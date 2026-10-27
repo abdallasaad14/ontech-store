@@ -44,7 +44,9 @@ Client PCs connect to `http://<server-ip>:5080`.
 ## Development
 
 ```bash
-dotnet test                       # 16 end-to-end tests
+dotnet test                       # 16 end-to-end tests on SQLite
+# same tests on a real SQL Server, through the migrations (database name is added per test run):
+ONTECH_TEST_SQLSERVER="Server=localhost;User Id=sa;Password=...;TrustServerCertificate=True" dotnet test
 cd src/OnTech.Store.Api
 ASPNETCORE_ENVIRONMENT=Development dotnet run   # uses a local SQLite file, no SQL Server needed
 # open http://localhost:5080/swagger

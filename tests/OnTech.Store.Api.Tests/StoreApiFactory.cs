@@ -12,21 +12,34 @@ using OnTech.Store.Contracts;
 
 namespace OnTech.Store.Api.Tests;
 
-/// <summary>Runs the real API in memory against a fresh SQLite database file per test class.</summary>
+/// <summary>
+/// Runs the real API in memory against a fresh database per test class: SQLite by default, or SQL Server
+/// (through the real migrations) when ONTECH_TEST_SQLSERVER holds a connection string without a database name.
+/// </summary>
 public sealed class StoreApiFactory : WebApplicationFactory<Program>
 {
     public const string AdminEmail = "admin@test.local";
     public const string AdminPassword = "Admin!12345";
     private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"ontech-test-{Guid.NewGuid():N}.db");
+    private readonly string? _sqlServer = Environment.GetEnvironmentVariable("ONTECH_TEST_SQLSERVER");
+    private readonly string _sqlDbName = $"OnTechStoreTest_{Guid.NewGuid():N}";
 
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting("Database:Provider", "Sqlite");
-        // Shared cache + a busy timeout lets concurrent requests queue for the write lock like SQL Server row locks would.
-        builder.UseSetting("ConnectionStrings:Store", $"Data Source={_dbPath};Default Timeout=30;Pooling=False");
+        if (_sqlServer is not null)
+        {
+            builder.UseSetting("Database:Provider", "SqlServer");
+            builder.UseSetting("ConnectionStrings:Store", $"{_sqlServer};Database={_sqlDbName}");
+        }
+        else
+        {
+            builder.UseSetting("Database:Provider", "Sqlite");
+            // A busy timeout lets concurrent requests queue for SQLite's write lock.
+            builder.UseSetting("ConnectionStrings:Store", $"Data Source={_dbPath};Default Timeout=30;Pooling=False");
+        }
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-0123456789abcdefghijklmnop");
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
@@ -50,6 +63,10 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
 
     protected override void Dispose(bool disposing)
     {
+        if (_sqlServer is not null)
+        {
+            try { WithDb(db => db.Database.EnsureDeleted()); } catch { /* best effort */ }
+        }
         base.Dispose(disposing);
         SqliteConnection.ClearAllPools();
         try { File.Delete(_dbPath); } catch { /* best effort */ }
