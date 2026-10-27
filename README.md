@@ -1,6 +1,6 @@
 # OnTech Store
 
-Internal stock app for OnTech: categories and items with quantities, customers, and orders that take stock out of the store, with an optional receipt number. This repository holds the server (database + REST API). The WPF desktop app will be added under `src/` and reuses `OnTech.Store.Contracts` for all request/response types.
+Internal stock app for OnTech: categories and items with quantities, customers, and orders that take stock out of the store, with an optional receipt number. This repository holds the server (database + REST API) and the WPF desktop app that staff use on up to 3 PCs.
 
 ## Layout
 
@@ -8,7 +8,9 @@ Internal stock app for OnTech: categories and items with quantities, customers, 
 |---|---|
 | `src/OnTech.Store.Api` | ASP.NET Core 8 Web API, EF Core, JWT login. Runs as a Windows service. |
 | `src/OnTech.Store.Contracts` | DTOs and enums shared with the desktop app (`Permission`, `OrderQuery`, `CreateOrderRequest`, ...). |
-| `tests/OnTech.Store.Api.Tests` | End-to-end API tests (in-memory host + SQLite), including a 3-PC concurrency test. |
+| `src/OnTech.Store.Client` | Typed HTTP client for the API (`StoreApiClient`), used by the desktop app. Turns server errors into readable messages. |
+| `src/OnTech.Store.Desktop` | WPF (.NET 8) desktop app, `OnTechStore.exe`. MVVM with CommunityToolkit.Mvvm. |
+| `tests/OnTech.Store.Api.Tests` | End-to-end API tests (in-memory host + SQLite), including a 3-PC concurrency test, plus tests of the desktop app's API client against the real server. |
 | `db/OnTechStore.sql` | Idempotent SQL script of the schema, for review or manual setup. |
 | `docs/swagger.json` | OpenAPI spec snapshot. The live, clickable version is at `/swagger` on the server. |
 | `scripts/` | `install-service.ps1` (publish + install Windows service + firewall), `backup-database.ps1`. |
@@ -41,16 +43,43 @@ Client PCs connect to `http://<server-ip>:5080`.
 | `Seed:*` | see file | Only used when no admin exists. |
 | `Swagger:Enabled` | `true` | API docs at `/swagger`. |
 
+## Desktop app (client PCs)
+
+1. Install the [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) (x64) on each PC.
+2. Build it once (on any machine with the .NET 8 SDK):
+   ```powershell
+   dotnet publish src\OnTech.Store.Desktop -c Release -r win-x64 --self-contained false -o publish\desktop
+   ```
+   Copy the `publish\desktop` folder to each PC (about 1 MB) and make a shortcut to `OnTechStore.exe`.
+3. On first start, type the server PC's address on the sign-in screen (for example `192.168.1.10`; port 5080 is added for you), press **Test**, then sign in. The address and last email are remembered per PC in `%LocalAppData%\OnTechStore\settings.json`.
+
+What each screen does:
+
+| Screen | Who sees it | What it does |
+|---|---|---|
+| Sign in | everyone | Server address, email, password. Users flagged by an admin must pick a new password first. |
+| Home | everyone | Greeting, the three big actions (New Order, Add Quantity, Add Customer), today's numbers, and the stock table with In stock / Low / Out of stock. Double-click an item to order it. |
+| New Order | `CreateOrders` | Category → item (shows what's available) → quantity → customer, optional receipt number and notes. "Add another item" puts several items in one order. Shows how many are left after the order. If another PC took the stock first, the app says which item is short and refreshes the numbers. |
+| Add Quantity | `AddStock` | Category → item → quantity received, optional note. |
+| Customers | everyone (edit needs `ManageCustomers`) | Search, add, edit, disable. Company name is the only required field. |
+| Orders Log | `ViewOrders` | Search, with/without receipt filter, paging, order details, cancel (needs `CancelOrders`). The full log with every filter and receipt PDFs is the next step. |
+| Items & Categories | `ManageCatalog` (admin menu) | Add/edit categories and items with a starting quantity and low-stock level, stock counts (corrections with a reason), disable. |
+| Users | `ManageUsers` (admin menu) | Add users with email + first password, admin flag or individual permissions, reset passwords, disable. |
+
+The menu only shows what the signed-in user is allowed to do, and the server checks every permission again, so a hidden button is never the only protection.
+
 ## Development
 
 ```bash
-dotnet test                       # 16 end-to-end tests on SQLite
+dotnet test                       # end-to-end API + client tests on SQLite
 # same tests on a real SQL Server, through the migrations (database name is added per test run):
 ONTECH_TEST_SQLSERVER="Server=localhost;User Id=sa;Password=...;TrustServerCertificate=True" dotnet test
 cd src/OnTech.Store.Api
 ASPNETCORE_ENVIRONMENT=Development dotnet run   # uses a local SQLite file, no SQL Server needed
 # open http://localhost:5080/swagger
 ```
+
+The desktop app is built with Visual Studio 2022 or `dotnet build src/OnTech.Store.Desktop` and runs on Windows only (the project sets `EnableWindowsTargeting` so it also compiles on Linux CI). Run the API in Development mode, start the app, and use `localhost` as the server address.
 
 Schema changes: edit `Data/Entities.cs` / `StoreDbContext.cs`, then
 `dotnet ef migrations add <Name> -o Data/Migrations` from `src/OnTech.Store.Api`. The server applies pending migrations on startup.
