@@ -31,14 +31,14 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     public bool IsFormOpen => Form != FormKind.None;
     public bool IsNewItem => IsItemForm && EditingId is null;
 
-    public string FormTitle => (Form, EditingId) switch
+    public string FormTitle => L.T((Form, EditingId) switch
     {
         (FormKind.Category, null) => "Add category",
         (FormKind.Category, _) => "Edit category",
         (FormKind.Item, null) => "Add item",
         (FormKind.Item, _) => "Edit item",
         _ => "",
-    };
+    });
 
     // Category form
     [ObservableProperty] private string? _categoryCode;
@@ -109,13 +109,13 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     [RelayCommand]
     private Task DeleteCategoryAsync(CategoryDto? c)
     {
-        if (c is null || !Dialogs.Confirm($"Remove the category \"{c.Name}\"? If it still has items it is disabled instead of deleted.")) return Task.CompletedTask;
+        if (c is null || !Dialogs.Confirm(L.T("Remove the category \"{0}\"? If it still has items it is disabled instead of deleted.", c.Name))) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             await Api.DeleteCategoryAsync(c.Id);
             Form = FormKind.None;
             await ReloadCategoriesAsync();
-            SuccessMessage = $"Category \"{c.Name}\" removed.";
+            SuccessMessage = L.T("Category \"{0}\" removed.", c.Name);
         });
     }
 
@@ -151,14 +151,14 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     [RelayCommand]
     private Task DisableItemAsync(ItemDto? i)
     {
-        if (i is null || !Dialogs.Confirm($"Disable \"{i.Name}\"? It stays in old orders but can't be ordered or restocked.")) return Task.CompletedTask;
+        if (i is null || !Dialogs.Confirm(L.T("Disable \"{0}\"? It stays in old orders but can't be ordered or restocked.", i.Name))) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             await Api.DisableItemAsync(i.Id);
             Form = FormKind.None;
             await ReloadCategoriesAsync();
             await ReloadItemsAsync();
-            SuccessMessage = $"\"{i.Name}\" was disabled.";
+            SuccessMessage = L.T("\"{0}\" was disabled.", i.Name);
         });
     }
 
@@ -166,21 +166,21 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     private Task AdjustItemAsync(ItemDto? i)
     {
         if (i is null) return Task.CompletedTask;
-        var counted = Dialogs.Prompt($"Stock count: {i.Name}", $"The system shows {i.Quantity}. How many did you count?", i.Quantity.ToString(), okText: "Next");
+        var counted = Dialogs.Prompt(L.T("Stock count: {0}", i.Name), L.T("The system shows {0}. How many did you count?", i.Quantity), i.Quantity.ToString(), okText: L.T("Next"));
         if (counted is null) return Task.CompletedTask;
         if (!int.TryParse(counted.Trim(), out var newQty) || newQty < 0)
         {
-            ErrorMessage = "Enter a whole number of 0 or more.";
+            ErrorMessage = L.T("Enter a whole number of 0 or more.");
             return Task.CompletedTask;
         }
-        var reason = Dialogs.Prompt($"Stock count: {i.Name}", "Reason for the correction (for example \"Monthly count\" or \"Damaged unit\")", okText: "Save count");
+        var reason = Dialogs.Prompt(L.T("Stock count: {0}", i.Name), L.T("Reason for the correction (for example \"Monthly count\" or \"Damaged unit\")"), okText: L.T("Save count"));
         if (string.IsNullOrWhiteSpace(reason)) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             var updated = await Api.AdjustQuantityAsync(i.Id, newQty, reason.Trim());
             await ReloadCategoriesAsync();
             await ReloadItemsAsync();
-            SuccessMessage = $"\"{updated.Name}\" set to {updated.Quantity}.";
+            SuccessMessage = L.T("\"{0}\" set to {1}.", updated.Name, updated.Quantity);
         });
     }
 
@@ -197,7 +197,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
 
     private async Task SaveCategoryAsync()
     {
-        if (string.IsNullOrWhiteSpace(CategoryName)) throw new ArgumentException("Enter the category name.");
+        if (string.IsNullOrWhiteSpace(CategoryName)) throw new ArgumentException(L.T("Enter the category name."));
         var req = new SaveCategoryRequest
         {
             Code = string.IsNullOrWhiteSpace(CategoryCode) ? null : CategoryCode.Trim(),
@@ -209,14 +209,14 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         Form = FormKind.None;
         await ReloadCategoriesAsync();
         SelectedCategory = Categories.FirstOrDefault(c => c.Id == saved.Id) ?? SelectedCategory;
-        SuccessMessage = $"Category \"{saved.Name}\" saved.";
+        SuccessMessage = L.T("Category \"{0}\" saved.", saved.Name);
     }
 
     private async Task SaveItemAsync()
     {
-        if (ItemCategory is null) throw new ArgumentException("Choose the category.");
-        if (string.IsNullOrWhiteSpace(ItemName)) throw new ArgumentException("Enter the item name.");
-        if (!int.TryParse(ItemLowStock?.Trim(), out var low) || low < 0) throw new ArgumentException("Low stock warning must be 0 or more.");
+        if (ItemCategory is null) throw new ArgumentException(L.T("Choose the category."));
+        if (string.IsNullOrWhiteSpace(ItemName)) throw new ArgumentException(L.T("Enter the item name."));
+        if (!int.TryParse(ItemLowStock?.Trim(), out var low) || low < 0) throw new ArgumentException(L.T("Low stock warning must be 0 or more."));
         ItemDto saved;
         if (EditingId is { } id)
         {
@@ -232,7 +232,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         }
         else
         {
-            if (!int.TryParse(ItemInitialQuantity?.Trim(), out var initial) || initial < 0) throw new ArgumentException("Starting quantity must be 0 or more.");
+            if (!int.TryParse(ItemInitialQuantity?.Trim(), out var initial) || initial < 0) throw new ArgumentException(L.T("Starting quantity must be 0 or more."));
             saved = await Api.CreateItemAsync(new CreateItemRequest
             {
                 CategoryId = ItemCategory.Id,
@@ -248,6 +248,6 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         SelectedCategory = Categories.FirstOrDefault(c => c.Id == saved.CategoryId) ?? SelectedCategory;
         await ReloadItemsAsync();
         SelectedItem = Items.FirstOrDefault(i => i.Id == saved.Id);
-        SuccessMessage = $"\"{saved.Name}\" saved.";
+        SuccessMessage = L.T("\"{0}\" saved.", saved.Name);
     }
 }

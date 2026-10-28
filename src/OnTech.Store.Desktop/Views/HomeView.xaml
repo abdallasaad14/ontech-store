@@ -1,6 +1,7 @@
 <UserControl x:Class="OnTech.Store.Desktop.Views.HomeView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:OnTech.Store.Desktop.Services"
              xmlns:views="clr-namespace:OnTech.Store.Desktop.Views">
     <DockPanel Margin="32,28,32,24">
         <StackPanel DockPanel.Dock="Top">
@@ -14,8 +15,8 @@
                         Visibility="{Binding CanCreateOrders, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource Icon}" Text="&#xE7BF;" FontSize="22" HorizontalAlignment="Left"/>
-                        <TextBlock Text="New Order" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,2"/>
-                        <TextBlock Text="Take items out for a customer" FontSize="12" Opacity="0.85"/>
+                        <TextBlock Text="{l:T 'New Order'}" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,2"/>
+                        <TextBlock Text="{l:T 'Take items out for a customer'}" FontSize="12" Opacity="0.85"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddQuantityCommand}"
@@ -24,8 +25,8 @@
                         <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" HorizontalAlignment="Left">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="Add Quantity" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                        <TextBlock Text="Stock received for existing items" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{l:T 'Add Quantity'}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
+                        <TextBlock Text="{l:T 'Stock received for existing items'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddCustomerCommand}"
@@ -34,8 +35,8 @@
                         <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" HorizontalAlignment="Left">
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE8FA;" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="Add Customer" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                        <TextBlock Text="Company name, number, tax number" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{l:T 'Add Customer'}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
+                        <TextBlock Text="{l:T 'Company name, number, tax number'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
                     </StackPanel>
                 </Button>
             </UniformGrid>
@@ -44,29 +45,29 @@
             <UniformGrid Rows="1" Margin="-6,0,-6,20" Visibility="{Binding CanViewStock, Converter={StaticResource BoolToVisibility}}">
                 <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="Units in stock" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Text="{l:T 'Units in stock'}" Style="{StaticResource FieldLabel}"/>
                         <TextBlock Text="{Binding Summary.TotalUnitsInStock}" FontSize="22" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="Low stock" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Text="{l:T 'Low stock'}" Style="{StaticResource FieldLabel}"/>
                         <TextBlock FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}">
-                            <Run Text="{Binding Summary.LowStockItemCount, Mode=OneWay}"/><Run Text=" items" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
+                            <Run Text="{Binding Summary.LowStockItemCount, Mode=OneWay}"/><Run Text="{l:T ' items'}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="Orders today" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Text="{l:T 'Orders today'}" Style="{StaticResource FieldLabel}"/>
                         <TextBlock FontSize="22" FontWeight="SemiBold">
-                            <Run Text="{Binding Summary.OrdersToday, Mode=OneWay}"/><Run Text="{Binding Summary.UnitsOutToday, Mode=OneWay, StringFormat=' · {0} units out'}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
+                            <Run Text="{Binding Summary.OrdersToday, Mode=OneWay}"/><Run Text="{Binding Summary.UnitsOutToday, Mode=OneWay, StringFormat={l:T ' · {0} units out'}}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
                         </TextBlock>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="Customers" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Text="{l:T 'Customers'}" Style="{StaticResource FieldLabel}"/>
                         <TextBlock Text="{Binding Summary.CustomerCount}" FontSize="22" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
@@ -79,26 +80,26 @@
                 <DockPanel DockPanel.Dock="Top" Margin="20,16,20,10">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                         <ComboBox Width="180" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" Margin="0,0,8,0"/>
-                        <TextBox Width="200" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="Search by item name or code">
+                        <TextBox Width="200" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Search by item name or code'}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding RefreshCommand}"/>
                             </TextBox.InputBindings>
                         </TextBox>
                         <Button Content="&#xE72C;" FontFamily="{StaticResource IconFont}" Margin="8,0,0,0" Padding="11,8"
-                                ToolTip="Refresh" Command="{Binding RefreshCommand}"/>
+                                ToolTip="{l:T 'Refresh'}" Command="{Binding RefreshCommand}"/>
                     </StackPanel>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Stock available" Style="{StaticResource SectionTitle}"/>
-                        <TextBlock Text="Double-click an item to start an order with it." Style="{StaticResource Hint}" Margin="0,2,0,0"/>
+                        <TextBlock Text="{l:T 'Stock available'}" Style="{StaticResource SectionTitle}"/>
+                        <TextBlock Text="{l:T 'Double-click an item to start an order with it.'}" Style="{StaticResource Hint}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </DockPanel>
                 <DataGrid x:Name="StockGrid" ItemsSource="{Binding Items}" Margin="10,0,10,10" MouseDoubleClick="OnStockDoubleClick">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="ITEM" Binding="{Binding Name}" Width="2*" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="CODE" Binding="{Binding Code}" Width="*"/>
-                        <DataGridTextColumn Header="CATEGORY" Binding="{Binding CategoryName}" Width="*"/>
-                        <DataGridTextColumn Header="AVAILABLE" Binding="{Binding Quantity}" Width="100" FontWeight="SemiBold"/>
-                        <DataGridTemplateColumn Header="STATUS" Width="120">
+                        <DataGridTextColumn Header="{l:T 'ITEM'}" Binding="{Binding Name}" Width="2*" FontWeight="SemiBold"/>
+                        <DataGridTextColumn Header="{l:T 'CODE'}" Binding="{Binding Code}" Width="*"/>
+                        <DataGridTextColumn Header="{l:T 'CATEGORY'}" Binding="{Binding CategoryName}" Width="*"/>
+                        <DataGridTextColumn Header="{l:T 'AVAILABLE'}" Binding="{Binding Quantity}" Width="100" FontWeight="SemiBold"/>
+                        <DataGridTemplateColumn Header="{l:T 'STATUS'}" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate><views:StockPill/></DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

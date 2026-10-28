@@ -1,6 +1,7 @@
 <Window x:Class="OnTech.Store.Desktop.Views.PromptWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:OnTech.Store.Desktop.Services"
         Width="420" SizeToContent="Height" ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
         Background="{StaticResource WindowBrush}" FontFamily="{StaticResource UiFont}" Icon="/Assets/app.ico" ShowInTaskbar="False">
     <Border Style="{StaticResource Card}" Margin="16" Padding="22">
@@ -9,7 +10,7 @@
             <TextBox x:Name="InputBox" Margin="0,0,0,18"/>
             <PasswordBox x:Name="PasswordInput" Margin="0,0,0,18" Visibility="Collapsed"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Cancel" IsCancel="True" Margin="0,0,8,0" MinWidth="90"/>
+                <Button Content="{l:T 'Cancel'}" IsCancel="True" Margin="0,0,8,0" MinWidth="90"/>
                 <Button x:Name="OkButton" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="OnOk" MinWidth="90"/>
             </StackPanel>
         </StackPanel>

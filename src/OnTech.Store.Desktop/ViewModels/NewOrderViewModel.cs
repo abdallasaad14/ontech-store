@@ -51,7 +51,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     private bool _loading;
 
     public string? AvailableHint => SelectedItem is { } i
-        ? $"{Remaining(i, includeCurrent: false)} available" + (i.IsLowStock ? " (low stock)" : "")
+        ? L.T(i.IsLowStock ? "{0} available (low stock)" : "{0} available", Remaining(i, includeCurrent: false))
         : null;
 
     public bool HasSummary => Summary is not null;
@@ -62,10 +62,10 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         {
             if (SelectedItem is not { } item || !TryQuantity(out var qty)) return null;
             var left = Remaining(item, includeCurrent: false) - qty;
-            var who = SelectedCustomer is { } c ? $" for {c.CompanyName}" : "";
-            return left < 0
-                ? $"Only {Remaining(item, false)} {item.Name} available. Lower the quantity."
-                : $"Taking {qty} × {item.Name}{who}. {left} left after this order.";
+            if (left < 0) return L.T("Only {0} {1} available. Lower the quantity.", Remaining(item, false), item.Name);
+            return SelectedCustomer is { } c
+                ? L.T("Taking {0} × {1} for {2}. {3} left after this order.", qty, item.Name, c.CompanyName, left)
+                : L.T("Taking {0} × {1}. {2} left after this order.", qty, item.Name, left);
         }
     }
 
@@ -136,11 +136,11 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     /// <summary>Moves the current item + quantity into <see cref="Lines"/>. Returns false (with a message) if it isn't valid.</summary>
     private bool TryTakeCurrentLine()
     {
-        if (SelectedItem is not { } item) { ErrorMessage = "Choose an item."; return false; }
-        if (!TryQuantity(out var qty)) { ErrorMessage = "Enter a quantity of 1 or more."; return false; }
+        if (SelectedItem is not { } item) { ErrorMessage = L.T("Choose an item."); return false; }
+        if (!TryQuantity(out var qty)) { ErrorMessage = L.T("Enter a quantity of 1 or more."); return false; }
         if (qty > Remaining(item, false))
         {
-            ErrorMessage = $"Only {Remaining(item, false)} {item.Name} available.";
+            ErrorMessage = L.T("Only {0} {1} available.", Remaining(item, false), item.Name);
             return false;
         }
         var existing = Lines.FirstOrDefault(l => l.Item.Id == item.Id);
@@ -180,7 +180,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [RelayCommand]
     private Task QuickAddCustomerAsync()
     {
-        var name = Dialogs.Prompt("New customer", "Company name", okText: "Add customer");
+        var name = Dialogs.Prompt(L.T("New customer"), L.T("Company name"), okText: L.T("Add customer"));
         if (string.IsNullOrWhiteSpace(name)) return Task.CompletedTask;
         return RunAsync(async () =>
         {
@@ -189,7 +189,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
             CustomerSearch = null;
             FilterCustomers();
             SelectedCustomer = Customers.FirstOrDefault(c => c.Id == created.Id);
-            SuccessMessage = $"Customer \"{created.CompanyName}\" added. You can add the phone and tax number later under Customers.";
+            SuccessMessage = L.T("Customer \"{0}\" added. You can add the phone and tax number later under Customers.", created.CompanyName);
         });
     }
 
@@ -203,9 +203,9 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
             SelectedItem = null; // it is in Lines now, so a retry must not add it twice
             QuantityText = "1";
         }
-        if (Lines.Count == 0) throw new ArgumentException("Choose an item and a quantity.");
-        if (SelectedCustomer is null) throw new ArgumentException("Choose the customer.");
-        if (WithReceipt && string.IsNullOrWhiteSpace(ReceiptNumber)) throw new ArgumentException("Enter the receipt number, or untick \"Add a receipt\".");
+        if (Lines.Count == 0) throw new ArgumentException(L.T("Choose an item and a quantity."));
+        if (SelectedCustomer is null) throw new ArgumentException(L.T("Choose the customer."));
+        if (WithReceipt && string.IsNullOrWhiteSpace(ReceiptNumber)) throw new ArgumentException(L.T("Enter the receipt number, or untick \"Add a receipt\"."));
 
         var order = await Api.CreateOrderAsync(new CreateOrderRequest
         {
@@ -219,8 +219,9 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         LastOrder = order;
         ResetForm();
         await LoadItemsAsync(); // fresh quantities, including changes from other PCs
-        SuccessMessage = $"Order {order.OrderNumber} saved for {order.CustomerName}: {order.TotalQuantity} unit(s) taken from stock"
-                         + (order.WithReceipt ? $", receipt {order.ReceiptNumber}." : ".");
+        SuccessMessage = order.WithReceipt
+            ? L.T("Order {0} saved for {1}: {2} unit(s) taken from stock, receipt {3}.", order.OrderNumber, order.CustomerName, order.TotalQuantity, order.ReceiptNumber)
+            : L.T("Order {0} saved for {1}: {2} unit(s) taken from stock.", order.OrderNumber, order.CustomerName, order.TotalQuantity);
     });
 
     private void ResetForm()
@@ -236,7 +237,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [RelayCommand]
     private void Cancel()
     {
-        if (Lines.Count > 0 && !Dialogs.Confirm("Discard this order?")) return;
+        if (Lines.Count > 0 && !Dialogs.Confirm(L.T("Discard this order?"))) return;
         shell.Navigate(Page.Home);
     }
 

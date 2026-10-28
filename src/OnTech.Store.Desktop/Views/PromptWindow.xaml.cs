@@ -1,4 +1,5 @@
 using System.Windows;
+using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.Views;
 
@@ -10,6 +11,7 @@ public partial class PromptWindow : Window
     public PromptWindow(string title, string label, string? initial, bool isPassword, string okText)
     {
         InitializeComponent();
+        L.Apply(this);
         Title = title;
         LabelText.Text = label;
         OkButton.Content = okText;

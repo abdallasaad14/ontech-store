@@ -8,6 +8,8 @@ public sealed class AppSettings
 {
     public string ServerUrl { get; set; } = "http://localhost:5080";
     public string? LastUsername { get; set; }
+    /// <summary>"en" or "ar".</summary>
+    public string Language { get; set; } = "en";
 
     private static readonly string FilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OnTechStore", "settings.json");

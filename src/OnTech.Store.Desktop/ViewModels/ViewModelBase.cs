@@ -26,18 +26,18 @@ public abstract partial class ViewModelBase : ObservableObject
         }
         catch (ApiError ex)
         {
-            ErrorMessage = ex.Message;
+            ErrorMessage = L.Message(ex.Message);
             OnApiError(ex);
             return false;
         }
         catch (ArgumentException ex)
         {
-            ErrorMessage = ex.Message;
+            ErrorMessage = L.Message(ex.Message);
             return false;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            ErrorMessage = "Unexpected error: " + ex.Message;
+            ErrorMessage = L.T("Unexpected error:") + " " + ex.Message;
             return false;
         }
         finally

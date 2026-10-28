@@ -9,12 +9,13 @@ public sealed partial class LoginViewModel : ViewModelBase
 {
     private readonly AppSettings _settings;
 
-    public LoginViewModel(AppSettings settings)
+    /// <param name="previous">The form being replaced after a language change; its typed values are kept.</param>
+    public LoginViewModel(AppSettings settings, LoginViewModel? previous = null)
     {
         _settings = settings;
-        _serverUrl = settings.ServerUrl;
-        _username = settings.LastUsername ?? "";
-        _isEditingServer = string.IsNullOrWhiteSpace(settings.LastUsername);
+        _serverUrl = previous?.ServerUrl ?? settings.ServerUrl;
+        _username = previous?.Username ?? settings.LastUsername ?? "";
+        _isEditingServer = previous?.IsEditingServer ?? string.IsNullOrWhiteSpace(settings.LastUsername);
     }
 
     [ObservableProperty] private string _serverUrl;
@@ -28,6 +29,18 @@ public sealed partial class LoginViewModel : ViewModelBase
 
     public event EventHandler? LoggedIn;
 
+    public string OtherLanguage => L.OtherLanguageName;
+    public bool LanguageChanged { get; private set; }
+    public event EventHandler? LanguageChangeRequested;
+
+    [RelayCommand]
+    private void SwitchLanguage()
+    {
+        L.Switch(_settings);
+        LanguageChanged = true;
+        LanguageChangeRequested?.Invoke(this, EventArgs.Empty);
+    }
+
     [RelayCommand]
     private void EditServer() => IsEditingServer = true;
 
@@ -37,14 +50,14 @@ public sealed partial class LoginViewModel : ViewModelBase
         var api = StoreApiClient.Create(ServerUrl, TimeSpan.FromSeconds(8));
         await api.CheckHealthAsync();
         ServerUrl = api.ServerUrl!.ToString().TrimEnd('/');
-        SuccessMessage = "Connected to the server.";
+        SuccessMessage = L.T("Connected to the server.");
     });
 
     [RelayCommand]
     private Task SignInAsync() => RunAsync(async () =>
     {
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
-            throw new ArgumentException("Enter your username and password.");
+            throw new ArgumentException(L.T("Enter your username and password."));
         var api = StoreApiClient.Create(ServerUrl);
         var user = await api.LoginAsync(Username, Password);
         ServerUrl = api.ServerUrl!.ToString().TrimEnd('/');

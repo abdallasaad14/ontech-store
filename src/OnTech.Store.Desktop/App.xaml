@@ -14,6 +14,7 @@
             <local:LocalTimeConverter x:Key="LocalTime"/>
             <local:UserAccessConverter x:Key="UserAccess"/>
             <local:CanCancelOrderConverter x:Key="CanCancelOrder"/>
+            <local:TranslateConverter x:Key="Translate"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

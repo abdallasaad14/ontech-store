@@ -1,11 +1,12 @@
 <UserControl x:Class="OnTech.Store.Desktop.Views.AddQuantityView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:OnTech.Store.Desktop.Services"
              xmlns:views="clr-namespace:OnTech.Store.Desktop.Views">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,28,32,24" MaxWidth="900" HorizontalAlignment="Left">
-            <TextBlock Text="Add Quantity" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="Record stock that arrived for an item that already exists. New items are added by an admin under Items &amp; Categories."
+            <TextBlock Text="{l:T 'Add Quantity'}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{l:T 'Record stock that arrived for an item that already exists. New items are added by an admin under Items &amp; Categories.'}"
                        Style="{StaticResource PageSubtitle}" Margin="0,4,0,20"/>
             <views:MessageBanners/>
 
@@ -22,17 +23,17 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Column="0" Margin="0,0,0,16">
-                            <TextBlock Text="Category" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="{l:T 'Category'}" Style="{StaticResource FieldLabel}"/>
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" Margin="0,0,0,16">
-                            <TextBlock Text="Item" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="{l:T 'Item'}" Style="{StaticResource FieldLabel}"/>
                             <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <DockPanel>
                                             <TextBlock DockPanel.Dock="Right" Margin="12,0,0,0" Foreground="{StaticResource TextMutedBrush}"
-                                                       Text="{Binding Quantity, StringFormat='{}{0} in stock'}"/>
+                                                       Text="{Binding Quantity, StringFormat={l:T '\{0\} in stock'}}"/>
                                             <TextBlock Text="{Binding Name}"/>
                                         </DockPanel>
                                     </DataTemplate>
@@ -40,12 +41,12 @@
                             </ComboBox>
                         </StackPanel>
                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,16">
-                            <TextBlock Text="Quantity to add" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="{l:T 'Quantity to add'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding QuantityText, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                         <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,16">
-                            <TextBlock Text="Note (optional)" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" ToolTip="For example the supplier or delivery note number"/>
+                            <TextBlock Text="{l:T 'Note (optional)'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'For example the supplier or delivery note number'}"/>
                         </StackPanel>
                     </Grid>
 
@@ -53,7 +54,7 @@
                         <TextBlock Text="{Binding Summary}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold"/>
                     </Border>
 
-                    <Button Content="Add to stock" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" MinWidth="120"
+                    <Button Content="{l:T 'Add to stock'}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Right" MinWidth="120"
                             Command="{Binding SaveCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"/>
                 </StackPanel>
             </Border>

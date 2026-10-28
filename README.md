@@ -53,6 +53,9 @@ Client PCs connect to `http://<server-ip>:5080`.
    ```
    Copy the `publish\desktop` folder to each PC (about 1 MB) and make a shortcut to `OnTechStore.exe`.
 3. On first start, type the server PC's address on the sign-in screen (for example `192.168.1.10`; port 5080 is added for you), press **Test**, then sign in. The address and last username are remembered per PC in `%LocalAppData%\OnTechStore\settings.json`.
+4. The app speaks English and Arabic. The **العربية / English** link on the sign-in screen and at the bottom of the sidebar switches language; Arabic turns the whole layout right-to-left. The choice is remembered per PC (`"Language": "en"` or `"ar"` in the same settings file).
+
+Translations live in `src/OnTech.Store.Desktop/Services/Arabic.cs`, keyed by the English text. Screens use `{l:T 'English text'}` in XAML and `L.T("English text")` in code; anything without an Arabic entry shows in English. Server messages are translated there too (fixed ones by exact text, ones with names or numbers by pattern).
 
 What each screen does:
 

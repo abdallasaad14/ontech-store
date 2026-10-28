@@ -14,7 +14,7 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
         {
             var hour = DateTime.Now.Hour;
             var part = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-            return $"{part}, {Session.User.FullName.Split(' ')[0]}";
+            return L.T(part + ", {0}", Session.User.FullName.Split(' ')[0]);
         }
     }
 
@@ -32,7 +32,7 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
     public ObservableCollection<CategoryDto> Categories { get; } = new();
     public ObservableCollection<ItemDto> Items { get; } = new();
 
-    private static readonly CategoryDto AllCategories = new() { Id = 0, Name = "All categories" };
+    private static readonly CategoryDto AllCategories = new() { Id = 0, Name = L.T("All categories") };
     private bool _loading;
 
     public override async Task LoadAsync()
