@@ -112,7 +112,7 @@
                             <TextBox Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding CategoryCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{l:T 'Leave empty for the next code (C01, C02, ...).'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
+                            <TextBlock Text="{l:T 'Digits only. Leave empty for the next code (01, 02, ...).'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                             <TextBlock Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding CategoryDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <CheckBox Content="{l:T 'Active'}" IsChecked="{Binding CategoryActive}" Margin="0,0,0,18"/>
@@ -125,7 +125,7 @@
                             <TextBox Text="{Binding ItemName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{l:T 'Leave empty to generate one from the category, e.g. C01-004.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
+                            <TextBlock Text="{l:T 'Digits only. Leave empty to get the category code plus a number, e.g. 01004.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                             <TextBlock Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding ItemDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <StackPanel Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}}">

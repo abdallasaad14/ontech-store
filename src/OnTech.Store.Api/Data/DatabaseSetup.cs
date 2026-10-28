@@ -44,6 +44,13 @@ public static class DatabaseSetup
             await db.Database.ExecuteSqlRawAsync("ALTER TABLE Categories ADD COLUMN Code TEXT NULL");
             await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS IX_Categories_Code ON Categories (Code)");
         }
+        cmd.CommandText = "SELECT COUNT(*) FROM pragma_index_list('Items') WHERE name = 'IX_Items_Code' AND \"unique\" = 1";
+        if (Convert.ToInt32(await cmd.ExecuteScalarAsync()) == 0)
+        {
+            await db.Database.ExecuteSqlRawAsync("DROP INDEX IF EXISTS IX_Items_Code");
+            await db.Database.ExecuteSqlRawAsync("UPDATE Items SET Code = NULL WHERE Id NOT IN (SELECT MIN(Id) FROM Items WHERE Code IS NOT NULL GROUP BY Code)");
+            await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IX_Items_Code ON Items (Code) WHERE Code IS NOT NULL");
+        }
         await db.Database.ExecuteSqlRawAsync("CREATE TABLE IF NOT EXISTS AppliedSeeds (Name TEXT NOT NULL CONSTRAINT PK_AppliedSeeds PRIMARY KEY, AppliedAt TEXT NOT NULL)");
     }
 
@@ -63,6 +70,7 @@ public static class DatabaseSetup
 
         if (!await db.Users.AnyAsync(u => u.IsAdmin)) await CreateFirstAdminAsync(scope.ServiceProvider, db, log);
         await OpeningData.ApplyAsync(db, log);
+        await CatalogCodes.MakeNumericAsync(db);
         await CatalogCodes.BackfillAsync(db);
     }
 

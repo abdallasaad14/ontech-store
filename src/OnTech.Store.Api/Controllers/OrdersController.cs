@@ -107,7 +107,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
                              || o.Customer.CompanyName.ToLower().Contains(s)
                              || (o.Customer.TaxNumber != null && o.Customer.TaxNumber.ToLower().Contains(s))
                              || (o.Notes != null && o.Notes.ToLower().Contains(s))
-                             || o.Lines.Any(l => l.ItemName.ToLower().Contains(s) || (l.ItemCode != null && l.ItemCode.ToLower().Contains(s))));
+                             || o.Lines.Any(l => l.ItemName.ToLower().Contains(s) || (l.ItemCode != null && l.ItemCode.StartsWith(s))));
         return q;
     }
 }

@@ -178,7 +178,9 @@ namespace OnTech.Store.Api.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Code");
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("[Code] IS NOT NULL");
 
                     b.HasIndex("CategoryId", "Name")
                         .IsUnique();

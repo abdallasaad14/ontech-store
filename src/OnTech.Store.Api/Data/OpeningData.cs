@@ -29,8 +29,8 @@ public static class OpeningData
         var adminId = await db.Users.Where(u => u.IsAdmin).OrderBy(u => u.Id).Select(u => u.Id).FirstAsync();
         var categories = await db.Categories.Include(c => c.Items).ToListAsync();
         int newItems = 0, newCustomers = 0;
-        // Codes follow the sheet's order (Data card = C01, its first item C01-001), so they are set here, not by insert order.
-        var nextCategory = CatalogCodes.Max(categories.Where(c => c.Code != null).Select(c => c.Code!), "C") + 1;
+        // Codes follow the sheet's order (Data card = 01, its first item 01001), so they are set here, not by insert order.
+        var nextCategory = CatalogCodes.Max(categories.Where(c => c.Code != null).Select(c => c.Code!), "") + 1;
 
         foreach (var sc in data.Categories)
         {
@@ -42,7 +42,8 @@ public static class OpeningData
                 categories.Add(category);
             }
             category.Code ??= CatalogCodes.CategoryCode(nextCategory++);
-            var nextItem = CatalogCodes.Max(await db.Items.Where(i => i.Code != null).Select(i => i.Code!).ToListAsync(), category.Code + "-") + 1;
+            var nextItem = CatalogCodes.Max((await db.Items.Where(i => i.Code != null).Select(i => i.Code!).ToListAsync())
+                .Where(c => c.Length == category.Code.Length + 3), category.Code) + 1;
             foreach (var si in sc.Items)
             {
                 if (category.Items.Any(i => i.Name.Equals(si.Name, StringComparison.OrdinalIgnoreCase))) continue;
