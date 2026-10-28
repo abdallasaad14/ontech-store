@@ -179,3 +179,7 @@ Response: `{ items: OrderDto[], page, pageSize, totalCount, totalPages }`.
 
 On the Customers page, **Import from Excel** reads the first sheet (or a sheet named *Customers*) of an `.xlsx` or `.csv` file. With a header row, columns are found by name (Number / No / Code, Name / Company, Phone, Tax, in English or Arabic). Without a header, the column of whole numbers is the customer number and the column of text is the company name, which is how OnTech's old customer sheet is laid out. The app shows how many customers it found and asks before importing.
 
+## Opening data
+
+`src/OnTech.Store.Api/Data/Seed/opening-data.json` holds OnTech's stock (11 categories, 318 items with their balances) and 505 customers, taken from the old Excel sheets on 2026-10-28. The server loads it once on startup into any database (new or existing): categories and items that already exist by name, and customers whose number is already used, are left alone. Every item with a balance gets an *Initial* stock movement. The load is recorded in the `AppliedSeeds` table, so restarting the server, or later edits and orders, never bring it back. Cleanups made while converting: `!A1` link leftovers and extra spaces removed from names, the two "DURAGRD LAMINATE" rows in Data card merged, and "palstic box" (−2 in the sheet) set to 0.
+

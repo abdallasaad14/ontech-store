@@ -119,3 +119,10 @@ public class StockMovement
     public string? Note { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+/// <summary>Marks a one-time data load (see <see cref="OpeningData"/>) as done, so it never runs twice.</summary>
+public class AppliedSeed
+{
+    public string Name { get; set; } = "";
+    public DateTime AppliedAt { get; set; }
+}

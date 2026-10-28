@@ -33,9 +33,12 @@ public static class DatabaseSetup
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM pragma_table_info('Customers') WHERE name = 'CustomerNumber'";
-        if (Convert.ToInt32(await cmd.ExecuteScalarAsync()) > 0) return;
-        await db.Database.ExecuteSqlRawAsync("ALTER TABLE Customers ADD COLUMN CustomerNumber INTEGER NULL");
-        await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS IX_Customers_CustomerNumber ON Customers (CustomerNumber)");
+        if (Convert.ToInt32(await cmd.ExecuteScalarAsync()) == 0)
+        {
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Customers ADD COLUMN CustomerNumber INTEGER NULL");
+            await db.Database.ExecuteSqlRawAsync("CREATE UNIQUE INDEX IF NOT EXISTS IX_Customers_CustomerNumber ON Customers (CustomerNumber)");
+        }
+        await db.Database.ExecuteSqlRawAsync("CREATE TABLE IF NOT EXISTS AppliedSeeds (Name TEXT NOT NULL CONSTRAINT PK_AppliedSeeds PRIMARY KEY, AppliedAt TEXT NOT NULL)");
     }
 
     /// <summary>Creates or upgrades the database on startup and makes sure an admin exists.</summary>
@@ -52,9 +55,13 @@ public static class DatabaseSetup
             await UpgradeSqliteAsync(db);
         }
 
-        if (await db.Users.AnyAsync(u => u.IsAdmin)) return;
+        if (!await db.Users.AnyAsync(u => u.IsAdmin)) await CreateFirstAdminAsync(scope.ServiceProvider, db, log);
+        await OpeningData.ApplyAsync(db, log);
+    }
 
-        var seed = scope.ServiceProvider.GetRequiredService<IConfiguration>().GetSection(SeedOptions.Section).Get<SeedOptions>() ?? new SeedOptions();
+    private static async Task CreateFirstAdminAsync(IServiceProvider services, StoreDbContext db, ILogger log)
+    {
+        var seed = services.GetRequiredService<IConfiguration>().GetSection(SeedOptions.Section).Get<SeedOptions>() ?? new SeedOptions();
         var admin = new User
         {
             FullName = seed.AdminName,
@@ -65,7 +72,7 @@ public static class DatabaseSetup
             MustChangePassword = true,
             CreatedAt = DateTime.UtcNow,
         };
-        admin.PasswordHash = scope.ServiceProvider.GetRequiredService<PasswordService>().Hash(admin, seed.AdminPassword);
+        admin.PasswordHash = services.GetRequiredService<PasswordService>().Hash(admin, seed.AdminPassword);
         db.Users.Add(admin);
         await db.SaveChangesAsync();
         log.LogWarning("Created first admin '{Username}'. Sign in and change the password.", seed.AdminUsername);

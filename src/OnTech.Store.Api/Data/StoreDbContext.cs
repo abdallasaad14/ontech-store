@@ -11,9 +11,16 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderLine> OrderLines => Set<OrderLine>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<AppliedSeed> AppliedSeeds => Set<AppliedSeed>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<AppliedSeed>(e =>
+        {
+            e.HasKey(x => x.Name);
+            e.Property(x => x.Name).HasMaxLength(100);
+        });
+
         b.Entity<User>(e =>
         {
             e.Property(x => x.FullName).HasMaxLength(150).IsRequired();

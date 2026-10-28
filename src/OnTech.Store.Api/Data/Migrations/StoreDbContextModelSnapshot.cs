@@ -22,6 +22,20 @@ namespace OnTech.Store.Api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("OnTech.Store.Api.Data.AppliedSeed", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("AppliedSeeds");
+                });
+
             modelBuilder.Entity("OnTech.Store.Api.Data.Category", b =>
                 {
                     b.Property<int>("Id")

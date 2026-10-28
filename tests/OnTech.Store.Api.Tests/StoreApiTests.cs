@@ -323,4 +323,16 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         var clash = await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Other {tag}", CustomerNumber = n });
         Assert.Equal(HttpStatusCode.Conflict, clash.StatusCode);
     }
+
+    [Fact]
+    public async Task Opening_stock_and_customers_are_loaded_once()
+    {
+        var admin = await _f.LoginAsync();
+        var items = await admin.GetAs<List<ItemDto>>("/api/items?search=Retransfer%20Film");
+        Assert.Contains(items, i => i.CategoryName == "Fargo" && i.Name == "HDP 5000e Retransfer Film" && i.Quantity == 5);
+        var proximity = Assert.Single(await admin.GetAs<List<ItemDto>>("/api/items?search=Proximity%20with%20serial"));
+        Assert.Equal("PVC CARD", proximity.CategoryName);
+        Assert.Equal("Star Medical Center", Assert.Single(await admin.GetAs<List<CustomerDto>>("/api/customers?search=2"), c => c.CustomerNumber == 2).CompanyName);
+        Assert.Equal(1, _f.WithDb(db => db.AppliedSeeds.Count()));
+    }
 }
