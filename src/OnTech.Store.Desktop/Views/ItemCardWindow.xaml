@@ -18,10 +18,11 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,14">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
                 <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96"
-                        Visibility="{Binding HasPeriodStart, Converter={StaticResource BoolToVisibility}}">
+                        Visibility="{Binding HasOpening, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <TextBlock Text="{l:T 'OPENING BALANCE'}" Style="{StaticResource FieldLabel}" Margin="0"/>
                         <TextBlock Text="{Binding OpeningBalance}" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding OpeningDateText}" Style="{StaticResource Hint}" Margin="0"/>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96">
@@ -37,7 +38,7 @@
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96"
-                        Visibility="{Binding HasPeriodStart, Converter={StaticResource BoolToVisibility}}">
+                        Visibility="{Binding HasPeriod, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <TextBlock Text="{l:T 'CLOSING BALANCE'}" Style="{StaticResource FieldLabel}" Margin="0"/>
                         <TextBlock Text="{Binding ClosingBalance}" FontSize="18" FontWeight="SemiBold"/>

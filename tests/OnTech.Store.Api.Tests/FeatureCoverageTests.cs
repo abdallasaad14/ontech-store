@@ -545,6 +545,22 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
 
         Assert.Equal(404, (int)(await admin.GetAsync("/api/items/999999/card")).StatusCode);
         Assert.Empty(card.TopCustomers); // the only order was cancelled
+        Assert.Null(card.OpeningDate); // a new item has no opening stock
+    }
+
+    [Fact]
+    public async Task Item_card_shows_opening_stock_as_the_starting_balance_not_as_a_line()
+    {
+        var admin = await _f.LoginAsync();
+        var items = await admin.GetAs<List<ItemDto>>("/api/items?inStockOnly=true&search=Fargo");
+        var item = items.First();
+        var card = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card");
+
+        Assert.DoesNotContain(card.Lines, l => l.Type == StockMovementType.Initial);
+        Assert.NotNull(card.OpeningDate);
+        Assert.True(card.OpeningBalance > 0);
+        Assert.Equal(card.Item.Quantity, card.OpeningBalance + card.TotalIn - card.TotalOut);
+        Assert.Equal(card.Item.Quantity, card.ClosingBalance);
     }
 
     [Fact]

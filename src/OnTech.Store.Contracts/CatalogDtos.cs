@@ -85,8 +85,13 @@ public sealed class ItemCardDto
     /// <summary>The period shown, as asked for (null = from the first movement / up to now).</summary>
     public DateTimeOffset? From { get; init; }
     public DateTimeOffset? To { get; init; }
-    /// <summary>Quantity in the store just before the period (0 when the card starts from the first movement).</summary>
+    /// <summary>
+    /// Quantity at the start of the card: just before the period, or the item's opening stock (the store sheet it was loaded from)
+    /// when there is no start date. Opening stock is shown here, never as a movement line.
+    /// </summary>
     public int OpeningBalance { get; init; }
+    /// <summary>The date <see cref="OpeningBalance"/> is for (the period start, or the opening stock's date). Null when the item had none.</summary>
+    public DateTimeOffset? OpeningDate { get; init; }
     /// <summary>Quantity in the store at the end of the period.</summary>
     public int ClosingBalance { get; init; }
     /// <summary>In and out within the period.</summary>

@@ -52,7 +52,6 @@ public static class ItemCardPrinter
         var group = new TableRowGroup();
         table.RowGroups.Add(group);
         group.Rows.Add(Row(headers.Cast<object?>(), bold: true, fill: HeaderFill));
-        if (card.HasPeriodStart) group.Rows.Add(Row([null, L.T("Opening balance"), null, null, card.OpeningBalance], bold: true));
         foreach (var l in card.Lines) group.Rows.Add(Row(ItemCardViewModel.Cells(l)));
         group.Rows.Add(Row([null, L.T("Total"), card.TotalIn, card.TotalOut, card.ClosingBalance], bold: true, fill: HeaderFill));
         doc.Blocks.Add(table);

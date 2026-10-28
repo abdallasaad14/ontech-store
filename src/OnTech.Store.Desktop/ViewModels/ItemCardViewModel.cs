@@ -19,7 +19,9 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
     [ObservableProperty] private int _totalOut;
     [ObservableProperty] private int _openingBalance;
     [ObservableProperty] private int _closingBalance;
-    [ObservableProperty] private bool _hasPeriodStart;
+    [ObservableProperty] private bool _hasPeriod;
+    [ObservableProperty] private bool _hasOpening;
+    [ObservableProperty] private string _openingDateText = "";
     [ObservableProperty] private string _periodText = "";
     [ObservableProperty] private ItemCardLineDto? _selectedLine;
 
@@ -66,7 +68,9 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
         TotalOut = card.TotalOut;
         OpeningBalance = card.OpeningBalance;
         ClosingBalance = card.ClosingBalance;
-        HasPeriodStart = query.From is not null;
+        HasPeriod = query.From is not null || query.To is not null;
+        HasOpening = card.OpeningDate is not null;
+        OpeningDateText = card.OpeningDate is { } od ? L.T("on {0}", od.ToLocalTime().ToString("d MMM yyyy", L.Culture)) : "";
         PeriodText = DescribePeriod(FromDate, ToDate);
         Lines.Clear();
         foreach (var l in card.Lines) Lines.Add(l);
@@ -119,7 +123,7 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
         var lines = new List<string> { L.T("Item card - {0}", Item.Name) };
         if (SubTitle.Length > 0) lines.Add(SubTitle);
         lines.Add(L.T("Period: {0}", PeriodText));
-        if (HasPeriodStart) lines.Add(L.T("Opening balance: {0}", OpeningBalance));
+        if (HasOpening) lines.Add(L.T("Opening balance {0}: {1}", OpeningDateText, OpeningBalance));
         lines.Add(L.T("Total in: {0}   Total out: {1}   Balance: {2}", TotalIn, TotalOut, ClosingBalance));
         lines.Add(L.T("Printed {0}", DateTime.Now.ToString("d MMM yyyy HH:mm", L.Culture)));
         return lines;
@@ -145,7 +149,6 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
         if (dlg.ShowDialog() != true) return Task.CompletedTask;
 
         var rows = new List<IReadOnlyList<object?>>();
-        if (HasPeriodStart) rows.Add([null, L.T("Opening balance"), null, null, OpeningBalance]);
         rows.AddRange(Lines.Select(Cells));
         rows.Add([null, L.T("Total"), TotalIn, TotalOut, ClosingBalance]);
         if (TopCustomers.Count > 0)

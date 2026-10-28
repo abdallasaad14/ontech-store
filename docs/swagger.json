@@ -2588,8 +2588,14 @@
                     },
                     "openingBalance": {
                         "type": "integer",
-                        "description": "Quantity in the store just before the period (0 when the card starts from the first movement).",
+                        "description": "Quantity at the start of the card: just before the period, or the item's opening stock (the store sheet it was loaded from)\r\nwhen there is no start date. Opening stock is shown here, never as a movement line.",
                         "format": "int32"
+                    },
+                    "openingDate": {
+                        "type": "string",
+                        "description": "The date OnTech.Store.Contracts.ItemCardDto.OpeningBalance is for (the period start, or the opening stock's date). Null when the item had none.",
+                        "format": "date-time",
+                        "nullable": true
                     },
                     "closingBalance": {
                         "type": "integer",

@@ -48,14 +48,26 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         var q = db.StockMovements.AsNoTracking().Where(m => m.ItemId == id);
 
         var opening = 0;
+        DateTimeOffset? openingDate = null;
         if (f.From is { } fromOffset)
         {
             var from = fromOffset.UtcDateTime;
             opening = await q.Where(m => m.CreatedAt < from).OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
                 .Select(m => (int?)m.QuantityAfter).FirstOrDefaultAsync(ct) ?? 0;
+            openingDate = fromOffset;
             q = q.Where(m => m.CreatedAt >= from);
         }
         if (f.To is { } toOffset) { var to = toOffset.UtcDateTime; q = q.Where(m => m.CreatedAt <= to); }
+
+        // Opening stock (from the store sheet) is the card's starting balance, not a movement line.
+        var initial = await q.Where(m => m.Type == StockMovementType.Initial).OrderBy(m => m.CreatedAt)
+            .Select(m => new { m.Change, m.CreatedAt }).ToListAsync(ct);
+        if (initial.Count > 0)
+        {
+            opening += initial.Sum(m => m.Change);
+            openingDate ??= initial[0].CreatedAt.ToUtcOffset();
+        }
+        q = q.Where(m => m.Type != StockMovementType.Initial);
 
         var rows = await q.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id)
             .Select(m => new
@@ -103,7 +115,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         return new ItemCardDto
         {
             Item = item.ToDto(), From = f.From, To = f.To,
-            OpeningBalance = opening, ClosingBalance = lines.Count > 0 ? lines[^1].Balance : opening,
+            OpeningBalance = opening, OpeningDate = openingDate, ClosingBalance = lines.Count > 0 ? lines[^1].Balance : opening,
             TotalIn = lines.Sum(l => l.In), TotalOut = lines.Sum(l => l.Out), Lines = lines, TopCustomers = topCustomers,
         };
     }
