@@ -234,10 +234,10 @@ internal static class Arabic
         ["Add item"] = "إضافة صنف",
         ["Edit item"] = "تعديل صنف",
         ["Name *"] = "الاسم *",
-        ["Leave empty for the next code (C01, C02, ...)."] = "سيبه فاضي عشان ياخد الكود اللي بعده (C01، C02، ...).",
+        ["Digits only. Leave empty for the next code (01, 02, ...)."] = "أرقام بس. سيبه فاضي عشان ياخد الكود اللي بعده (01، 02، ...).",
         ["Category *"] = "الفئة *",
         ["Item name *"] = "اسم الصنف *",
-        ["Leave empty to generate one from the category, e.g. C01-004."] = "سيبه فاضي عشان يتعمل من كود الفئة، مثلاً C01-004.",
+        ["Digits only. Leave empty to get the category code plus a number, e.g. 01004."] = "أرقام بس. سيبه فاضي عشان ياخد كود الفئة وبعده رقم، مثلاً 01004.",
         ["Starting quantity"] = "الكمية في البداية",
         ["Low stock warning at"] = "نبّهني لما الكمية توصل",
         ["Shows \"Low\" when the quantity falls to this number. 0 turns the warning off."] = "بيظهر \"قليل\" لما الكمية توصل للرقم ده. 0 يقفل التنبيه.",
@@ -334,6 +334,7 @@ internal static class Arabic
         ["You can't disable your own account or remove your own admin rights."] = "مينفعش توقف حسابك أو تشيل صلاحية المسؤول من نفسك.",
         ["User is disabled."] = "المستخدم موقوف.",
         ["Database is not reachable."] = "قاعدة البيانات مش متاحة.",
+        ["Codes can only contain digits."] = "الكود لازم يكون أرقام بس.",
     };
 
     /// <summary>Messages that carry a name or number: English pattern → Arabic, with $1, $2 for the captured parts.</summary>
@@ -349,6 +350,7 @@ internal static class Arabic
         (P(@"A customer with tax number '(.+)' already exists\."), "فيه عميل بالرقم الضريبي '$1' بالفعل."),
         (P(@"An item named '(.+)' already exists in this category\."), "فيه صنف اسمه '$1' في الفئة دي بالفعل."),
         (P(@"Category code '(.+)' is already used\."), "كود الفئة '$1' مستخدم قبل كده."),
+        (P(@"Item code '(.+)' is already used\."), "كود الصنف '$1' مستخدم قبل كده."),
         (P(@"Customer number (\d+) is already used\."), "رقم العميل $1 مستخدم قبل كده."),
         (P(@"Receipt number '(.+)' is already used by another order\."), "رقم الإيصال '$1' مستخدم في طلب تاني."),
         (P(@"The username '(.+)' is already taken\."), "اسم المستخدم '$1' مستخدم قبل كده."),

@@ -1,5 +1,8 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using OnTech.Store.Api.Data;
+using OnTech.Store.Api.Services;
 using OnTech.Store.Contracts;
 using Xunit;
 
@@ -16,7 +19,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         var tag = Guid.NewGuid().ToString("N")[..6];
         var printers = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Printers {tag}" })).Read<CategoryDto>();
         var readers = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Readers {tag}" })).Read<CategoryDto>();
-        var fargo = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = printers.Id, Name = "Fargo DTC1250e", Code = "FARGO-1250", InitialQuantity = fargoQty, LowStockThreshold = 3 })).Read<ItemDto>();
+        var fargo = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = printers.Id, Name = "Fargo DTC1250e", InitialQuantity = fargoQty, LowStockThreshold = 3 })).Read<ItemDto>();
         var xpass = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = readers.Id, Name = "Xpass", InitialQuantity = xpassQty })).Read<ItemDto>();
         var customer = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Acme {tag}", PhoneNumber = "0100", TaxNumber = $"TAX-{tag}" })).Read<CustomerDto>();
         return (admin, customer, fargo, xpass);
@@ -155,7 +158,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         Assert.Equal(1, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?customerId={customer.Id}&itemId={xpass.Id}")).TotalCount);
         Assert.Equal(1, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?customerId={customer.Id}&categoryId={fargo.CategoryId}")).TotalCount);
         Assert.Equal(1, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?customerId={customer.Id}&search=urgent")).TotalCount);
-        Assert.Equal(1, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?customerId={customer.Id}&search=FARGO-1250")).TotalCount);
+        Assert.Equal(1, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?customerId={customer.Id}&search={fargo.Code}")).TotalCount);
         Assert.Equal(2, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?search={Uri.EscapeDataString(customer.CompanyName)}")).TotalCount);
 
         var me = await admin.GetAs<UserDto>("/api/auth/me");
@@ -340,28 +343,81 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
     public async Task Categories_and_items_get_generated_codes()
     {
         var admin = await _f.LoginAsync();
-        // The opening data is coded in sheet order: Data card is C01, Fargo C04.
+        // The opening data is coded in sheet order: Data card is 01, Fargo 04, and item codes are the category code plus 3 digits.
         var categories = await admin.GetAs<List<CategoryDto>>("/api/categories");
-        Assert.Equal("C01", categories.Single(c => c.Name == "Data card").Code);
+        Assert.Equal("01", categories.Single(c => c.Name == "Data card").Code);
         var fargo = categories.Single(c => c.Name == "Fargo");
-        Assert.Equal("C04", fargo.Code);
+        Assert.Equal("04", fargo.Code);
         var fargoItems = await admin.GetAs<List<ItemDto>>($"/api/items?categoryId={fargo.Id}");
-        Assert.Equal("C04-001", fargoItems.Single(i => i.Name == "HDP 5000 PRINTER SingleSide").Code);
-        Assert.All(fargoItems, i => Assert.StartsWith("C04-", i.Code));
+        Assert.Equal("04001", fargoItems.Single(i => i.Name == "HDP 5000 PRINTER SingleSide").Code);
+        Assert.All(fargoItems, i => Assert.Matches(@"^04\d{3}$", i.Code));
 
         var tag = Guid.NewGuid().ToString("N")[..6];
         var cat = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Coded {tag}" })).Read<CategoryDto>();
-        Assert.Matches(@"^C\d{2,}$", cat.Code);
+        Assert.Matches(@"^\d{2,}$", cat.Code);
         var first = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "One" })).Read<ItemDto>();
         var second = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Two" })).Read<ItemDto>();
-        var own = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Three", Code = "MODEL-X" })).Read<ItemDto>();
-        Assert.Equal($"{cat.Code}-001", first.Code);
-        Assert.Equal($"{cat.Code}-002", second.Code);
-        Assert.Equal("MODEL-X", own.Code);
+        var ownCode = "9" + Random.Shared.Next(10_000_000, 99_999_999);
+        var own = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Three", Code = ownCode })).Read<ItemDto>();
+        Assert.Equal($"{cat.Code}001", first.Code);
+        Assert.Equal($"{cat.Code}002", second.Code);
+        Assert.Equal(ownCode, own.Code);
 
         // Saving an item with the code box empty keeps its code.
         var edited = await (await admin.Put($"/api/items/{first.Id}", new UpdateItemRequest { CategoryId = cat.Id, Name = "One renamed" })).Read<ItemDto>();
-        Assert.Equal($"{cat.Code}-001", edited.Code);
-        Assert.Equal(HttpStatusCode.Conflict, (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Clash {tag}", Code = "C01" })).StatusCode);
+        Assert.Equal($"{cat.Code}001", edited.Code);
+        Assert.Equal(HttpStatusCode.Conflict, (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Clash {tag}", Code = "01" })).StatusCode);
+
+        // Codes are digits only, and an item code can't repeat, even in another category.
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Letters {tag}", Code = "C99" })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Four", Code = "MODEL-X" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await admin.Post("/api/items", new CreateItemRequest { CategoryId = fargo.Id, Name = $"Copy {tag}", Code = first.Code })).StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, (await admin.Put($"/api/items/{second.Id}", new UpdateItemRequest { CategoryId = cat.Id, Name = "Two", Code = "04001" })).StatusCode);
+    }
+
+    [Fact]
+    public async Task Search_by_code_finds_one_item_not_the_same_number_in_every_category()
+    {
+        var admin = await _f.LoginAsync();
+        var exact = Assert.Single(await admin.GetAs<List<ItemDto>>("/api/items?search=04001"));
+        Assert.Equal("HDP 5000 PRINTER SingleSide", exact.Name);
+        // "002" used to match item 002 of every category; now no code starts with it.
+        Assert.DoesNotContain(await admin.GetAs<List<ItemDto>>("/api/items?search=002"), i => i.Code!.EndsWith("002"));
+        // A category code lists that category's items.
+        Assert.All(await admin.GetAs<List<ItemDto>>("/api/items?search=04"), i => Assert.True(i.Code!.StartsWith("04") || i.Name.Contains("04") || i.CategoryName.Contains("04")));
+    }
+
+    [Fact]
+    public async Task Old_letter_codes_are_switched_to_digits_on_startup()
+    {
+        var admin = await _f.LoginAsync();
+        var tag = Guid.NewGuid().ToString("N")[..6];
+        var cat = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Old {tag}" })).Read<CategoryDto>();
+        var item = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Old item", InitialQuantity = 5 })).Read<ItemDto>();
+        var odd = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Odd item", InitialQuantity = 5 })).Read<ItemDto>();
+        var customer = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Old buyer {tag}" })).Read<CustomerDto>();
+        var order = await (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } })).Read<OrderDto>();
+
+        // Put the database back the way the old version left it.
+        var n = Random.Shared.Next(100, 999);
+        _f.WithDb(db =>
+        {
+            db.Categories.Single(c => c.Id == cat.Id).Code = $"C{n}";
+            db.Items.Single(i => i.Id == item.Id).Code = $"C{n}-007";
+            db.Items.Single(i => i.Id == odd.Id).Code = $"MODEL-{tag}";
+            db.OrderLines.Single(l => l.OrderId == order.Id).ItemCode = $"C{n}-007";
+            return db.SaveChanges();
+        });
+        using (var scope = _f.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
+            await CatalogCodes.MakeNumericAsync(db);
+            await CatalogCodes.BackfillAsync(db);
+        }
+
+        Assert.Equal($"{n}", (await admin.GetAs<CategoryDto>($"/api/categories/{cat.Id}")).Code);
+        Assert.Equal($"{n}007", (await admin.GetAs<ItemDto>($"/api/items/{item.Id}")).Code);
+        Assert.Matches($"^{n}\\d{{3}}$", (await admin.GetAs<ItemDto>($"/api/items/{odd.Id}")).Code);
+        Assert.Equal($"{n}007", _f.WithDb(db => db.OrderLines.Single(l => l.OrderId == order.Id).ItemCode));
     }
 }

@@ -26,7 +26,8 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         if (lowStockOnly) q = q.Where(i => i.LowStockThreshold > 0 && i.Quantity <= i.LowStockThreshold);
         if (inStockOnly) q = q.Where(i => i.Quantity > 0);
         if (search.Clean()?.ToLower() is { } s) // ToLower: SQLite compares case-sensitively; SQL Server doesn't.
-            q = q.Where(i => i.Name.ToLower().Contains(s) || (i.Code != null && i.Code.ToLower().Contains(s)) || i.Category.Name.ToLower().Contains(s));
+            // A code matches from its start, so "01" lists category 01's items and "01002" finds exactly one item.
+            q = q.Where(i => i.Name.ToLower().Contains(s) || (i.Code != null && i.Code.StartsWith(s)) || i.Category.Name.ToLower().Contains(s));
         var items = await q.OrderBy(i => i.Category.Name).ThenBy(i => i.Name).ToListAsync(ct);
         return items.Select(i => i.ToDto()).ToList();
     }
@@ -45,6 +46,7 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         var item = await NumberingGate.RunAsync(async () =>
         {
             await EnsureNameFree(req.CategoryId, name, null, ct);
+            if (req.Code.Clean() is { } code) await EnsureCodeFree(code, null, ct);
             var created = new Item
             {
                 Category = category, Name = name, Code = req.Code.Clean() ?? await CatalogCodes.NextItemCodeAsync(db, category, ct), Description = req.Description.Clean(),
@@ -68,6 +70,7 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
             throw ApiException.NotFound("Category");
         var name = req.Name.Trim();
         await EnsureNameFree(req.CategoryId, name, id, ct);
+        if (req.Code.Clean() is { } code && code != item.Code) await EnsureCodeFree(code, id, ct);
         item.CategoryId = req.CategoryId;
         item.Name = name;
         item.Code = req.Code.Clean() ?? item.Code; // Empty keeps the generated code.
@@ -120,5 +123,12 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         var lower = name.ToLower();
         if (await db.Items.AnyAsync(i => i.CategoryId == categoryId && i.Name.ToLower() == lower && i.Id != exceptId, ct))
             throw ApiException.Conflict($"An item named '{name}' already exists in this category.");
+    }
+
+    private async Task EnsureCodeFree(string code, int? exceptId, CancellationToken ct)
+    {
+        if (!CatalogCodes.IsValid(code)) throw ApiException.BadRequest("Codes can only contain digits.");
+        if (await db.Items.AnyAsync(i => i.Code == code && i.Id != exceptId, ct))
+            throw ApiException.Conflict($"Item code '{code}' is already used.");
     }
 }

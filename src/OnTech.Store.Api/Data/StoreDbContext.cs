@@ -46,7 +46,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.Code).HasMaxLength(64);
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasIndex(x => new { x.CategoryId, x.Name }).IsUnique();
-            e.HasIndex(x => x.Code);
+            e.HasIndex(x => x.Code).IsUnique();
             e.HasOne(x => x.Category).WithMany(c => c.Items).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
             e.ToTable(t =>
             {

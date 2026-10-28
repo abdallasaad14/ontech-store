@@ -15,7 +15,7 @@ public sealed class CategoryDto
 
 public sealed class SaveCategoryRequest
 {
-    /// <summary>Leave empty to get the next free code (C01, C02, ...) on create, or to keep the current one on edit.</summary>
+    /// <summary>Digits only. Leave empty to get the next free code (01, 02, ...) on create, or to keep the current one on edit.</summary>
     [MaxLength(10)] public string? Code { get; set; }
     [Required, MaxLength(100)] public string Name { get; set; } = "";
     [MaxLength(500)] public string? Description { get; set; }
@@ -41,7 +41,7 @@ public sealed class CreateItemRequest
 {
     [Range(1, int.MaxValue)] public int CategoryId { get; set; }
     [Required, MaxLength(150)] public string Name { get; set; } = "";
-    /// <summary>Optional model number, SKU or part code.</summary>
+    /// <summary>Digits only, unique across all items. Leave empty to get the next one (category code + 3 digits, e.g. 01007).</summary>
     [MaxLength(64)] public string? Code { get; set; }
     [MaxLength(500)] public string? Description { get; set; }
     [Range(0, 1_000_000)] public int InitialQuantity { get; set; }

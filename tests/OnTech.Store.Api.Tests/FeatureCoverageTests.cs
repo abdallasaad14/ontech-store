@@ -210,14 +210,14 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
     {
         var admin = await _f.LoginAsync();
         var categories = await admin.GetAs<List<CategoryDto>>("/api/categories");
-        var opening = categories.Where(c => c.Code is { Length: 3 } code && string.CompareOrdinal(code, "C11") <= 0).ToList();
+        var opening = categories.Where(c => c.Code is { Length: 2 } code && string.CompareOrdinal(code, "11") <= 0).ToList();
         Assert.Equal(11, opening.Count);
-        Assert.Equal("C01", opening[0].Code);
+        Assert.Equal("01", opening[0].Code);
 
         var items = await admin.GetAs<List<ItemDto>>("/api/items?includeInactive=true");
         var openingItems = items.Where(i => opening.Any(c => c.Id == i.CategoryId)).ToList();
         Assert.Equal(318, openingItems.Count);
-        Assert.All(openingItems, i => Assert.Matches(@"^C\d{2}-\d{3}$", i.Code!));
+        Assert.All(openingItems, i => Assert.Matches(@"^\d{5}$", i.Code!));
         Assert.Equal(openingItems.Count, openingItems.Select(i => i.Code).Distinct().Count());
         Assert.All(openingItems, i => Assert.True(i.Quantity >= 0));
 
