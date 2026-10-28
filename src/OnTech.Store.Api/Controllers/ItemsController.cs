@@ -36,6 +36,43 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     [HasPermission(Permission.ViewStock)]
     public async Task<ActionResult<ItemDto>> Get(int id, CancellationToken ct) => (await Load(id, ct)).ToDto();
 
+    /// <summary>The item card: every movement of this item, oldest first, with who supplied or took it and the balance after it.</summary>
+    [HttpGet("{id:int}/card")]
+    [HasPermission(Permission.ViewStock)]
+    public async Task<ActionResult<ItemCardDto>> Card(int id, CancellationToken ct)
+    {
+        var item = await Load(id, ct);
+        var rows = await db.StockMovements.AsNoTracking().Where(m => m.ItemId == id)
+            .OrderBy(m => m.CreatedAt).ThenBy(m => m.Id)
+            .Select(m => new
+            {
+                m.Id, m.CreatedAt, m.Type, m.Change, m.QuantityAfter, m.OrderId, m.StockInId, UserName = m.User.FullName, m.Note,
+                OrderNumber = m.Order != null ? m.Order.OrderNumber : null,
+                IssueVoucher = m.Order != null ? m.Order.IssueVoucherNumber : null,
+                Receipt = m.Order != null ? m.Order.ReceiptNumber : null,
+                Customer = m.Order != null ? m.Order.Customer.CompanyName : null,
+                StockInNumber = m.StockIn != null ? m.StockIn.StockInNumber : null,
+                InVoucher = m.StockIn != null ? m.StockIn.VoucherNumber : null,
+                SupplierInvoice = m.StockIn != null ? m.StockIn.SupplierInvoiceNumber : null,
+                Supplier = m.StockIn != null ? m.StockIn.Supplier.CompanyName : null,
+            })
+            .ToListAsync(ct);
+
+        var lines = rows.Select(m => new ItemCardLineDto
+        {
+            Id = m.Id, Date = m.CreatedAt.ToUtcOffset(), Type = m.Type,
+            In = Math.Max(m.Change, 0), Out = Math.Max(-m.Change, 0), Balance = m.QuantityAfter,
+            OrderId = m.OrderId, StockInId = m.StockInId,
+            DocumentNumber = m.OrderNumber ?? m.StockInNumber,
+            VoucherNumber = m.IssueVoucher ?? m.InVoucher,
+            InvoiceNumber = m.Receipt ?? m.SupplierInvoice,
+            PartyName = m.Customer ?? m.Supplier,
+            UserName = m.UserName, Note = m.Note,
+        }).ToList();
+
+        return new ItemCardDto { Item = item.ToDto(), TotalIn = lines.Sum(l => l.In), TotalOut = lines.Sum(l => l.Out), Lines = lines };
+    }
+
     [HttpPost]
     [HasPermission(Permission.ManageCatalog)]
     public async Task<ActionResult<ItemDto>> Create(CreateItemRequest req, CancellationToken ct)

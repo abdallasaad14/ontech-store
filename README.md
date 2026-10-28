@@ -156,6 +156,7 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 | GET | `/api/categories` | ViewStock | With item count and total units |
 | POST/PUT/DELETE | `/api/categories[/{id}]` | ManageCatalog | Delete removes an empty category, else disables it |
 | GET | `/api/items?categoryId=&search=&inStockOnly=&lowStockOnly=` | ViewStock | Items with available quantity (New Order picker) |
+| GET | `/api/items/{id}/card` | ViewStock | Item card: every movement in/out, oldest first, with customer or supplier, voucher, order/stock-in number and balance after each |
 | POST/PUT/DELETE | `/api/items[/{id}]` | ManageCatalog | Add (starts at 0) / edit details / disable. Quantity is never set directly |
 | GET | `/api/customers?search=` | any | Customer picker. A number matches that customer number exactly; text matches name, phone, tax number, contact |
 | POST/PUT/DELETE | `/api/customers[/{id}]` | ManageCustomers | Add / edit / disable |

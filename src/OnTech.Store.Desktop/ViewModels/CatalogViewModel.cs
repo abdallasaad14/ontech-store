@@ -147,6 +147,13 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     }
 
     [RelayCommand]
+    private void OpenCard(ItemDto? i)
+    {
+        if (i is null) return;
+        new Views.ItemCardWindow(new ItemCardViewModel(Session, i)) { Owner = System.Windows.Application.Current.MainWindow }.Show();
+    }
+
+    [RelayCommand]
     private Task DisableItemAsync(ItemDto? i)
     {
         if (i is null || !Dialogs.Confirm(L.T("Disable \"{0}\"? It stays in old orders but can't be ordered or restocked.", i.Name))) return Task.CompletedTask;

@@ -43,6 +43,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         { Permission.ViewStock, "GET", "/api/categories" },
         { Permission.ViewStock, "GET", "/api/dashboard/summary" },
         { Permission.ViewStock, "GET", "/api/stock-movements" },
+        { Permission.ViewStock, "GET", "/api/items/{item}/card" },
         { Permission.ManageCatalog, "POST", "/api/categories" },
         { Permission.ManageCatalog, "POST", "/api/items" },
         { Permission.ManageCatalog, "DELETE", "/api/items/{item}" },
@@ -505,5 +506,43 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var moves = await admin.GetAs<PagedResult<StockMovementDto>>($"/api/stock-movements?itemId={item.Id}&pageSize=200");
         Assert.Equal(final.Quantity, moves.Items.Sum(m => m.Change));
         Assert.Equal(final.Quantity, moves.Items[0].QuantityAfter);
+    }
+
+    [Fact]
+    public async Task Item_card_lists_every_movement_with_its_party_voucher_and_balance()
+    {
+        var (admin, _, item, customer) = await SetupAsync(qty: 0);
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Card supplier {Tag()}" })).Read<SupplierDto>();
+        var stockIn = await admin.StockIn(item.Id, 10, supplier);
+        var order = await (await admin.Post("/api/orders", new CreateOrderRequest
+        {
+            IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, WithReceipt = true, ReceiptNumber = $"R{Tag()}",
+            Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 4 } },
+        })).Read<OrderDto>();
+        await (await admin.Post($"/api/orders/{order.Id}/cancel", new CancelOrderRequest { Reason = "test" })).Read<OrderDto>();
+
+        var card = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card");
+
+        Assert.Equal(item.Id, card.Item.Id);
+        Assert.Equal(10, card.Item.Quantity);
+        Assert.Equal(14, card.TotalIn);
+        Assert.Equal(4, card.TotalOut);
+        Assert.Equal([StockMovementType.StockIn, StockMovementType.Order, StockMovementType.OrderCancelled], card.Lines.Select(l => l.Type));
+        Assert.Equal([10, 6, 10], card.Lines.Select(l => l.Balance));
+
+        var received = card.Lines[0];
+        Assert.Equal((10, 0), (received.In, received.Out));
+        Assert.Equal(supplier.CompanyName, received.PartyName);
+        Assert.Equal(stockIn.StockInNumber, received.DocumentNumber);
+        Assert.Equal(stockIn.VoucherNumber, received.VoucherNumber);
+
+        var issued = card.Lines[1];
+        Assert.Equal((0, 4), (issued.In, issued.Out));
+        Assert.Equal(customer.CompanyName, issued.PartyName);
+        Assert.Equal(order.OrderNumber, issued.DocumentNumber);
+        Assert.Equal(order.IssueVoucherNumber, issued.VoucherNumber);
+        Assert.Equal(order.ReceiptNumber, issued.InvoiceNumber);
+
+        Assert.Equal(404, (int)(await admin.GetAsync("/api/items/999999/card")).StatusCode);
     }
 }

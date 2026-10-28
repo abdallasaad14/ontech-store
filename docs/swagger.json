@@ -899,6 +899,47 @@
                 }
             }
         },
+        "/api/items/{id}/card": {
+            "get": {
+                "tags": [
+                    "Items"
+                ],
+                "summary": "The item card: every movement of this item, oldest first, with who supplied or took it and the balance after it.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItemCardDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItemCardDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItemCardDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/orders": {
             "post": {
                 "tags": [
@@ -2485,6 +2526,101 @@
                             "type": "string"
                         },
                         "description": "One line per skipped row, e.g. \"Row 12: number 7 already exists\".",
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false
+            },
+            "ItemCardDto": {
+                "type": "object",
+                "properties": {
+                    "item": {
+                        "$ref": "#/components/schemas/ItemDto"
+                    },
+                    "totalIn": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalOut": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemCardLineDto"
+                        },
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false,
+                "description": "An item's card (كارت الصنف): every movement in and out, oldest first, with the balance after each one."
+            },
+            "ItemCardLineDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/StockMovementType"
+                    },
+                    "in": {
+                        "type": "integer",
+                        "description": "Units that came in (0 when the movement took stock out).",
+                        "format": "int32"
+                    },
+                    "out": {
+                        "type": "integer",
+                        "description": "Units that went out (0 when the movement brought stock in).",
+                        "format": "int32"
+                    },
+                    "balance": {
+                        "type": "integer",
+                        "description": "Quantity in the store right after this movement.",
+                        "format": "int32"
+                    },
+                    "documentNumber": {
+                        "type": "string",
+                        "description": "The order or stock-in number, e.g. ORD-000012 or IN-000003.",
+                        "nullable": true
+                    },
+                    "orderId": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "stockInId": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "voucherNumber": {
+                        "type": "string",
+                        "description": "Issue voucher number for an order, receipt voucher number for a stock-in.",
+                        "nullable": true
+                    },
+                    "invoiceNumber": {
+                        "type": "string",
+                        "description": "Customer receipt number for an order, supplier invoice number for a stock-in.",
+                        "nullable": true
+                    },
+                    "partyName": {
+                        "type": "string",
+                        "description": "The customer who took the stock or the supplier who sent it.",
+                        "nullable": true
+                    },
+                    "userName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "note": {
+                        "type": "string",
                         "nullable": true
                     }
                 },

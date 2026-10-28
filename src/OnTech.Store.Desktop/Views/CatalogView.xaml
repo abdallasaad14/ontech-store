@@ -17,7 +17,7 @@
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="{l:T 'Items &amp; Categories'}" Style="{StaticResource PageTitle}"/>
-                <TextBlock Text="{l:T 'What the store holds. Items are disabled, never deleted, so old orders stay complete.'}" Style="{StaticResource PageSubtitle}"/>
+                <TextBlock Text="{l:T 'What the store holds. Double-click an item to open its card with every movement in and out.'}" Style="{StaticResource PageSubtitle}"/>
             </StackPanel>
         </DockPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
@@ -84,6 +84,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
+                                            <Button Content="{l:T 'Item card'}" Style="{StaticResource RowLink}"
+                                                    Command="{Binding DataContext.OpenCardCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                             <Button Content="{l:T 'Edit'}" Style="{StaticResource RowLink}"
                                                     Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                             <Button Content="{l:T 'Disable'}" Style="{StaticResource RowLink}" Foreground="{StaticResource DangerBrush}"

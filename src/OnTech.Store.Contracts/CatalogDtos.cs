@@ -78,6 +78,40 @@ public sealed class StockMovementDto
     public DateTimeOffset CreatedAt { get; init; }
 }
 
+/// <summary>An item's card (كارت الصنف): every movement in and out, oldest first, with the balance after each one.</summary>
+public sealed class ItemCardDto
+{
+    public ItemDto Item { get; init; } = null!;
+    public int TotalIn { get; init; }
+    public int TotalOut { get; init; }
+    public IReadOnlyList<ItemCardLineDto> Lines { get; init; } = Array.Empty<ItemCardLineDto>();
+}
+
+public sealed class ItemCardLineDto
+{
+    public long Id { get; init; }
+    public DateTimeOffset Date { get; init; }
+    public StockMovementType Type { get; init; }
+    /// <summary>Units that came in (0 when the movement took stock out).</summary>
+    public int In { get; init; }
+    /// <summary>Units that went out (0 when the movement brought stock in).</summary>
+    public int Out { get; init; }
+    /// <summary>Quantity in the store right after this movement.</summary>
+    public int Balance { get; init; }
+    /// <summary>The order or stock-in number, e.g. ORD-000012 or IN-000003.</summary>
+    public string? DocumentNumber { get; init; }
+    public int? OrderId { get; init; }
+    public int? StockInId { get; init; }
+    /// <summary>Issue voucher number for an order, receipt voucher number for a stock-in.</summary>
+    public string? VoucherNumber { get; init; }
+    /// <summary>Customer receipt number for an order, supplier invoice number for a stock-in.</summary>
+    public string? InvoiceNumber { get; init; }
+    /// <summary>The customer who took the stock or the supplier who sent it.</summary>
+    public string? PartyName { get; init; }
+    public string UserName { get; init; } = "";
+    public string? Note { get; init; }
+}
+
 public sealed class StockMovementQuery
 {
     public int? ItemId { get; set; }
