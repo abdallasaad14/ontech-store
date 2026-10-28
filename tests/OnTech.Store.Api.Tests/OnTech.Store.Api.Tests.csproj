@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OnTech.Store.Api\OnTech.Store.Api.csproj" />
+    <ProjectReference Include="..\..\src\OnTech.Store.Client\OnTech.Store.Client.csproj" />
   </ItemGroup>
 
 </Project>

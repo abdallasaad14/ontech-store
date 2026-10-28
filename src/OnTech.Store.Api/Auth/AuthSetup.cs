@@ -49,7 +49,6 @@ public static class AuthSetup
                         {
                             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                             new Claim("name", user.FullName),
-                            new Claim(ClaimTypes.Email, user.Email),
                             new Claim(StoreClaims.IsAdmin, user.IsAdmin ? "true" : "false"),
                             new Claim(StoreClaims.Permissions, ((int)user.EffectivePermissions).ToString()),
                         }, JwtBearerDefaults.AuthenticationScheme, "name", ClaimTypes.Role);

@@ -18,7 +18,7 @@ namespace OnTech.Store.Api.Tests;
 /// </summary>
 public sealed class StoreApiFactory : WebApplicationFactory<Program>
 {
-    public const string AdminEmail = "admin@test.local";
+    public const string AdminUsername = "admin";
     public const string AdminPassword = "Admin!12345";
     private readonly string _dbPath = Path.Combine(Path.GetTempPath(), $"ontech-test-{Guid.NewGuid():N}.db");
     private readonly string? _sqlServer = Environment.GetEnvironmentVariable("ONTECH_TEST_SQLSERVER");
@@ -41,14 +41,14 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
             builder.UseSetting("ConnectionStrings:Store", $"Data Source={_dbPath};Default Timeout=30;Pooling=False");
         }
         builder.UseSetting("Jwt:SigningKey", "test-signing-key-0123456789abcdefghijklmnop");
-        builder.UseSetting("Seed:AdminEmail", AdminEmail);
+        builder.UseSetting("Seed:AdminUsername", AdminUsername);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
     }
 
-    public async Task<HttpClient> LoginAsync(string email = AdminEmail, string password = AdminPassword)
+    public async Task<HttpClient> LoginAsync(string username = AdminUsername, string password = AdminPassword)
     {
         var client = CreateClient();
-        var res = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest { Email = email, Password = password }, Json);
+        var res = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest { Username = username, Password = password }, Json);
         res.EnsureSuccessStatusCode();
         var login = (await res.Content.ReadFromJsonAsync<LoginResponse>(Json))!;
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);

@@ -17,10 +17,10 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
         b.Entity<User>(e =>
         {
             e.Property(x => x.FullName).HasMaxLength(150).IsRequired();
-            e.Property(x => x.Email).HasMaxLength(256).IsRequired();
-            e.Property(x => x.NormalizedEmail).HasMaxLength(256).IsRequired();
+            e.Property(x => x.Username).HasMaxLength(64).IsRequired();
+            e.Property(x => x.NormalizedUsername).HasMaxLength(64).IsRequired();
             e.Property(x => x.PasswordHash).HasMaxLength(512).IsRequired();
-            e.HasIndex(x => x.NormalizedEmail).IsUnique();
+            e.HasIndex(x => x.NormalizedUsername).IsUnique();
             e.Ignore(x => x.EffectivePermissions);
         });
 

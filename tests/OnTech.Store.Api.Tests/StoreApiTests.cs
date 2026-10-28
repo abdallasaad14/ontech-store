@@ -39,7 +39,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
     [Fact]
     public async Task Wrong_password_is_rejected()
     {
-        var res = await _f.CreateClient().Post("/api/auth/login", new LoginRequest { Email = StoreApiFactory.AdminEmail, Password = "nope" });
+        var res = await _f.CreateClient().Post("/api/auth/login", new LoginRequest { Username = StoreApiFactory.AdminUsername, Password = "nope" });
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
     }
 
@@ -224,14 +224,14 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
     public async Task Standard_user_permissions_are_enforced_and_disabling_is_immediate()
     {
         var (admin, customer, fargo, _) = await SetupAsync();
-        var email = $"user{Guid.NewGuid():N}"[..14] + "@test.local";
+        var username = $"user{Guid.NewGuid():N}"[..14];
         var user = await (await admin.Post("/api/users", new CreateUserRequest
         {
-            FullName = "Store Keeper", Email = email, Password = "Keeper!123", Permissions = Permission.StandardUser,
+            FullName = "Store Keeper", Username = username, Password = "Keeper!123", Permissions = Permission.StandardUser,
         })).Read<UserDto>();
         Assert.True(user.MustChangePassword);
 
-        var keeper = await _f.LoginAsync(email, "Keeper!123");
+        var keeper = await _f.LoginAsync(username, "Keeper!123");
         // Allowed: home page actions.
         await (await keeper.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { new() { ItemId = fargo.Id, Quantity = 1 } } })).Read<OrderDto>();
         await (await keeper.Post($"/api/items/{fargo.Id}/add-quantity", new AddQuantityRequest { Quantity = 1 })).Read<ItemDto>();
@@ -244,7 +244,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         // Admin grants catalog permission: applies without logging in again.
         await (await admin.Put($"/api/users/{user.Id}", new UpdateUserRequest
         {
-            FullName = user.FullName, Email = email, IsActive = true, Permissions = Permission.StandardUser | Permission.ManageCatalog,
+            FullName = user.FullName, Username = username, IsActive = true, Permissions = Permission.StandardUser | Permission.ManageCatalog,
         })).Read<UserDto>();
         Assert.Equal(HttpStatusCode.Created, (await keeper.Post("/api/categories", new SaveCategoryRequest { Name = "Cables " + Guid.NewGuid().ToString("N")[..6] })).StatusCode);
 
@@ -256,11 +256,11 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
     public async Task Change_password_works()
     {
         var admin = await _f.LoginAsync();
-        var email = $"pw{Guid.NewGuid():N}"[..12] + "@test.local";
-        await (await admin.Post("/api/users", new CreateUserRequest { FullName = "Pw", Email = email, Password = "First!1234" })).Read<UserDto>();
-        var u = await _f.LoginAsync(email, "First!1234");
+        var username = $"pw{Guid.NewGuid():N}"[..12];
+        await (await admin.Post("/api/users", new CreateUserRequest { FullName = "Pw", Username = username, Password = "First!1234" })).Read<UserDto>();
+        var u = await _f.LoginAsync(username, "First!1234");
         Assert.Equal(HttpStatusCode.NoContent, (await u.Post("/api/auth/change-password", new ChangePasswordRequest { CurrentPassword = "First!1234", NewPassword = "Second!1234" })).StatusCode);
-        var again = await _f.LoginAsync(email, "Second!1234");
+        var again = await _f.LoginAsync(username, "Second!1234");
         Assert.False((await again.GetAs<UserDto>("/api/auth/me")).MustChangePassword);
     }
 
@@ -269,7 +269,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
     {
         var admin = await _f.LoginAsync();
         var me = await admin.GetAs<UserDto>("/api/auth/me");
-        var res = await admin.Put($"/api/users/{me.Id}", new UpdateUserRequest { FullName = me.FullName, Email = me.Email, IsAdmin = false, IsActive = true });
+        var res = await admin.Put($"/api/users/{me.Id}", new UpdateUserRequest { FullName = me.FullName, Username = me.Username, IsAdmin = false, IsActive = true });
         Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
     }
 
