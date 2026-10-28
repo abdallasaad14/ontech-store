@@ -26,6 +26,8 @@ public class User
 public class Category
 {
     public int Id { get; set; }
+    /// <summary>Short code such as C01; items in it get codes like C01-001. Unique.</summary>
+    public string? Code { get; set; }
     public string Name { get; set; } = "";
     public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
@@ -52,6 +54,8 @@ public class Item
 public class Customer
 {
     public int Id { get; set; }
+    /// <summary>OnTech's own customer number (from the old customer sheet). Unique; new customers get the next free one.</summary>
+    public int? CustomerNumber { get; set; }
     public string CompanyName { get; set; } = "";
     public string? PhoneNumber { get; set; }
     public string? TaxNumber { get; set; }
@@ -116,4 +120,11 @@ public class StockMovement
     public User User { get; set; } = null!;
     public string? Note { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+/// <summary>Marks a one-time data load (see <see cref="OpeningData"/>) as done, so it never runs twice.</summary>
+public class AppliedSeed
+{
+    public string Name { get; set; } = "";
+    public DateTime AppliedAt { get; set; }
 }

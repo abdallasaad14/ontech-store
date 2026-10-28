@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -18,6 +20,7 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     // Edit form
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] private int? _editingId;
+    [ObservableProperty] private string? _customerNumber;
     [ObservableProperty] private string _companyName = "";
     [ObservableProperty] private string? _phoneNumber;
     [ObservableProperty] private string? _taxNumber;
@@ -47,6 +50,7 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     {
         if (!CanEdit) return;
         EditingId = null;
+        CustomerNumber = null;
         CompanyName = "";
         PhoneNumber = TaxNumber = ContactPerson = Email = Address = Notes = null;
         IsActive = true;
@@ -58,6 +62,7 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     {
         if (c is null || !CanEdit) return;
         EditingId = c.Id;
+        CustomerNumber = c.CustomerNumber?.ToString();
         CompanyName = c.CompanyName;
         PhoneNumber = c.PhoneNumber;
         TaxNumber = c.TaxNumber;
@@ -75,8 +80,12 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     private Task SaveAsync() => RunAsync(async () =>
     {
         if (string.IsNullOrWhiteSpace(CompanyName)) throw new ArgumentException("Company name is required.");
+        int? number = null;
+        if (Clean(CustomerNumber) is { } numberText)
+            number = int.TryParse(numberText, out var n) && n > 0 ? n : throw new ArgumentException("Customer number must be a whole number, 1 or more.");
         var req = new SaveCustomerRequest
         {
+            CustomerNumber = number,
             CompanyName = CompanyName.Trim(),
             PhoneNumber = Clean(PhoneNumber),
             TaxNumber = Clean(TaxNumber),
@@ -92,6 +101,34 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
         Selected = Customers.FirstOrDefault(c => c.Id == saved.Id);
         SuccessMessage = EditingId is null ? $"Customer \"{saved.CompanyName}\" added." : $"Customer \"{saved.CompanyName}\" saved.";
     });
+
+    /// <summary>Adds customers from an Excel or CSV sheet. Numbers already in the store are skipped, so importing twice is safe.</summary>
+    [RelayCommand]
+    private Task ImportAsync()
+    {
+        if (!CanEdit) return Task.CompletedTask;
+        var dlg = new OpenFileDialog { Title = "Import customers", Filter = "Excel or CSV|*.xlsx;*.csv|All files|*.*" };
+        if (dlg.ShowDialog() != true) return Task.CompletedTask;
+        return RunAsync(async () =>
+        {
+            List<ImportCustomerRow> rows;
+            try { rows = CustomerSheet.Read(dlg.FileName); }
+            catch (System.IO.IOException) { throw new ArgumentException("Couldn't open the file. Close it in Excel and try again."); }
+            catch (Exception ex) when (ex is System.IO.InvalidDataException or InvalidOperationException or System.Xml.XmlException)
+            { throw new ArgumentException("Couldn't read this file. Save it as .xlsx or .csv and try again."); }
+            if (rows.Count == 0) throw new ArgumentException("No customers found in this file.");
+
+            var sample = string.Join("\n", rows.Take(3).Select(r => $"  {r.CustomerNumber?.ToString() ?? "(new number)"}  {r.CompanyName}"));
+            if (!Dialogs.Confirm($"Found {rows.Count} customers in {System.IO.Path.GetFileName(dlg.FileName)}, for example:\n\n{sample}\n\nImport them?")) return;
+
+            var result = await Api.ImportCustomersAsync(new ImportCustomersRequest { Rows = rows });
+            IsEditing = false;
+            await ReloadAsync();
+            SuccessMessage = result.Skipped == 0
+                ? $"{result.Added} customers imported."
+                : $"{result.Added} customers imported, {result.Skipped} skipped: " + string.Join("; ", result.Messages.Take(5)) + (result.Messages.Count > 5 ? "; ..." : "");
+        });
+    }
 
     [RelayCommand]
     private Task DisableAsync(CustomerDto? c)

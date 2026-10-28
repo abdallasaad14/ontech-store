@@ -41,6 +41,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     };
 
     // Category form
+    [ObservableProperty] private string? _categoryCode;
     [ObservableProperty] private string _categoryName = "";
     [ObservableProperty] private string? _categoryDescription;
     [ObservableProperty] private bool _categoryActive = true;
@@ -86,6 +87,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     private void NewCategory()
     {
         EditingId = null;
+        CategoryCode = null;
         CategoryName = "";
         CategoryDescription = null;
         CategoryActive = true;
@@ -97,6 +99,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     {
         if (c is null) return;
         EditingId = c.Id;
+        CategoryCode = c.Code;
         CategoryName = c.Name;
         CategoryDescription = c.Description;
         CategoryActive = c.IsActive;
@@ -197,6 +200,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         if (string.IsNullOrWhiteSpace(CategoryName)) throw new ArgumentException("Enter the category name.");
         var req = new SaveCategoryRequest
         {
+            Code = string.IsNullOrWhiteSpace(CategoryCode) ? null : CategoryCode.Trim(),
             Name = CategoryName.Trim(),
             Description = string.IsNullOrWhiteSpace(CategoryDescription) ? null : CategoryDescription.Trim(),
             IsActive = CategoryActive,

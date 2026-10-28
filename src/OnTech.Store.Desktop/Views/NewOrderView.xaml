@@ -57,10 +57,12 @@
                                 <Button DockPanel.Dock="Right" Content="+ New customer" Style="{StaticResource LinkButton}" Margin="0,-6,0,0"
                                         Command="{Binding QuickAddCustomerCommand}"
                                         Visibility="{Binding CanAddCustomer, Converter={StaticResource BoolToVisibility}}"/>
-                                <TextBlock Text="Customer" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="Customer (type number or name)" Style="{StaticResource FieldLabel}"/>
                             </DockPanel>
-                            <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="CompanyName"
-                                      IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="CompanyName"/>
+                            <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged, Delay=200}" Margin="0,0,0,6"
+                                     ToolTip="Type the customer number or part of the name"/>
+                            <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Display"
+                                      IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="Display"/>
                         </StackPanel>
                     </Grid>
 

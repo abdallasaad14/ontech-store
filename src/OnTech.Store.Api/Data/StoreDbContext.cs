@@ -11,9 +11,16 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderLine> OrderLines => Set<OrderLine>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<AppliedSeed> AppliedSeeds => Set<AppliedSeed>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<AppliedSeed>(e =>
+        {
+            e.HasKey(x => x.Name);
+            e.Property(x => x.Name).HasMaxLength(100);
+        });
+
         b.Entity<User>(e =>
         {
             e.Property(x => x.FullName).HasMaxLength(150).IsRequired();
@@ -26,6 +33,8 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
 
         b.Entity<Category>(e =>
         {
+            e.Property(x => x.Code).HasMaxLength(10);
+            e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasIndex(x => x.Name).IsUnique();
@@ -57,6 +66,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.Notes).HasMaxLength(1000);
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
+            e.HasIndex(x => x.CustomerNumber).IsUnique();
         });
 
         b.Entity<Order>(e =>

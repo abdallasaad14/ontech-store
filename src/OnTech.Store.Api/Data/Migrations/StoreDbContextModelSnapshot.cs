@@ -22,6 +22,20 @@ namespace OnTech.Store.Api.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("OnTech.Store.Api.Data.AppliedSeed", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("AppliedSeeds");
+                });
+
             modelBuilder.Entity("OnTech.Store.Api.Data.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -29,6 +43,10 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -46,6 +64,10 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("[Code] IS NOT NULL");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -80,6 +102,9 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CustomerNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -102,6 +127,10 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyName");
+
+                    b.HasIndex("CustomerNumber")
+                        .IsUnique()
+                        .HasFilter("[CustomerNumber] IS NOT NULL");
 
                     b.HasIndex("TaxNumber");
 

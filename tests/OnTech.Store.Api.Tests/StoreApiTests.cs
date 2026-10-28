@@ -285,4 +285,83 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         var swagger = await _f.CreateClient().GetAsync("/swagger/v1/swagger.json");
         Assert.Equal(HttpStatusCode.OK, swagger.StatusCode);
     }
+
+    [Fact]
+    public async Task Customers_import_from_sheet_and_search_by_number_or_name()
+    {
+        var admin = await _f.LoginAsync();
+        var tag = Guid.NewGuid().ToString("N")[..6];
+        var n = Random.Shared.Next(1_000_000, 9_000_000);
+        var req = new ImportCustomersRequest
+        {
+            Rows =
+            {
+                new() { CustomerNumber = n, CompanyName = $"  Star Medical {tag} " },
+                new() { CustomerNumber = n + 1, CompanyName = $"Food Bank {tag}" },
+                new() { CustomerNumber = n + 2, CompanyName = $"food bank {tag}" }, // same name, different number: kept
+                new() { CustomerNumber = n + 3, CompanyName = "  " },
+                new() { CustomerNumber = n, CompanyName = $"Duplicate {tag}" },
+            },
+        };
+        var result = await (await admin.Post("/api/customers/import", req)).Read<ImportCustomersResult>();
+        Assert.Equal(3, result.Added);
+        Assert.Equal(2, result.Skipped);
+        Assert.Equal(2, result.Messages.Count);
+
+        // Importing the same sheet again adds nothing.
+        var again = await (await admin.Post("/api/customers/import", req)).Read<ImportCustomersResult>();
+        Assert.Equal(0, again.Added);
+
+        var byNumber = await admin.GetAs<List<CustomerDto>>($"/api/customers?search={n}");
+        var star = Assert.Single(byNumber);
+        Assert.Equal($"Star Medical {tag}", star.CompanyName);
+        Assert.Equal(2, (await admin.GetAs<List<CustomerDto>>($"/api/customers?search=bank%20{tag}")).Count);
+
+        // New customers get the next number; a taken number is refused.
+        var added = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"New Co {tag}" })).Read<CustomerDto>();
+        Assert.True(added.CustomerNumber > n + 2);
+        var clash = await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Other {tag}", CustomerNumber = n });
+        Assert.Equal(HttpStatusCode.Conflict, clash.StatusCode);
+    }
+
+    [Fact]
+    public async Task Opening_stock_and_customers_are_loaded_once()
+    {
+        var admin = await _f.LoginAsync();
+        var items = await admin.GetAs<List<ItemDto>>("/api/items?search=Retransfer%20Film");
+        Assert.Contains(items, i => i.CategoryName == "Fargo" && i.Name == "HDP 5000e Retransfer Film" && i.Quantity == 5);
+        var proximity = Assert.Single(await admin.GetAs<List<ItemDto>>("/api/items?search=Proximity%20with%20serial"));
+        Assert.Equal("PVC CARD", proximity.CategoryName);
+        Assert.Equal("Star Medical Center", Assert.Single(await admin.GetAs<List<CustomerDto>>("/api/customers?search=2"), c => c.CustomerNumber == 2).CompanyName);
+        Assert.Equal(1, _f.WithDb(db => db.AppliedSeeds.Count()));
+    }
+
+    [Fact]
+    public async Task Categories_and_items_get_generated_codes()
+    {
+        var admin = await _f.LoginAsync();
+        // The opening data is coded in sheet order: Data card is C01, Fargo C04.
+        var categories = await admin.GetAs<List<CategoryDto>>("/api/categories");
+        Assert.Equal("C01", categories.Single(c => c.Name == "Data card").Code);
+        var fargo = categories.Single(c => c.Name == "Fargo");
+        Assert.Equal("C04", fargo.Code);
+        var fargoItems = await admin.GetAs<List<ItemDto>>($"/api/items?categoryId={fargo.Id}");
+        Assert.Equal("C04-001", fargoItems.Single(i => i.Name == "HDP 5000 PRINTER SingleSide").Code);
+        Assert.All(fargoItems, i => Assert.StartsWith("C04-", i.Code));
+
+        var tag = Guid.NewGuid().ToString("N")[..6];
+        var cat = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Coded {tag}" })).Read<CategoryDto>();
+        Assert.Matches(@"^C\d{2,}$", cat.Code);
+        var first = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "One" })).Read<ItemDto>();
+        var second = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Two" })).Read<ItemDto>();
+        var own = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Three", Code = "MODEL-X" })).Read<ItemDto>();
+        Assert.Equal($"{cat.Code}-001", first.Code);
+        Assert.Equal($"{cat.Code}-002", second.Code);
+        Assert.Equal("MODEL-X", own.Code);
+
+        // Saving an item with the code box empty keeps its code.
+        var edited = await (await admin.Put($"/api/items/{first.Id}", new UpdateItemRequest { CategoryId = cat.Id, Name = "One renamed" })).Read<ItemDto>();
+        Assert.Equal($"{cat.Code}-001", edited.Code);
+        Assert.Equal(HttpStatusCode.Conflict, (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Clash {tag}", Code = "C01" })).StatusCode);
+    }
 }
