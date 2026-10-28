@@ -43,6 +43,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         { Permission.ViewStock, "GET", "/api/categories" },
         { Permission.ViewStock, "GET", "/api/dashboard/summary" },
         { Permission.ViewStock, "GET", "/api/stock-movements" },
+        { Permission.ViewStock, "GET", "/api/items/{item}/card" },
         { Permission.ManageCatalog, "POST", "/api/categories" },
         { Permission.ManageCatalog, "POST", "/api/items" },
         { Permission.ManageCatalog, "DELETE", "/api/items/{item}" },
@@ -505,5 +506,94 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var moves = await admin.GetAs<PagedResult<StockMovementDto>>($"/api/stock-movements?itemId={item.Id}&pageSize=200");
         Assert.Equal(final.Quantity, moves.Items.Sum(m => m.Change));
         Assert.Equal(final.Quantity, moves.Items[0].QuantityAfter);
+    }
+
+    [Fact]
+    public async Task Item_card_lists_every_movement_with_its_party_voucher_and_balance()
+    {
+        var (admin, _, item, customer) = await SetupAsync(qty: 0);
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Card supplier {Tag()}" })).Read<SupplierDto>();
+        var stockIn = await admin.StockIn(item.Id, 10, supplier);
+        var order = await (await admin.Post("/api/orders", new CreateOrderRequest
+        {
+            IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, WithReceipt = true, ReceiptNumber = $"R{Tag()}",
+            Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 4 } },
+        })).Read<OrderDto>();
+        await (await admin.Post($"/api/orders/{order.Id}/cancel", new CancelOrderRequest { Reason = "test" })).Read<OrderDto>();
+
+        var card = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card");
+
+        Assert.Equal(item.Id, card.Item.Id);
+        Assert.Equal(10, card.Item.Quantity);
+        Assert.Equal(14, card.TotalIn);
+        Assert.Equal(4, card.TotalOut);
+        Assert.Equal([StockMovementType.StockIn, StockMovementType.Order, StockMovementType.OrderCancelled], card.Lines.Select(l => l.Type));
+        Assert.Equal([10, 6, 10], card.Lines.Select(l => l.Balance));
+
+        var received = card.Lines[0];
+        Assert.Equal((10, 0), (received.In, received.Out));
+        Assert.Equal(supplier.CompanyName, received.PartyName);
+        Assert.Equal(stockIn.StockInNumber, received.DocumentNumber);
+        Assert.Equal(stockIn.VoucherNumber, received.VoucherNumber);
+
+        var issued = card.Lines[1];
+        Assert.Equal((0, 4), (issued.In, issued.Out));
+        Assert.Equal(customer.CompanyName, issued.PartyName);
+        Assert.Equal(order.OrderNumber, issued.DocumentNumber);
+        Assert.Equal(order.IssueVoucherNumber, issued.VoucherNumber);
+        Assert.Equal(order.ReceiptNumber, issued.InvoiceNumber);
+
+        Assert.Equal(404, (int)(await admin.GetAsync("/api/items/999999/card")).StatusCode);
+        Assert.Empty(card.TopCustomers); // the only order was cancelled
+        Assert.Null(card.OpeningDate); // a new item has no opening stock
+    }
+
+    [Fact]
+    public async Task Item_card_shows_opening_stock_as_the_starting_balance_not_as_a_line()
+    {
+        var admin = await _f.LoginAsync();
+        var items = await admin.GetAs<List<ItemDto>>("/api/items?inStockOnly=true&search=Fargo");
+        var item = items.First();
+        var card = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card");
+
+        Assert.DoesNotContain(card.Lines, l => l.Type == StockMovementType.Initial);
+        Assert.NotNull(card.OpeningDate);
+        Assert.True(card.OpeningBalance > 0);
+        Assert.Equal(card.Item.Quantity, card.OpeningBalance + card.TotalIn - card.TotalOut);
+        Assert.Equal(card.Item.Quantity, card.ClosingBalance);
+    }
+
+    [Fact]
+    public async Task Item_card_period_starts_from_the_balance_before_it_and_ranks_customers()
+    {
+        var (admin, _, item, customer) = await SetupAsync(qty: 20);
+        var other = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Card other {Tag()}" })).Read<CustomerDto>();
+        async Task<OrderDto> Order(CustomerDto c, int qty) => await (await admin.Post("/api/orders", new CreateOrderRequest
+        {
+            IssueVoucherNumber = TestStock.Voucher(), CustomerId = c.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = qty } },
+        })).Read<OrderDto>();
+        await Order(customer, 2);
+        await Order(other, 5);
+        var cancelled = await Order(customer, 4);
+        await (await admin.Post($"/api/orders/{cancelled.Id}/cancel", new CancelOrderRequest { Reason = "test" })).Read<OrderDto>();
+        await Order(customer, 1);
+
+        var all = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card");
+        Assert.Equal(0, all.OpeningBalance);
+        Assert.Equal(12, all.ClosingBalance);
+        Assert.Equal([(other.Id, 5, 1), (customer.Id, 3, 2)], all.TopCustomers.Select(c => (c.CustomerId, c.Quantity, c.Orders)));
+
+        // A period after every movement: nothing in it, and it opens and closes at today's quantity.
+        var later = Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(1).ToString("o"));
+        var future = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card?from={later}");
+        Assert.Empty(future.Lines);
+        Assert.Equal((12, 12, 0, 0), (future.OpeningBalance, future.ClosingBalance, future.TotalIn, future.TotalOut));
+        Assert.Empty(future.TopCustomers);
+
+        // A period before the item existed: empty, balance 0.
+        var earlier = Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(-1).ToString("o"));
+        var past = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card?to={earlier}");
+        Assert.Empty(past.Lines);
+        Assert.Equal((0, 0), (past.OpeningBalance, past.ClosingBalance));
     }
 }

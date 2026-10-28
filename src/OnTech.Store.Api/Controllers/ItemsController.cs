@@ -36,6 +36,90 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     [HasPermission(Permission.ViewStock)]
     public async Task<ActionResult<ItemDto>> Get(int id, CancellationToken ct) => (await Load(id, ct)).ToDto();
 
+    /// <summary>
+    /// The item card: every movement of this item, oldest first, with who supplied or took it and the balance after it.
+    /// With a period, also the balance just before it and the customers who took the most within it.
+    /// </summary>
+    [HttpGet("{id:int}/card")]
+    [HasPermission(Permission.ViewStock)]
+    public async Task<ActionResult<ItemCardDto>> Card(int id, [FromQuery] ItemCardQuery f, CancellationToken ct)
+    {
+        var item = await Load(id, ct);
+        var q = db.StockMovements.AsNoTracking().Where(m => m.ItemId == id);
+
+        var opening = 0;
+        DateTimeOffset? openingDate = null;
+        if (f.From is { } fromOffset)
+        {
+            var from = fromOffset.UtcDateTime;
+            opening = await q.Where(m => m.CreatedAt < from).OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+                .Select(m => (int?)m.QuantityAfter).FirstOrDefaultAsync(ct) ?? 0;
+            openingDate = fromOffset;
+            q = q.Where(m => m.CreatedAt >= from);
+        }
+        if (f.To is { } toOffset) { var to = toOffset.UtcDateTime; q = q.Where(m => m.CreatedAt <= to); }
+
+        // Opening stock (from the store sheet) is the card's starting balance, not a movement line.
+        var initial = await q.Where(m => m.Type == StockMovementType.Initial).OrderBy(m => m.CreatedAt)
+            .Select(m => new { m.Change, m.CreatedAt }).ToListAsync(ct);
+        if (initial.Count > 0)
+        {
+            opening += initial.Sum(m => m.Change);
+            openingDate ??= initial[0].CreatedAt.ToUtcOffset();
+        }
+        q = q.Where(m => m.Type != StockMovementType.Initial);
+
+        var rows = await q.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id)
+            .Select(m => new
+            {
+                m.Id, m.CreatedAt, m.Type, m.Change, m.QuantityAfter, m.OrderId, m.StockInId, UserName = m.User.FullName, m.Note,
+                OrderNumber = m.Order != null ? m.Order.OrderNumber : null,
+                IssueVoucher = m.Order != null ? m.Order.IssueVoucherNumber : null,
+                Receipt = m.Order != null ? m.Order.ReceiptNumber : null,
+                CustomerId = m.Order != null ? (int?)m.Order.CustomerId : null,
+                Customer = m.Order != null ? m.Order.Customer.CompanyName : null,
+                StockInNumber = m.StockIn != null ? m.StockIn.StockInNumber : null,
+                InVoucher = m.StockIn != null ? m.StockIn.VoucherNumber : null,
+                SupplierInvoice = m.StockIn != null ? m.StockIn.SupplierInvoiceNumber : null,
+                Supplier = m.StockIn != null ? m.StockIn.Supplier.CompanyName : null,
+            })
+            .ToListAsync(ct);
+
+        var lines = rows.Select(m => new ItemCardLineDto
+        {
+            Id = m.Id, Date = m.CreatedAt.ToUtcOffset(), Type = m.Type,
+            In = Math.Max(m.Change, 0), Out = Math.Max(-m.Change, 0), Balance = m.QuantityAfter,
+            OrderId = m.OrderId, StockInId = m.StockInId,
+            DocumentNumber = m.OrderNumber ?? m.StockInNumber,
+            VoucherNumber = m.IssueVoucher ?? m.InVoucher,
+            InvoiceNumber = m.Receipt ?? m.SupplierInvoice,
+            PartyName = m.Customer ?? m.Supplier,
+            UserName = m.UserName, Note = m.Note,
+        }).ToList();
+
+        // An order takes stock out and its cancellation puts it back, so the sum per customer is what they kept.
+        var topCustomers = rows
+            .Where(m => m.CustomerId is not null && m.Type is StockMovementType.Order or StockMovementType.OrderCancelled)
+            .GroupBy(m => (Id: m.CustomerId!.Value, Name: m.Customer!))
+            .Select(g => new ItemCardCustomerDto
+            {
+                CustomerId = g.Key.Id, CustomerName = g.Key.Name, Quantity = -g.Sum(m => m.Change),
+                Orders = g.Where(m => m.Type == StockMovementType.Order).Select(m => m.OrderId).Distinct().Count()
+                    - g.Where(m => m.Type == StockMovementType.OrderCancelled).Select(m => m.OrderId).Distinct().Count(),
+            })
+            .Where(c => c.Quantity > 0)
+            .OrderByDescending(c => c.Quantity).ThenBy(c => c.CustomerName)
+            .Take(5)
+            .ToList();
+
+        return new ItemCardDto
+        {
+            Item = item.ToDto(), From = f.From, To = f.To,
+            OpeningBalance = opening, OpeningDate = openingDate, ClosingBalance = lines.Count > 0 ? lines[^1].Balance : opening,
+            TotalIn = lines.Sum(l => l.In), TotalOut = lines.Sum(l => l.Out), Lines = lines, TopCustomers = topCustomers,
+        };
+    }
+
     [HttpPost]
     [HasPermission(Permission.ManageCatalog)]
     public async Task<ActionResult<ItemDto>> Create(CreateItemRequest req, CancellationToken ct)

@@ -12,6 +12,7 @@ Internal stock app for OnTech: categories and items with quantities, customers, 
 | `src/OnTech.Store.Desktop` | WPF (.NET 8) desktop app, `OnTechStore.exe`. MVVM with CommunityToolkit.Mvvm. |
 | `tests/OnTech.Store.Api.Tests` | End-to-end API tests (in-memory host + SQLite), including a 3-PC concurrency test, plus tests of the desktop app's API client against the real server. `FeatureCoverageTests` goes through every feature: the permission matrix, bad input, the opening data, the orders log and 3-PC races. |
 | `tools/OnTech.Store.LoadTest` | Load test: several PCs using a running server at once, with timings per screen and a stock check at the end. |
+| `tools/OnTech.Store.DemoData` | Fills a SQLite store database with made-up stock-ins and orders from 1 January to now, for trying the app. |
 | `db/OnTechStore.sql` | Idempotent SQL script of the schema, for review or manual setup. |
 | `docs/swagger.json` | OpenAPI spec snapshot. The live, clickable version is at `/swagger` on the server. |
 | `scripts/` | `install-service.ps1` (publish + install Windows service + firewall), `backup-database.ps1`. |
@@ -95,6 +96,19 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run   # uses a local SQLite file, no S
 dotnet run -c Release --project tools/OnTech.Store.LoadTest -- --server 192.168.1.10 --user admin --password <password> --pcs 3 --seconds 60 --think-ms 300
 ```
 
+### Demo data
+
+`tools/OnTech.Store.DemoData` adds a made-up history so the item cards, logs and filters have something to show: deliveries from 8 demo suppliers and orders to the real customers on most days from 1 January to now (Friday off, Saturday quiet), with a few cancelled orders and stock-in vouchers. Stock never goes below zero, and every item ends with at least its opening quantity. Everything made up is marked: voucher and receipt numbers start with `DEMO-`, the suppliers are named "(تجريبي)", and the notes say "بيانات تجريبية". It runs once per database.
+
+```powershell
+# A separate copy (ontech-store-demo.db next to the source); the real database is only read:
+dotnet run --project tools/OnTech.Store.DemoData -- --source src\OnTech.Store.Api\ontech-store-dev.db
+# Or fill the database itself (stop the server first). A backup is saved next to it as <db>-backup-before-demo-<time>.db:
+dotnet run --project tools/OnTech.Store.DemoData -- --source src\OnTech.Store.Api\ontech-store-dev.db --in-place
+```
+
+To undo `--in-place`, stop the server and copy the backup back over the database file.
+
 It only orders and restocks a "Load test ..." category, items and customer that it makes for itself and disables at the end, but those orders stay in the orders log, so run it on a test copy of the server when you can. Exit code 0 means PASS.
 
 Results on 2026-10-28 (4-core Linux container, SQLite, Release build, opening data loaded): 3 PCs with a short pause between clicks made ~10 calls/second, every screen answered in under 10 ms at the median and under 20 ms at p95 (Save order p95 16 ms), with no errors and an exact stock check. A stress run of 10 PCs with no pause at all made ~400 calls/second, still with no errors and an exact stock check; reads stayed under 25 ms at p95, saves queued for SQLite's single writer (p95 ≈ 300 ms). SQL Server locks per row, so writes there should do better.
@@ -156,6 +170,7 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 | GET | `/api/categories` | ViewStock | With item count and total units |
 | POST/PUT/DELETE | `/api/categories[/{id}]` | ManageCatalog | Delete removes an empty category, else disables it |
 | GET | `/api/items?categoryId=&search=&inStockOnly=&lowStockOnly=` | ViewStock | Items with available quantity (New Order picker) |
+| GET | `/api/items/{id}/card?from=&to=` | ViewStock | Item card: every movement in/out, oldest first, with customer or supplier, voucher, order/stock-in number and balance after each; with a period, the balance before it and the top 5 customers |
 | POST/PUT/DELETE | `/api/items[/{id}]` | ManageCatalog | Add (starts at 0) / edit details / disable. Quantity is never set directly |
 | GET | `/api/customers?search=` | any | Customer picker. A number matches that customer number exactly; text matches name, phone, tax number, contact |
 | POST/PUT/DELETE | `/api/customers[/{id}]` | ManageCustomers | Add / edit / disable |

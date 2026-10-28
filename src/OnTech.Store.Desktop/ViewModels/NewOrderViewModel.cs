@@ -265,4 +265,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         }
         catch (Client.ApiError) { /* the error is already shown */ }
     }
+
+    /// <summary>Opens the picked item's card, to check its history before saving.</summary>
+    [RelayCommand] private void OpenCard() => ItemCards.Open(Session, SelectedItem);
 }

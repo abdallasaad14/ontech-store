@@ -146,6 +146,8 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         Form = FormKind.Item;
     }
 
+    [RelayCommand] private void OpenCard(ItemDto? i) => ItemCards.Open(Session, i);
+
     [RelayCommand]
     private Task DisableItemAsync(ItemDto? i)
     {

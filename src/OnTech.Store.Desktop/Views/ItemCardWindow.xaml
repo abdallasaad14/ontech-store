@@ -1,0 +1,146 @@
+<Window x:Class="OnTech.Store.Desktop.Views.ItemCardWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:OnTech.Store.Desktop.Services"
+        xmlns:views="clr-namespace:OnTech.Store.Desktop.Views"
+        Title="{Binding Title}" Width="1200" Height="720" MinWidth="820" MinHeight="460" WindowStartupLocation="CenterOwner"
+        Background="{StaticResource WindowBrush}" FontFamily="{StaticResource UiFont}" Icon="/Assets/app.ico">
+    <Window.Resources>
+        <Style TargetType="DatePicker">
+            <Setter Property="Width" Value="140"/>
+            <Setter Property="Padding" Value="6,5"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="24,20,24,18">
+        <!-- Item and its totals -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,14">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96"
+                        Visibility="{Binding HasOpening, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="{l:T 'OPENING BALANCE'}" Style="{StaticResource FieldLabel}" Margin="0"/>
+                        <TextBlock Text="{Binding OpeningBalance}" FontSize="18" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding OpeningDateText}" Style="{StaticResource Hint}" Margin="0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96">
+                    <StackPanel>
+                        <TextBlock Text="{l:T 'TOTAL IN'}" Style="{StaticResource FieldLabel}" Margin="0"/>
+                        <TextBlock Text="{Binding TotalIn}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource OkBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96">
+                    <StackPanel>
+                        <TextBlock Text="{l:T 'TOTAL OUT'}" Style="{StaticResource FieldLabel}" Margin="0"/>
+                        <TextBlock Text="{Binding TotalOut}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="14,8" Margin="0,0,10,0" MinWidth="96"
+                        Visibility="{Binding HasPeriod, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="{l:T 'CLOSING BALANCE'}" Style="{StaticResource FieldLabel}" Margin="0"/>
+                        <TextBlock Text="{Binding ClosingBalance}" FontSize="18" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Padding="14,8" MinWidth="96" Background="{StaticResource AccentSoftBrush}">
+                    <StackPanel>
+                        <TextBlock Text="{l:T 'IN STORE NOW'}" Style="{StaticResource FieldLabel}" Margin="0"/>
+                        <TextBlock Text="{Binding Item.Quantity}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="{l:T 'ITEM CARD'}" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Text="{Binding Item.Name}" Style="{StaticResource PageTitle}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="{Binding SubTitle}" Style="{StaticResource PageSubtitle}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Period -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="{l:T 'Print / PDF'}" Margin="0,0,8,0" Command="{Binding PrintCommand}"
+                        ToolTip="{l:T 'To save a PDF, choose Microsoft Print to PDF as the printer.'}"/>
+                <Button Content="{l:T 'Export to Excel'}" Command="{Binding ExportExcelCommand}"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{l:T 'From'}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <DatePicker SelectedDate="{Binding FromDate}"/>
+                <TextBlock Text="{l:T 'To'}" VerticalAlignment="Center" Margin="14,0,8,0"/>
+                <DatePicker SelectedDate="{Binding ToDate}"/>
+                <Button Content="{l:T 'Show'}" Style="{StaticResource PrimaryButton}" Margin="12,0,0,0" Command="{Binding ShowPeriodCommand}"/>
+                <Button Content="{l:T 'All dates'}" Style="{StaticResource LinkButton}" Margin="6,0,0,0" Command="{Binding ShowAllDatesCommand}"/>
+                <TextBlock Text="{Binding PeriodText}" Style="{StaticResource Hint}" VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </StackPanel>
+        </DockPanel>
+
+        <views:MessageBanners DockPanel.Dock="Top"/>
+
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="{l:T 'Refresh'}" Margin="0,0,8,0" Command="{Binding RefreshCommand}"/>
+                <Button Content="{l:T 'Close'}" Style="{StaticResource PrimaryButton}" MinWidth="90" IsCancel="True" Click="OnClose"/>
+            </StackPanel>
+            <TextBlock Text="{l:T 'Oldest first. Balance is the quantity in the store right after each movement. Double-click a movement to open its order or stock-in.'}"
+                       Style="{StaticResource Hint}" VerticalAlignment="Center" TextWrapping="Wrap"/>
+        </DockPanel>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource Card}" Padding="0">
+                <Grid>
+                    <DataGrid x:Name="LinesGrid" ItemsSource="{Binding Lines}" SelectedItem="{Binding SelectedLine}" Margin="6" MouseDoubleClick="OnLineDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding Date, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="130"/>
+                            <DataGridTextColumn Header="{l:T 'MOVEMENT'}" Binding="{Binding Type, Converter={StaticResource MovementType}, Mode=OneWay}" Width="150"/>
+                            <DataGridTextColumn Header="{l:T 'IN'}" Binding="{Binding In, Converter={StaticResource ZeroAsBlank}, Mode=OneWay}" Width="60"
+                                                FontWeight="SemiBold" Foreground="{StaticResource OkBrush}"/>
+                            <DataGridTextColumn Header="{l:T 'OUT'}" Binding="{Binding Out, Converter={StaticResource ZeroAsBlank}, Mode=OneWay}" Width="60"
+                                                FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}"/>
+                            <DataGridTextColumn Header="{l:T 'BALANCE'}" Binding="{Binding Balance}" Width="75" FontWeight="Bold"/>
+                            <DataGridTextColumn Header="{l:T 'CUSTOMER / SUPPLIER'}" Binding="{Binding PartyName}" Width="2*"/>
+                            <DataGridTextColumn Header="{l:T 'VOUCHER NO.'}" Binding="{Binding VoucherNumber}" Width="*"/>
+                            <DataGridTextColumn Header="{l:T 'ORDER / STOCK-IN NO.'}" Binding="{Binding DocumentNumber}" Width="*"/>
+                            <DataGridTextColumn Header="{l:T 'RECEIPT / INVOICE'}" Binding="{Binding InvoiceNumber}" Width="*"/>
+                            <DataGridTextColumn Header="{l:T 'BY'}" Binding="{Binding UserName}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Text="{l:T 'No movements in this period. Stock comes in with Stock In and goes out with orders.'}" Style="{StaticResource Hint}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{Binding Lines.Count, Converter={StaticResource HasValueToVisibility}, ConverterParameter=Invert}"/>
+                </Grid>
+            </Border>
+
+            <!-- Who took the most -->
+            <Border Grid.Column="1" Style="{StaticResource Card}" Width="250" Margin="16,0,0,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="{l:T 'TOP CUSTOMERS'}" Style="{StaticResource FieldLabel}"/>
+                    <TextBlock DockPanel.Dock="Top" Text="{l:T 'Units taken in this period, after cancelled orders.'}" Style="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                    <Grid>
+                        <ItemsControl ItemsSource="{Binding TopCustomers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,5">
+                                        <StackPanel DockPanel.Dock="Right" Margin="10,0,0,0">
+                                            <TextBlock Text="{Binding Quantity}" FontWeight="Bold" FontSize="14" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding Orders, StringFormat={l:T '\{0\} orders'}}" Style="{StaticResource Hint}" HorizontalAlignment="Right"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding CustomerName}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{l:T 'No customer took this item in this period.'}" Style="{StaticResource Hint}" TextWrapping="Wrap"
+                                   Visibility="{Binding TopCustomers.Count, Converter={StaticResource HasValueToVisibility}, ConverterParameter=Invert}"/>
+                    </Grid>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

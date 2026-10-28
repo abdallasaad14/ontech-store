@@ -74,3 +74,21 @@ public sealed class TranslateConverter : IValueConverter
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
+
+/// <summary>A stock movement type in plain words, in the current language (for the item card).</summary>
+public sealed class MovementTypeConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is Contracts.StockMovementType t ? ViewModels.ItemCardViewModel.Describe(t) : null;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>Shows 0 as an empty cell, so an in/out column only shows the side that moved.</summary>
+public sealed class ZeroAsBlankConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is int n && n != 0 ? n.ToString(culture) : "";
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}

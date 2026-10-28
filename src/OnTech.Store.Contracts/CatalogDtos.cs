@@ -78,6 +78,70 @@ public sealed class StockMovementDto
     public DateTimeOffset CreatedAt { get; init; }
 }
 
+/// <summary>An item's card (كارت الصنف): every movement in and out, oldest first, with the balance after each one.</summary>
+public sealed class ItemCardDto
+{
+    public ItemDto Item { get; init; } = null!;
+    /// <summary>The period shown, as asked for (null = from the first movement / up to now).</summary>
+    public DateTimeOffset? From { get; init; }
+    public DateTimeOffset? To { get; init; }
+    /// <summary>
+    /// Quantity at the start of the card: just before the period, or the item's opening stock (the store sheet it was loaded from)
+    /// when there is no start date. Opening stock is shown here, never as a movement line.
+    /// </summary>
+    public int OpeningBalance { get; init; }
+    /// <summary>The date <see cref="OpeningBalance"/> is for (the period start, or the opening stock's date). Null when the item had none.</summary>
+    public DateTimeOffset? OpeningDate { get; init; }
+    /// <summary>Quantity in the store at the end of the period.</summary>
+    public int ClosingBalance { get; init; }
+    /// <summary>In and out within the period.</summary>
+    public int TotalIn { get; init; }
+    public int TotalOut { get; init; }
+    public IReadOnlyList<ItemCardLineDto> Lines { get; init; } = Array.Empty<ItemCardLineDto>();
+    /// <summary>Customers who took the most of this item in the period, net of cancelled orders, most first (top 5).</summary>
+    public IReadOnlyList<ItemCardCustomerDto> TopCustomers { get; init; } = Array.Empty<ItemCardCustomerDto>();
+}
+
+public sealed class ItemCardCustomerDto
+{
+    public int CustomerId { get; init; }
+    public string CustomerName { get; init; } = "";
+    public int Quantity { get; init; }
+    public int Orders { get; init; }
+}
+
+/// <summary>Optional period for the item card. Both ends are included.</summary>
+public sealed class ItemCardQuery
+{
+    public DateTimeOffset? From { get; set; }
+    public DateTimeOffset? To { get; set; }
+}
+
+public sealed class ItemCardLineDto
+{
+    public long Id { get; init; }
+    public DateTimeOffset Date { get; init; }
+    public StockMovementType Type { get; init; }
+    /// <summary>Units that came in (0 when the movement took stock out).</summary>
+    public int In { get; init; }
+    /// <summary>Units that went out (0 when the movement brought stock in).</summary>
+    public int Out { get; init; }
+    /// <summary>Quantity in the store right after this movement.</summary>
+    public int Balance { get; init; }
+    /// <summary>The order or stock-in number, e.g. ORD-000012 or IN-000003.</summary>
+    public string? DocumentNumber { get; init; }
+    public int? OrderId { get; init; }
+    public int? StockInId { get; init; }
+    /// <summary>Issue voucher number for an order, receipt voucher number for a stock-in.</summary>
+    public string? VoucherNumber { get; init; }
+    /// <summary>Customer receipt number for an order, supplier invoice number for a stock-in.</summary>
+    public string? InvoiceNumber { get; init; }
+    /// <summary>The customer who took the stock or the supplier who sent it.</summary>
+    public string? PartyName { get; init; }
+    public string UserName { get; init; } = "";
+    public string? Note { get; init; }
+}
+
 public sealed class StockMovementQuery
 {
     public int? ItemId { get; set; }
