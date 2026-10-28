@@ -10,7 +10,7 @@ namespace OnTech.Store.Api.Controllers;
 
 [ApiController]
 [Route("api/items")]
-public class ItemsController(StoreDbContext db, StockService stock) : ControllerBase
+public class ItemsController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Items with their available quantities. Filter by category for the New Order screen.</summary>
     [HttpGet]
@@ -50,17 +50,16 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
             var created = new Item
             {
                 Category = category, Name = name, Code = req.Code.Clean() ?? await CatalogCodes.NextItemCodeAsync(db, category, ct), Description = req.Description.Clean(),
-                Quantity = req.InitialQuantity, LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
+                LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
             };
-            db.Items.Add(created);
-            stock.RecordInitialStock(created, User.GetUserId());
+            db.Items.Add(created); // starts at 0; stock comes in only through a stock-in voucher
             await db.SaveChangesAsync(ct);
             return created;
         }, ct);
         return CreatedAtAction(nameof(Get), new { id = item.Id }, item.ToDto());
     }
 
-    /// <summary>Edits item details. Quantity is changed only through add-quantity, adjust and orders.</summary>
+    /// <summary>Edits item details. Quantity is changed only by orders and stock-in vouchers.</summary>
     [HttpPut("{id:int}")]
     [HasPermission(Permission.ManageCatalog)]
     public async Task<ActionResult<ItemDto>> Update(int id, UpdateItemRequest req, CancellationToken ct)
@@ -92,24 +91,6 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         item.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
         return NoContent();
-    }
-
-    /// <summary>Adds received stock to an existing item (the "Add Quantity" home page action).</summary>
-    [HttpPost("{id:int}/add-quantity")]
-    [HasPermission(Permission.AddStock)]
-    public async Task<ActionResult<ItemDto>> AddQuantity(int id, AddQuantityRequest req, CancellationToken ct)
-    {
-        await stock.AddQuantityAsync(id, req.Quantity, req.Note, User.GetUserId(), ct);
-        return (await Load(id, ct)).ToDto();
-    }
-
-    /// <summary>Sets the quantity to a counted value (stock-take correction). The difference is logged.</summary>
-    [HttpPost("{id:int}/adjust")]
-    [HasPermission(Permission.ManageCatalog)]
-    public async Task<ActionResult<ItemDto>> Adjust(int id, AdjustQuantityRequest req, CancellationToken ct)
-    {
-        await stock.AdjustQuantityAsync(id, req.NewQuantity, req.Reason, User.GetUserId(), ct);
-        return (await Load(id, ct)).ToDto();
     }
 
     private async Task<Item> Load(int id, CancellationToken ct, bool tracking = false)

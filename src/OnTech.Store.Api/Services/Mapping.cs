@@ -42,6 +42,7 @@ public static class Mapping
         CustomerName = o.Customer?.CompanyName ?? "",
         CustomerTaxNumber = o.Customer?.TaxNumber,
         CustomerPhoneNumber = o.Customer?.PhoneNumber,
+        IssueVoucherNumber = o.IssueVoucherNumber,
         WithReceipt = o.WithReceipt,
         ReceiptNumber = o.ReceiptNumber,
         Notes = o.Notes,
@@ -54,6 +55,36 @@ public static class Mapping
         CancelledByUserName = o.CancelledByUser?.FullName,
         CancelReason = o.CancelReason,
         Lines = o.Lines.OrderBy(l => l.Id).Select(l => new OrderLineDto
+        {
+            Id = l.Id,
+            ItemId = l.ItemId,
+            ItemName = l.ItemName,
+            ItemCode = l.ItemCode,
+            CategoryId = l.CategoryId,
+            CategoryName = l.CategoryName,
+            Quantity = l.Quantity,
+        }).ToList(),
+    };
+
+    public static StockInDto ToDto(this StockIn s) => new()
+    {
+        Id = s.Id,
+        StockInNumber = s.StockInNumber,
+        SupplierId = s.SupplierId,
+        SupplierName = s.Supplier?.CompanyName ?? "",
+        SupplierTaxNumber = s.Supplier?.TaxNumber,
+        VoucherNumber = s.VoucherNumber,
+        SupplierInvoiceNumber = s.SupplierInvoiceNumber,
+        Notes = s.Notes,
+        Status = s.Status,
+        TotalQuantity = s.Lines.Sum(l => l.Quantity),
+        CreatedByUserId = s.CreatedByUserId,
+        CreatedByUserName = s.CreatedByUser?.FullName ?? "",
+        CreatedAt = s.CreatedAt.ToUtcOffset(),
+        CancelledAt = s.CancelledAt.ToUtcOffset(),
+        CancelledByUserName = s.CancelledByUser?.FullName,
+        CancelReason = s.CancelReason,
+        Lines = s.Lines.OrderBy(l => l.Id).Select(l => new OrderLineDto
         {
             Id = l.Id,
             ItemId = l.ItemId,

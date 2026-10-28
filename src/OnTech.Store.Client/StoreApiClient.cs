@@ -115,12 +115,6 @@ public sealed class StoreApiClient
     public Task DisableItemAsync(int id, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Delete, $"api/items/{id}", null, ct);
 
-    public Task<ItemDto> AddQuantityAsync(int itemId, int quantity, string? note, CancellationToken ct = default) =>
-        SendAsync<ItemDto>(HttpMethod.Post, $"api/items/{itemId}/add-quantity", new AddQuantityRequest { Quantity = quantity, Note = note }, ct);
-
-    public Task<ItemDto> AdjustQuantityAsync(int itemId, int newQuantity, string reason, CancellationToken ct = default) =>
-        SendAsync<ItemDto>(HttpMethod.Post, $"api/items/{itemId}/adjust", new AdjustQuantityRequest { NewQuantity = newQuantity, Reason = reason }, ct);
-
     // ---- Customers ----
 
     public Task<List<CustomerDto>> GetCustomersAsync(string? search = null, bool includeInactive = false, CancellationToken ct = default) =>
@@ -138,6 +132,36 @@ public sealed class StoreApiClient
     public Task DisableCustomerAsync(int id, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Delete, $"api/customers/{id}", null, ct);
 
+    // ---- Suppliers ----
+
+    public Task<List<SupplierDto>> GetSuppliersAsync(string? search = null, bool includeInactive = false, CancellationToken ct = default) =>
+        SendAsync<List<SupplierDto>>(HttpMethod.Get, "api/suppliers" + Query(("search", search), ("includeInactive", includeInactive)), null, ct);
+
+    public Task<SupplierDto> CreateSupplierAsync(SaveSupplierRequest req, CancellationToken ct = default) =>
+        SendAsync<SupplierDto>(HttpMethod.Post, "api/suppliers", req, ct);
+
+    public Task<SupplierDto> UpdateSupplierAsync(int id, SaveSupplierRequest req, CancellationToken ct = default) =>
+        SendAsync<SupplierDto>(HttpMethod.Put, $"api/suppliers/{id}", req, ct);
+
+    public Task DisableSupplierAsync(int id, CancellationToken ct = default) =>
+        SendAsync(HttpMethod.Delete, $"api/suppliers/{id}", null, ct);
+
+    // ---- Stock in (from suppliers) ----
+
+    public Task<StockInDto> CreateStockInAsync(CreateStockInRequest req, CancellationToken ct = default) =>
+        SendAsync<StockInDto>(HttpMethod.Post, "api/stock-ins", req, ct);
+
+    public Task<PagedResult<StockInDto>> SearchStockInsAsync(StockInQuery q, CancellationToken ct = default) =>
+        SendAsync<PagedResult<StockInDto>>(HttpMethod.Get, "api/stock-ins" + Query(
+            ("search", q.Search), ("from", q.From), ("to", q.To), ("supplierId", q.SupplierId), ("itemId", q.ItemId),
+            ("status", q.Status), ("page", q.Page), ("pageSize", q.PageSize)), null, ct);
+
+    public Task<StockInDto> GetStockInAsync(int id, CancellationToken ct = default) =>
+        SendAsync<StockInDto>(HttpMethod.Get, $"api/stock-ins/{id}", null, ct);
+
+    public Task<StockInDto> CancelStockInAsync(int id, string reason, CancellationToken ct = default) =>
+        SendAsync<StockInDto>(HttpMethod.Post, $"api/stock-ins/{id}/cancel", new CancelStockInRequest { Reason = reason }, ct);
+
     // ---- Orders ----
 
     public Task<OrderDto> CreateOrderAsync(CreateOrderRequest req, CancellationToken ct = default) =>
@@ -147,7 +171,7 @@ public sealed class StoreApiClient
         SendAsync<PagedResult<OrderDto>>(HttpMethod.Get, "api/orders" + Query(
             ("search", q.Search), ("from", q.From), ("to", q.To), ("customerId", q.CustomerId), ("categoryId", q.CategoryId),
             ("itemId", q.ItemId), ("createdByUserId", q.CreatedByUserId), ("withReceipt", q.WithReceipt),
-            ("receiptNumber", q.ReceiptNumber), ("orderNumber", q.OrderNumber), ("status", q.Status),
+            ("receiptNumber", q.ReceiptNumber), ("orderNumber", q.OrderNumber), ("issueVoucherNumber", q.IssueVoucherNumber), ("status", q.Status),
             ("sort", q.Sort), ("page", q.Page), ("pageSize", q.PageSize)), null, ct);
 
     public Task<OrderDto> GetOrderAsync(int id, CancellationToken ct = default) =>

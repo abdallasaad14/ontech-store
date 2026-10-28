@@ -51,7 +51,6 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     [ObservableProperty] private string _itemName = "";
     [ObservableProperty] private string? _itemCode;
     [ObservableProperty] private string? _itemDescription;
-    [ObservableProperty] private string _itemInitialQuantity = "0";
     [ObservableProperty] private string _itemLowStock = "0";
     [ObservableProperty] private bool _itemActive = true;
 
@@ -128,7 +127,6 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         ItemCategory = SelectedCategory;
         ItemName = "";
         ItemCode = ItemDescription = null;
-        ItemInitialQuantity = "0";
         ItemLowStock = "0";
         ItemActive = true;
         Form = FormKind.Item;
@@ -159,28 +157,6 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
             await ReloadCategoriesAsync();
             await ReloadItemsAsync();
             SuccessMessage = L.T("\"{0}\" was disabled.", i.Name);
-        });
-    }
-
-    [RelayCommand]
-    private Task AdjustItemAsync(ItemDto? i)
-    {
-        if (i is null) return Task.CompletedTask;
-        var counted = Dialogs.Prompt(L.T("Stock count: {0}", i.Name), L.T("The system shows {0}. How many did you count?", i.Quantity), i.Quantity.ToString(), okText: L.T("Next"));
-        if (counted is null) return Task.CompletedTask;
-        if (!int.TryParse(counted.Trim(), out var newQty) || newQty < 0)
-        {
-            ErrorMessage = L.T("Enter a whole number of 0 or more.");
-            return Task.CompletedTask;
-        }
-        var reason = Dialogs.Prompt(L.T("Stock count: {0}", i.Name), L.T("Reason for the correction (for example \"Monthly count\" or \"Damaged unit\")"), okText: L.T("Save count"));
-        if (string.IsNullOrWhiteSpace(reason)) return Task.CompletedTask;
-        return RunAsync(async () =>
-        {
-            var updated = await Api.AdjustQuantityAsync(i.Id, newQty, reason.Trim());
-            await ReloadCategoriesAsync();
-            await ReloadItemsAsync();
-            SuccessMessage = L.T("\"{0}\" set to {1}.", updated.Name, updated.Quantity);
         });
     }
 
@@ -232,14 +208,12 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         }
         else
         {
-            if (!int.TryParse(ItemInitialQuantity?.Trim(), out var initial) || initial < 0) throw new ArgumentException(L.T("Starting quantity must be 0 or more."));
             saved = await Api.CreateItemAsync(new CreateItemRequest
             {
                 CategoryId = ItemCategory.Id,
                 Name = ItemName.Trim(),
                 Code = string.IsNullOrWhiteSpace(ItemCode) ? null : ItemCode.Trim(),
                 Description = string.IsNullOrWhiteSpace(ItemDescription) ? null : ItemDescription.Trim(),
-                InitialQuantity = initial,
                 LowStockThreshold = low,
             });
         }

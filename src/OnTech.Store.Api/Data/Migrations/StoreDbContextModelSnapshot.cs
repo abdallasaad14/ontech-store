@@ -220,6 +220,10 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<string>("IssueVoucherNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -244,6 +248,10 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.HasIndex("CancelledByUserId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IssueVoucherNumber")
+                        .IsUnique()
+                        .HasFilter("[IssueVoucherNumber] IS NOT NULL");
 
                     b.HasIndex("OrderNumber");
 
@@ -306,6 +314,118 @@ namespace OnTech.Store.Api.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("OnTech.Store.Api.Data.StockIn", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CancelledByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StockInNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SupplierInvoiceNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CancelledByUserId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("StockInNumber");
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique();
+
+                    b.HasIndex("SupplierId", "CreatedAt");
+
+                    b.ToTable("StockIns");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.StockInLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ItemCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockInId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("StockInId");
+
+                    b.ToTable("StockInLines", t =>
+                        {
+                            t.HasCheckConstraint("CK_StockInLines_Quantity_Positive", "[Quantity] > 0");
+                        });
+                });
+
             modelBuilder.Entity("OnTech.Store.Api.Data.StockMovement", b =>
                 {
                     b.Property<long>("Id")
@@ -333,6 +453,9 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("QuantityAfter")
                         .HasColumnType("int");
 
+                    b.Property<int?>("StockInId")
+                        .HasColumnType("int");
+
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
@@ -345,11 +468,75 @@ namespace OnTech.Store.Api.Data.Migrations
 
                     b.HasIndex("OrderId");
 
+                    b.HasIndex("StockInId");
+
                     b.HasIndex("UserId");
 
                     b.HasIndex("ItemId", "CreatedAt");
 
                     b.ToTable("StockMovements");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.Supplier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ContactPerson")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("SupplierNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyName");
+
+                    b.HasIndex("SupplierNumber")
+                        .IsUnique()
+                        .HasFilter("[SupplierNumber] IS NOT NULL");
+
+                    b.HasIndex("TaxNumber");
+
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("OnTech.Store.Api.Data.User", b =>
@@ -462,6 +649,51 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("OnTech.Store.Api.Data.StockIn", b =>
+                {
+                    b.HasOne("OnTech.Store.Api.Data.User", "CancelledByUser")
+                        .WithMany()
+                        .HasForeignKey("CancelledByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("OnTech.Store.Api.Data.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OnTech.Store.Api.Data.Supplier", "Supplier")
+                        .WithMany("StockIns")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CancelledByUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.StockInLine", b =>
+                {
+                    b.HasOne("OnTech.Store.Api.Data.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("OnTech.Store.Api.Data.StockIn", "StockIn")
+                        .WithMany("Lines")
+                        .HasForeignKey("StockInId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("StockIn");
+                });
+
             modelBuilder.Entity("OnTech.Store.Api.Data.StockMovement", b =>
                 {
                     b.HasOne("OnTech.Store.Api.Data.Item", "Item")
@@ -475,6 +707,11 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("OnTech.Store.Api.Data.StockIn", "StockIn")
+                        .WithMany()
+                        .HasForeignKey("StockInId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("OnTech.Store.Api.Data.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -484,6 +721,8 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Navigation("Item");
 
                     b.Navigation("Order");
+
+                    b.Navigation("StockIn");
 
                     b.Navigation("User");
                 });
@@ -501,6 +740,16 @@ namespace OnTech.Store.Api.Data.Migrations
             modelBuilder.Entity("OnTech.Store.Api.Data.Order", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.StockIn", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.Supplier", b =>
+                {
+                    b.Navigation("StockIns");
                 });
 #pragma warning restore 612, 618
         }

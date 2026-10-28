@@ -14,7 +14,8 @@ public sealed partial class OrderLineViewModel(ItemDto item, int quantity) : Obs
 }
 
 /// <summary>
-/// New Order: pick category, item (with the available quantity), quantity and customer, optionally a receipt number.
+/// New Order: pick category, item (with the available quantity), quantity and customer, the warehouse issue voucher
+/// number (required) and optionally a receipt number.
 /// One order can hold several items: "Add another item" moves the current pick into the list.
 /// </summary>
 public sealed partial class NewOrderViewModel(Session session, ShellViewModel shell) : PageViewModel(session)
@@ -43,6 +44,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [ObservableProperty] private string? _customerSearch;
     private List<CustomerDto> _allCustomers = new();
 
+    [ObservableProperty] private string? _issueVoucherNumber;
     [ObservableProperty] private bool _withReceipt;
     [ObservableProperty] private string? _receiptNumber;
     [ObservableProperty] private string? _notes;
@@ -205,11 +207,13 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         }
         if (Lines.Count == 0) throw new ArgumentException(L.T("Choose an item and a quantity."));
         if (SelectedCustomer is null) throw new ArgumentException(L.T("Choose the customer."));
+        if (string.IsNullOrWhiteSpace(IssueVoucherNumber)) throw new ArgumentException(L.T("Enter the issue voucher number."));
         if (WithReceipt && string.IsNullOrWhiteSpace(ReceiptNumber)) throw new ArgumentException(L.T("Enter the receipt number, or untick \"Add a receipt\"."));
 
         var order = await Api.CreateOrderAsync(new CreateOrderRequest
         {
             CustomerId = SelectedCustomer.Id,
+            IssueVoucherNumber = IssueVoucherNumber.Trim(),
             WithReceipt = WithReceipt,
             ReceiptNumber = WithReceipt ? ReceiptNumber!.Trim() : null,
             Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(),
@@ -220,8 +224,8 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         ResetForm();
         await LoadItemsAsync(); // fresh quantities, including changes from other PCs
         SuccessMessage = order.WithReceipt
-            ? L.T("Order {0} saved for {1}: {2} unit(s) taken from stock, receipt {3}.", order.OrderNumber, order.CustomerName, order.TotalQuantity, order.ReceiptNumber)
-            : L.T("Order {0} saved for {1}: {2} unit(s) taken from stock.", order.OrderNumber, order.CustomerName, order.TotalQuantity);
+            ? L.T("Order {0} saved for {1}: {2} unit(s) taken from stock, issue voucher {3}, receipt {4}.", order.OrderNumber, order.CustomerName, order.TotalQuantity, order.IssueVoucherNumber, order.ReceiptNumber)
+            : L.T("Order {0} saved for {1}: {2} unit(s) taken from stock, issue voucher {3}.", order.OrderNumber, order.CustomerName, order.TotalQuantity, order.IssueVoucherNumber);
     });
 
     private void ResetForm()
@@ -229,6 +233,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         Lines.Clear();
         SelectedItem = null;
         QuantityText = "1";
+        IssueVoucherNumber = null;
         WithReceipt = false;
         ReceiptNumber = null;
         Notes = null;

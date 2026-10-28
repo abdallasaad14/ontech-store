@@ -19,14 +19,14 @@
                         <TextBlock Text="{l:T 'Take items out for a customer'}" FontSize="12" Opacity="0.85"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddQuantityCommand}"
+                <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding StockInCommand}"
                         Visibility="{Binding CanAddStock, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" HorizontalAlignment="Left">
-                            <TextBlock Style="{StaticResource Icon}" Text="&#xE710;" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
+                            <TextBlock Style="{StaticResource Icon}" Text="&#xE896;" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="{l:T 'Add Quantity'}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                        <TextBlock Text="{l:T 'Stock received for existing items'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBlock Text="{l:T 'Stock In'}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
+                        <TextBlock Text="{l:T 'Items received from a supplier'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
                     </StackPanel>
                 </Button>
                 <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddCustomerCommand}"

@@ -44,7 +44,6 @@ public sealed class CreateItemRequest
     /// <summary>Digits only, unique across all items. Leave empty to get the next one (category code + 3 digits, e.g. 01007).</summary>
     [MaxLength(64)] public string? Code { get; set; }
     [MaxLength(500)] public string? Description { get; set; }
-    [Range(0, 1_000_000)] public int InitialQuantity { get; set; }
     /// <summary>Show a warning when stock falls to or below this number (0 = no warning).</summary>
     [Range(0, 1_000_000)] public int LowStockThreshold { get; set; }
 }
@@ -59,19 +58,6 @@ public sealed class UpdateItemRequest
     public bool IsActive { get; set; } = true;
 }
 
-public sealed class AddQuantityRequest
-{
-    [Range(1, 1_000_000)] public int Quantity { get; set; }
-    [MaxLength(500)] public string? Note { get; set; }
-}
-
-public sealed class AdjustQuantityRequest
-{
-    /// <summary>The real counted quantity; the difference is recorded as an adjustment.</summary>
-    [Range(0, 1_000_000)] public int NewQuantity { get; set; }
-    [Required, MaxLength(500)] public string Reason { get; set; } = "";
-}
-
 public sealed class StockMovementDto
 {
     public long Id { get; init; }
@@ -84,6 +70,8 @@ public sealed class StockMovementDto
     public int QuantityAfter { get; init; }
     public int? OrderId { get; init; }
     public string? OrderNumber { get; init; }
+    public int? StockInId { get; init; }
+    public string? StockInNumber { get; init; }
     public int UserId { get; init; }
     public string UserName { get; init; } = "";
     public string? Note { get; init; }

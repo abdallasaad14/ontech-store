@@ -10,6 +10,9 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderLine> OrderLines => Set<OrderLine>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<StockIn> StockIns => Set<StockIn>();
+    public DbSet<StockInLine> StockInLines => Set<StockInLine>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<AppliedSeed> AppliedSeeds => Set<AppliedSeed>();
 
@@ -72,11 +75,13 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
         b.Entity<Order>(e =>
         {
             e.Property(x => x.OrderNumber).HasMaxLength(30).IsRequired();
+            e.Property(x => x.IssueVoucherNumber).HasMaxLength(50);
             e.Property(x => x.ReceiptNumber).HasMaxLength(50);
             e.Property(x => x.Notes).HasMaxLength(1000);
             e.Property(x => x.CancelReason).HasMaxLength(500);
             e.HasIndex(x => x.OrderNumber);
             e.HasIndex(x => x.ReceiptNumber).IsUnique().HasFilter("[ReceiptNumber] IS NOT NULL");
+            e.HasIndex(x => x.IssueVoucherNumber).IsUnique().HasFilter("[IssueVoucherNumber] IS NOT NULL");
             e.HasIndex(x => x.CreatedAt);
             e.HasIndex(x => new { x.CustomerId, x.CreatedAt });
             e.HasIndex(x => new { x.CreatedByUserId, x.CreatedAt });
@@ -97,6 +102,47 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.ToTable(t => t.HasCheckConstraint("CK_OrderLines_Quantity_Positive", "[Quantity] > 0"));
         });
 
+        b.Entity<Supplier>(e =>
+        {
+            e.Property(x => x.CompanyName).HasMaxLength(200).IsRequired();
+            e.Property(x => x.PhoneNumber).HasMaxLength(50);
+            e.Property(x => x.TaxNumber).HasMaxLength(50);
+            e.Property(x => x.ContactPerson).HasMaxLength(150);
+            e.Property(x => x.Email).HasMaxLength(256);
+            e.Property(x => x.Address).HasMaxLength(500);
+            e.Property(x => x.Notes).HasMaxLength(1000);
+            e.HasIndex(x => x.CompanyName);
+            e.HasIndex(x => x.TaxNumber);
+            e.HasIndex(x => x.SupplierNumber).IsUnique();
+        });
+
+        b.Entity<StockIn>(e =>
+        {
+            e.Property(x => x.StockInNumber).HasMaxLength(30).IsRequired();
+            e.Property(x => x.VoucherNumber).HasMaxLength(50).IsRequired();
+            e.Property(x => x.SupplierInvoiceNumber).HasMaxLength(50);
+            e.Property(x => x.Notes).HasMaxLength(1000);
+            e.Property(x => x.CancelReason).HasMaxLength(500);
+            e.HasIndex(x => x.StockInNumber);
+            e.HasIndex(x => x.VoucherNumber).IsUnique();
+            e.HasIndex(x => x.CreatedAt);
+            e.HasIndex(x => new { x.SupplierId, x.CreatedAt });
+            e.HasOne(x => x.Supplier).WithMany(s => s.StockIns).HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CreatedByUser).WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CancelledByUser).WithMany().HasForeignKey(x => x.CancelledByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        b.Entity<StockInLine>(e =>
+        {
+            e.Property(x => x.ItemName).HasMaxLength(150).IsRequired();
+            e.Property(x => x.ItemCode).HasMaxLength(64);
+            e.Property(x => x.CategoryName).HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.ItemId);
+            e.HasOne(x => x.StockIn).WithMany(o => o.Lines).HasForeignKey(x => x.StockInId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
+            e.ToTable(t => t.HasCheckConstraint("CK_StockInLines_Quantity_Positive", "[Quantity] > 0"));
+        });
+
         b.Entity<StockMovement>(e =>
         {
             e.Property(x => x.Note).HasMaxLength(500);
@@ -104,6 +150,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CreatedAt);
             e.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.Order).WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.StockIn).WithMany().HasForeignKey(x => x.StockInId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         });
     }

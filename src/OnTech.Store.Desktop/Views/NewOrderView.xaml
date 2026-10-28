@@ -20,6 +20,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
@@ -65,6 +66,21 @@
                             <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Display"
                                       IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="Display"/>
                         </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,16">
+                            <TextBlock Text="{l:T 'Issue voucher number *'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The number on the warehouse issue voucher. Required, and each number is used once.'}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,16">
+                            <CheckBox Content="{l:T 'Add a receipt'}" IsChecked="{Binding WithReceipt}" Margin="0,0,0,8"/>
+                            <StackPanel Visibility="{Binding WithReceipt, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{l:T 'Receipt number'}" Style="{StaticResource FieldLabel}"/>
+                                <TextBox Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Each receipt number can be used once. You can search orders by it later.'}"/>
+                            </StackPanel>
+                        </StackPanel>
                     </Grid>
 
                     <!-- Items already in this order -->
@@ -84,13 +100,6 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </Border>
-
-                    <CheckBox Content="{l:T 'Add a receipt'}" IsChecked="{Binding WithReceipt}" Margin="0,0,0,10"/>
-                    <StackPanel Visibility="{Binding WithReceipt, Converter={StaticResource BoolToVisibility}}" Margin="24,0,0,16" MaxWidth="400" HorizontalAlignment="Left">
-                        <TextBlock Text="{l:T 'Receipt number'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}" Width="300" HorizontalAlignment="Left"/>
-                        <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Each receipt number can be used once. You can search orders by it later.'}"/>
-                    </StackPanel>
 
                     <TextBlock Text="{l:T 'Notes (optional)'}" Style="{StaticResource FieldLabel}"/>
                     <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,18"/>

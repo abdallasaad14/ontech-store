@@ -23,7 +23,13 @@ Console.WriteLine($"Server {setup.ServerUrl}, {opt.Pcs} PCs, {opt.Seconds}s, thi
 var category = await setup.CreateCategoryAsync(new SaveCategoryRequest { Name = $"Load test {stamp}" });
 var items = new List<ItemDto>();
 for (var i = 1; i <= 5; i++)
-    items.Add(await setup.CreateItemAsync(new CreateItemRequest { CategoryId = category.Id, Name = $"Load item {i}", InitialQuantity = 200 }));
+    items.Add(await setup.CreateItemAsync(new CreateItemRequest { CategoryId = category.Id, Name = $"Load item {i}" }));
+var supplier = await setup.CreateSupplierAsync(new SaveSupplierRequest { CompanyName = $"Load test supplier {stamp}" });
+await setup.CreateStockInAsync(new CreateStockInRequest
+{
+    SupplierId = supplier.Id, VoucherNumber = $"LT-IN-{stamp}", Lines = items.Select(i => new OrderLineRequest { ItemId = i.Id, Quantity = 200 }).ToList(),
+});
+items = (await setup.GetItemsAsync(category.Id)).ToList();
 var customer = await setup.CreateCustomerAsync(new SaveCustomerRequest { CompanyName = $"Load test customer {stamp}" });
 var catalog = await setup.GetCategoriesAsync();
 
@@ -65,7 +71,7 @@ async Task Step(StoreApiClient pc, Random rnd)
         {
             var order = await Time("Save order", () => pc.CreateOrderAsync(new CreateOrderRequest
             {
-                CustomerId = customer.Id, WithReceipt = receipt is not null, ReceiptNumber = receipt, Notes = "load test",
+                IssueVoucherNumber = $"LT-{Guid.NewGuid():N}", CustomerId = customer.Id, WithReceipt = receipt is not null, ReceiptNumber = receipt, Notes = "load test",
                 Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = qty } },
             }));
             expected.AddOrUpdate(item.Id, 0, (_, q) => q - qty);
@@ -77,7 +83,11 @@ async Task Step(StoreApiClient pc, Random rnd)
     {
         var item = items[rnd.Next(items.Count)];
         var qty = rnd.Next(1, 10);
-        await Time("Add quantity", () => pc.AddQuantityAsync(item.Id, qty, "load test"));
+        await Time("Stock in", () => pc.CreateStockInAsync(new CreateStockInRequest
+        {
+            SupplierId = supplier.Id, VoucherNumber = $"LT-{Guid.NewGuid():N}", Notes = "load test",
+            Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = qty } },
+        }));
         expected.AddOrUpdate(item.Id, 0, (_, q) => q + qty);
     }
     else if (placed.TryDequeue(out var toCancel))

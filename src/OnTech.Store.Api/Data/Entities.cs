@@ -76,6 +76,8 @@ public class Order
     public string OrderNumber { get; set; } = "";
     public int CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
+    /// <summary>Warehouse issue voucher number (إذن صرف). Required for new orders; null only on orders saved before it existed.</summary>
+    public string? IssueVoucherNumber { get; set; }
     public bool WithReceipt { get; set; }
     public string? ReceiptNumber { get; set; }
     public string? Notes { get; set; }
@@ -105,6 +107,61 @@ public class OrderLine
     public string CategoryName { get; set; } = "";
 }
 
+public class Supplier
+{
+    public int Id { get; set; }
+    /// <summary>OnTech's own supplier number. Unique; new suppliers get the next free one.</summary>
+    public int? SupplierNumber { get; set; }
+    public string CompanyName { get; set; } = "";
+    public string? PhoneNumber { get; set; }
+    public string? TaxNumber { get; set; }
+    public string? ContactPerson { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+    public string? Notes { get; set; }
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
+    public int CreatedByUserId { get; set; }
+    public List<StockIn> StockIns { get; set; } = new();
+}
+
+/// <summary>Stock received from a supplier (إذن إضافة). The mirror of <see cref="Order"/>.</summary>
+public class StockIn
+{
+    public int Id { get; set; }
+    /// <summary>Human-friendly number, e.g. IN-000012. Assigned from the Id when saved.</summary>
+    public string StockInNumber { get; set; } = "";
+    public int SupplierId { get; set; }
+    public Supplier Supplier { get; set; } = null!;
+    /// <summary>Warehouse receipt voucher number. Required and unique.</summary>
+    public string VoucherNumber { get; set; } = "";
+    public string? SupplierInvoiceNumber { get; set; }
+    public string? Notes { get; set; }
+    public OrderStatus Status { get; set; }
+    public int CreatedByUserId { get; set; }
+    public User CreatedByUser { get; set; } = null!;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? CancelledAt { get; set; }
+    public int? CancelledByUserId { get; set; }
+    public User? CancelledByUser { get; set; }
+    public string? CancelReason { get; set; }
+    public List<StockInLine> Lines { get; set; } = new();
+}
+
+public class StockInLine
+{
+    public int Id { get; set; }
+    public int StockInId { get; set; }
+    public StockIn StockIn { get; set; } = null!;
+    public int ItemId { get; set; }
+    public Item Item { get; set; } = null!;
+    public int Quantity { get; set; }
+    public string ItemName { get; set; } = "";
+    public string? ItemCode { get; set; }
+    public int CategoryId { get; set; }
+    public string CategoryName { get; set; } = "";
+}
+
 /// <summary>Every change to an item's quantity, so stock can always be explained.</summary>
 public class StockMovement
 {
@@ -116,6 +173,8 @@ public class StockMovement
     public int QuantityAfter { get; set; }
     public int? OrderId { get; set; }
     public Order? Order { get; set; }
+    public int? StockInId { get; set; }
+    public StockIn? StockIn { get; set; }
     public int UserId { get; set; }
     public User User { get; set; } = null!;
     public string? Note { get; set; }

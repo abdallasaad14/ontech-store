@@ -62,12 +62,14 @@ What each screen does:
 | Screen | Who sees it | What it does |
 |---|---|---|
 | Sign in | everyone | Server address, username, password. Users flagged by an admin must pick a new password first. |
-| Home | everyone | Greeting, the three big actions (New Order, Add Quantity, Add Customer), today's numbers, and the stock table with In stock / Low / Out of stock. Double-click an item to order it. |
-| New Order | `CreateOrders` | Category → item (shows what's available) → quantity → customer, optional receipt number and notes. "Add another item" puts several items in one order. Shows how many are left after the order. If another PC took the stock first, the app says which item is short and refreshes the numbers. |
-| Add Quantity | `AddStock` | Category → item → quantity received, optional note. |
+| Home | everyone | Greeting, the three big actions (New Order, Stock In, Add Customer), today's numbers, and the stock table with In stock / Low / Out of stock. Double-click an item to order it. |
+| New Order | `CreateOrders` | Category → item (shows what's available) → quantity → customer, the **issue voucher number** (إذن صرف, required and unique), optional receipt number and notes. "Add another item" puts several items in one order. Shows how many are left after the order. If another PC took the stock first, the app says which item is short and refreshes the numbers. |
+| Stock In | `AddStock` | Stock received from a supplier: category → item → quantity → supplier, the **receipt voucher number** (إذن إضافة, required and unique), optional supplier invoice number and notes. Several items per voucher. This and New Order are the only ways a quantity changes. |
 | Customers | everyone (edit needs `ManageCustomers`) | Search by customer number or name, add, edit, disable. Company name is the only required field; new customers get the next free number. **Import from Excel** adds customers from an `.xlsx`/`.csv` sheet (see below). |
-| Orders Log | `ViewOrders` | Search, with/without receipt filter, paging, order details, cancel (needs `CancelOrders`). The full log with every filter and receipt PDFs is the next step. |
-| Items & Categories | `ManageCatalog` (admin menu) | Add/edit categories and items with a starting quantity and low-stock level, stock counts (corrections with a reason), disable. |
+| Suppliers | everyone (edit needs `ManageSuppliers`) | Same as Customers (number, company name, phone, tax number, ...), without the import. |
+| Orders Log | `ViewOrders` | Search (also by issue voucher), with/without receipt filter, paging, order details, cancel (needs `CancelOrders`). The full log with every filter and receipt PDFs is the next step. |
+| Stock In Log | `ViewOrders` | Every stock-in, newest first: search by number, voucher, supplier invoice, supplier or item; details; cancel (needs `CancelOrders`, refused if that stock was already issued). |
+| Items & Categories | `ManageCatalog` (admin menu) | Add/edit categories and items with a low-stock level, disable. New items start at 0; quantities can't be typed in here. |
 | Users | `ManageUsers` (admin menu) | Add users with a username + first password, admin flag or individual permissions, reset passwords, disable. |
 
 The menu only shows what the signed-in user is allowed to do, and the server checks every permission again, so a hidden button is never the only protection.
@@ -83,9 +85,11 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run   # uses a local SQLite file, no S
 # open http://localhost:5080/swagger
 ```
 
+**Upgrading a SQLite database.** On startup the server adds any new tables and columns to an existing SQLite file. Before a change it first saves a full copy next to the file, named like `ontech-store-dev-backup-before-suppliers-20261028-153000.db`, and logs where it went. To go back, stop the server and put that copy in place of the `.db` file. SQL Server databases are upgraded by the EF migrations instead; take a backup with `scripts\backup-database.ps1` before updating.
+
 ### Load test
 
-`tools/OnTech.Store.LoadTest` acts like several store PCs working at the same time against a running server, through the same API client as the desktop app: home page, stock list, New Order pickers, customer search by name and number, orders log, saving orders (some with receipts), Add Quantity and cancelling orders. At the end it prints the time each call took (average, p50, p95, p99, max), any errors, and checks that every unit taken, added or returned adds up on the server.
+`tools/OnTech.Store.LoadTest` acts like several store PCs working at the same time against a running server, through the same API client as the desktop app: home page, stock list, New Order pickers, customer search by name and number, orders log, saving orders (some with receipts), stock-ins from a supplier and cancelling orders. At the end it prints the time each call took (average, p50, p95, p99, max), any errors, and checks that every unit taken, added or returned adds up on the server.
 
 ```bash
 dotnet run -c Release --project tools/OnTech.Store.LoadTest -- --server 192.168.1.10 --user admin --password <password> --pcs 3 --seconds 60 --think-ms 300
@@ -105,15 +109,19 @@ Schema changes: edit `Data/Entities.cs` / `StoreDbContext.cs`, then
 ```
 Users ─┐                          Categories 1─* Items ──* StockMovements
        │ creates                                  │            │
-Customers 1─* Orders 1─* OrderLines *─────────────┘            │
-                 └──────────────────────────────────────────────┘ (order movements)
+Customers 1─* Orders 1─* OrderLines *─────────────┤            │
+                 └──────────────────────────────────────────────┤ (order movements)
+Suppliers 1─* StockIns 1─* StockInLines *─────────┘            │
+                 └──────────────────────────────────────────────┘ (stock-in movements)
 ```
 
 - **Users**: name, username (unique, not case-sensitive, letters/digits/`.`/`-`/`_`), PBKDF2 password hash, `IsAdmin`, `Permissions` bit mask, `IsActive`, `MustChangePassword`.
 - **Categories**: unique name, active flag. **Items**: category, name (unique per category), optional code/model, `Quantity` (DB check: never below 0), `LowStockThreshold`.
 - **Customers**: `CustomerNumber` (unique, next free number when left empty), `CompanyName` (required, unique when added by hand; an import keeps two same-name rows that have different numbers), phone, tax number (unique when set), contact person, email, address, notes.
-- **Orders**: `ORD-000123` number, customer, `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
-- **StockMovements**: every quantity change (Initial, Restock, Order, OrderCancelled, Adjustment) with the change, the quantity after, the user and the order. Stock can always be explained line by line.
+- **Orders**: `ORD-000123` number, customer, `IssueVoucherNumber` (إذن صرف, required on new orders, unique; empty on orders saved before it existed), `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
+- **Suppliers**: same fields as customers, with `SupplierNumber`.
+- **StockIns**: `IN-000012` number, supplier, `VoucherNumber` (إذن إضافة, required, unique), optional supplier invoice number, notes, status, who and when. **StockInLines** keep the same snapshots as order lines.
+- **StockMovements**: every quantity change (StockIn, StockInCancelled, Order, OrderCancelled; Initial for the opening data; Restock and Adjustment only in history from before stock-ins) with the change, the quantity after, the user and the order or stock-in. Stock can always be explained line by line.
 
 Nothing that orders reference is hard-deleted: users, items and customers are disabled instead, so the log stays complete.
 
@@ -123,14 +131,15 @@ Nothing that orders reference is hard-deleted: users, items and customers are di
 |---|---|
 | `ViewStock` | Categories, items, quantities, stock history, dashboard |
 | `ManageCustomers` | Add / edit / disable customers |
+| `ManageSuppliers` | Add / edit / disable suppliers |
 | `CreateOrders` | New Order |
-| `AddStock` | Add Quantity to existing items |
-| `ViewOrders` | Orders log, search, filters |
-| `CancelOrders` | Cancel an order (returns its stock) |
-| `ManageCatalog` | Add / edit categories and items, stock-count adjustments |
+| `AddStock` | Stock In from a supplier |
+| `ViewOrders` | Orders log and stock-in log, search, filters |
+| `CancelOrders` | Cancel an order (returns its stock) or a stock-in (takes its stock back out) |
+| `ManageCatalog` | Add / edit categories and items |
 | `ManageUsers` | Add users, set permissions, reset passwords |
 
-`StandardUser` = ViewStock + ManageCustomers + CreateOrders + AddStock + ViewOrders (the home page). Admins have everything. Permissions are checked against the database on every request, so a change or a disabled account applies immediately on every PC.
+`StandardUser` = ViewStock + ManageCustomers + ManageSuppliers + CreateOrders + AddStock + ViewOrders (the home page). When suppliers were added, everyone who had ManageCustomers was given ManageSuppliers. Admins have everything. Permissions are checked against the database on every request, so a change or a disabled account applies immediately on every PC.
 
 ## API overview
 
@@ -147,12 +156,16 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 | GET | `/api/categories` | ViewStock | With item count and total units |
 | POST/PUT/DELETE | `/api/categories[/{id}]` | ManageCatalog | Delete removes an empty category, else disables it |
 | GET | `/api/items?categoryId=&search=&inStockOnly=&lowStockOnly=` | ViewStock | Items with available quantity (New Order picker) |
-| POST/PUT/DELETE | `/api/items[/{id}]` | ManageCatalog | Add (with initial quantity) / edit details / disable |
-| POST | `/api/items/{id}/add-quantity` | AddStock | Add received stock |
-| POST | `/api/items/{id}/adjust` | ManageCatalog | Set counted quantity, reason required |
+| POST/PUT/DELETE | `/api/items[/{id}]` | ManageCatalog | Add (starts at 0) / edit details / disable. Quantity is never set directly |
 | GET | `/api/customers?search=` | any | Customer picker. A number matches that customer number exactly; text matches name, phone, tax number, contact |
 | POST/PUT/DELETE | `/api/customers[/{id}]` | ManageCustomers | Add / edit / disable |
 | POST | `/api/customers/import` | ManageCustomers | Bulk add `{ rows: [{ customerNumber, companyName, phoneNumber, taxNumber }] }`. Rows whose number already exists, or with no name, are skipped and listed in `messages`, so importing the same sheet twice is safe |
+| GET | `/api/suppliers?search=` | any | Supplier picker, same matching as customers |
+| POST/PUT/DELETE | `/api/suppliers[/{id}]` | ManageSuppliers | Add / edit / disable |
+| POST | `/api/stock-ins` | AddStock | Stock in from a supplier `{ supplierId, voucherNumber, supplierInvoiceNumber?, notes?, lines }`, adds stock. `409` if the voucher number is used |
+| GET | `/api/stock-ins?search=&from=&to=&supplierId=&itemId=&status=` | ViewOrders | Stock-in log, paged |
+| GET | `/api/stock-ins/{id}` | ViewOrders | One stock-in with lines |
+| POST | `/api/stock-ins/{id}/cancel` | CancelOrders | Cancel and take the stock back out; `409` with `shortages` if it was already issued |
 | POST | `/api/orders` | CreateOrders | Create order, deduct stock (see below) |
 | GET | `/api/orders` | ViewOrders | Orders log (filters below), paged |
 | GET | `/api/orders/{id}` | ViewOrders | One order with lines |
@@ -168,6 +181,7 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 POST /api/orders
 {
   "customerId": 3,
+  "issueVoucherNumber": "S-2051",
   "withReceipt": true,
   "receiptNumber": "R-10045",
   "notes": "Delivered by Ahmed",
@@ -176,8 +190,8 @@ POST /api/orders
 ```
 
 - `201` returns the full order (`orderNumber`, lines, customer, who created it).
-- `400` if `withReceipt` is true without a receipt number, or an item/customer is disabled.
-- `409` if the receipt number is already used, or stock is short. A shortage response lists every short item, and **nothing is taken**:
+- `400` if the issue voucher number is missing, `withReceipt` is true without a receipt number, or an item/customer is disabled.
+- `409` if the issue voucher or receipt number is already used, or stock is short. A shortage response lists every short item, and **nothing is taken**:
   ```json
   { "status": 409, "title": "Not enough stock for one or more items. Nothing was taken.",
     "shortages": [ { "itemId": 9, "itemName": "Xpass", "requested": 3, "available": 2 } ] }
@@ -187,7 +201,7 @@ POST /api/orders
 
 ### Orders log filters (`GET /api/orders`)
 
-All optional, combined with AND: `search` (order no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
+All optional, combined with AND: `search` (order no., issue voucher no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `issueVoucherNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
 
 Response: `{ items: OrderDto[], page, pageSize, totalCount, totalPages }`.
 
