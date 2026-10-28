@@ -10,14 +10,15 @@ Internal stock app for OnTech: categories and items with quantities, customers, 
 | `src/OnTech.Store.Contracts` | DTOs and enums shared with the desktop app (`Permission`, `OrderQuery`, `CreateOrderRequest`, ...). |
 | `src/OnTech.Store.Client` | Typed HTTP client for the API (`StoreApiClient`), used by the desktop app. Turns server errors into readable messages. |
 | `src/OnTech.Store.Desktop` | WPF (.NET 8) desktop app, `OnTechStore.exe`. MVVM with CommunityToolkit.Mvvm. |
-| `tests/OnTech.Store.Api.Tests` | End-to-end API tests (in-memory host + SQLite), including a 3-PC concurrency test, plus tests of the desktop app's API client against the real server. |
+| `tests/OnTech.Store.Api.Tests` | End-to-end API tests (in-memory host + SQLite), including a 3-PC concurrency test, plus tests of the desktop app's API client against the real server. `FeatureCoverageTests` goes through every feature: the permission matrix, bad input, the opening data, the orders log and 3-PC races. |
+| `tools/OnTech.Store.LoadTest` | Load test: several PCs using a running server at once, with timings per screen and a stock check at the end. |
 | `db/OnTechStore.sql` | Idempotent SQL script of the schema, for review or manual setup. |
 | `docs/swagger.json` | OpenAPI spec snapshot. The live, clickable version is at `/swagger` on the server. |
 | `scripts/` | `install-service.ps1` (publish + install Windows service + firewall), `backup-database.ps1`. |
 
 ## Deployment (server PC)
 
-Hardware: any normal office PC is enough for 3 clients. The API idles at roughly 60–100 MB RAM; SQL Server Express is capped by Microsoft at 1.4 GB buffer memory and 10 GB per database, which is years of orders for a store this size.
+Hardware: any normal office PC is enough for 3 clients. The API idles at roughly 140 MB RAM and stays around 300 MB with 3 PCs working (see *Load test* below); SQL Server Express is capped by Microsoft at 1.4 GB buffer memory and 10 GB per database, which is years of orders for a store this size.
 
 1. Install the [.NET 8 ASP.NET Core Runtime (Hosting Bundle)](https://dotnet.microsoft.com/download/dotnet/8.0), **SQL Server Express** (instance name `SQLEXPRESS`), and `sqlcmd`.
 2. Give the server PC a fixed IP address on the office network (or a DHCP reservation).
@@ -78,6 +79,18 @@ cd src/OnTech.Store.Api
 ASPNETCORE_ENVIRONMENT=Development dotnet run   # uses a local SQLite file, no SQL Server needed
 # open http://localhost:5080/swagger
 ```
+
+### Load test
+
+`tools/OnTech.Store.LoadTest` acts like several store PCs working at the same time against a running server, through the same API client as the desktop app: home page, stock list, New Order pickers, customer search by name and number, orders log, saving orders (some with receipts), Add Quantity and cancelling orders. At the end it prints the time each call took (average, p50, p95, p99, max), any errors, and checks that every unit taken, added or returned adds up on the server.
+
+```bash
+dotnet run -c Release --project tools/OnTech.Store.LoadTest -- --server 192.168.1.10 --user admin --password <password> --pcs 3 --seconds 60 --think-ms 300
+```
+
+It only orders and restocks a "Load test ..." category, items and customer that it makes for itself and disables at the end, but those orders stay in the orders log, so run it on a test copy of the server when you can. Exit code 0 means PASS.
+
+Results on 2026-10-28 (4-core Linux container, SQLite, Release build, opening data loaded): 3 PCs with a short pause between clicks made ~10 calls/second, every screen answered in under 10 ms at the median and under 20 ms at p95 (Save order p95 16 ms), with no errors and an exact stock check. A stress run of 10 PCs with no pause at all made ~400 calls/second, still with no errors and an exact stock check; reads stayed under 25 ms at p95, saves queued for SQLite's single writer (p95 ≈ 300 ms). SQL Server locks per row, so writes there should do better.
 
 The desktop app is built with Visual Studio 2022 or `dotnet build src/OnTech.Store.Desktop` and runs on Windows only (the project sets `EnableWindowsTargeting` so it also compiles on Linux CI). Run the API in Development mode, start the app, and use `localhost` as the server address.
 
