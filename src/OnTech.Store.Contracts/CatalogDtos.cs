@@ -82,9 +82,34 @@ public sealed class StockMovementDto
 public sealed class ItemCardDto
 {
     public ItemDto Item { get; init; } = null!;
+    /// <summary>The period shown, as asked for (null = from the first movement / up to now).</summary>
+    public DateTimeOffset? From { get; init; }
+    public DateTimeOffset? To { get; init; }
+    /// <summary>Quantity in the store just before the period (0 when the card starts from the first movement).</summary>
+    public int OpeningBalance { get; init; }
+    /// <summary>Quantity in the store at the end of the period.</summary>
+    public int ClosingBalance { get; init; }
+    /// <summary>In and out within the period.</summary>
     public int TotalIn { get; init; }
     public int TotalOut { get; init; }
     public IReadOnlyList<ItemCardLineDto> Lines { get; init; } = Array.Empty<ItemCardLineDto>();
+    /// <summary>Customers who took the most of this item in the period, net of cancelled orders, most first (top 5).</summary>
+    public IReadOnlyList<ItemCardCustomerDto> TopCustomers { get; init; } = Array.Empty<ItemCardCustomerDto>();
+}
+
+public sealed class ItemCardCustomerDto
+{
+    public int CustomerId { get; init; }
+    public string CustomerName { get; init; } = "";
+    public int Quantity { get; init; }
+    public int Orders { get; init; }
+}
+
+/// <summary>Optional period for the item card. Both ends are included.</summary>
+public sealed class ItemCardQuery
+{
+    public DateTimeOffset? From { get; set; }
+    public DateTimeOffset? To { get; set; }
 }
 
 public sealed class ItemCardLineDto

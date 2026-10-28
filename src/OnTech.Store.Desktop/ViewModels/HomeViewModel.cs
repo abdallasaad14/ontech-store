@@ -82,4 +82,6 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
         if (item is null || !CanCreateOrders) return;
         shell.Open(Page.NewOrder, vm => ((NewOrderViewModel)vm).PreselectItemId = item.Id);
     }
+
+    [RelayCommand] private void OpenCard(ItemDto? i) => ItemCards.Open(Session, i);
 }

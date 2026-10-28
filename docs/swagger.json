@@ -904,7 +904,7 @@
                 "tags": [
                     "Items"
                 ],
-                "summary": "The item card: every movement of this item, oldest first, with who supplied or took it and the balance after it.",
+                "summary": "The item card: every movement of this item, oldest first, with who supplied or took it and the balance after it.\r\nWith a period, also the balance just before it and the customers who took the most within it.",
                 "parameters": [
                     {
                         "name": "id",
@@ -913,6 +913,22 @@
                         "schema": {
                             "type": "integer",
                             "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "From",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "To",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
                         }
                     }
                 ],
@@ -2531,14 +2547,58 @@
                 },
                 "additionalProperties": false
             },
+            "ItemCardCustomerDto": {
+                "type": "object",
+                "properties": {
+                    "customerId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "customerName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "orders": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "additionalProperties": false
+            },
             "ItemCardDto": {
                 "type": "object",
                 "properties": {
                     "item": {
                         "$ref": "#/components/schemas/ItemDto"
                     },
+                    "from": {
+                        "type": "string",
+                        "description": "The period shown, as asked for (null = from the first movement / up to now).",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "to": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "openingBalance": {
+                        "type": "integer",
+                        "description": "Quantity in the store just before the period (0 when the card starts from the first movement).",
+                        "format": "int32"
+                    },
+                    "closingBalance": {
+                        "type": "integer",
+                        "description": "Quantity in the store at the end of the period.",
+                        "format": "int32"
+                    },
                     "totalIn": {
                         "type": "integer",
+                        "description": "In and out within the period.",
                         "format": "int32"
                     },
                     "totalOut": {
@@ -2550,6 +2610,14 @@
                         "items": {
                             "$ref": "#/components/schemas/ItemCardLineDto"
                         },
+                        "nullable": true
+                    },
+                    "topCustomers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemCardCustomerDto"
+                        },
+                        "description": "Customers who took the most of this item in the period, net of cancelled orders, most first (top 5).",
                         "nullable": true
                     }
                 },

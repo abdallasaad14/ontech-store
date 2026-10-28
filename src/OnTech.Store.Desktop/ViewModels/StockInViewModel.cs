@@ -185,4 +185,7 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
         if (Lines.Count > 0 && !Dialogs.Confirm(L.T("Discard this stock-in?"))) return;
         shell.Navigate(Page.Home);
     }
+
+    /// <summary>Opens the picked item's card, to check its history before saving.</summary>
+    [RelayCommand] private void OpenCard() => ItemCards.Open(Session, SelectedItem);
 }

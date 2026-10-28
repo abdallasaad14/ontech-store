@@ -544,5 +544,40 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         Assert.Equal(order.ReceiptNumber, issued.InvoiceNumber);
 
         Assert.Equal(404, (int)(await admin.GetAsync("/api/items/999999/card")).StatusCode);
+        Assert.Empty(card.TopCustomers); // the only order was cancelled
+    }
+
+    [Fact]
+    public async Task Item_card_period_starts_from_the_balance_before_it_and_ranks_customers()
+    {
+        var (admin, _, item, customer) = await SetupAsync(qty: 20);
+        var other = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Card other {Tag()}" })).Read<CustomerDto>();
+        async Task<OrderDto> Order(CustomerDto c, int qty) => await (await admin.Post("/api/orders", new CreateOrderRequest
+        {
+            IssueVoucherNumber = TestStock.Voucher(), CustomerId = c.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = qty } },
+        })).Read<OrderDto>();
+        await Order(customer, 2);
+        await Order(other, 5);
+        var cancelled = await Order(customer, 4);
+        await (await admin.Post($"/api/orders/{cancelled.Id}/cancel", new CancelOrderRequest { Reason = "test" })).Read<OrderDto>();
+        await Order(customer, 1);
+
+        var all = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card");
+        Assert.Equal(0, all.OpeningBalance);
+        Assert.Equal(12, all.ClosingBalance);
+        Assert.Equal([(other.Id, 5, 1), (customer.Id, 3, 2)], all.TopCustomers.Select(c => (c.CustomerId, c.Quantity, c.Orders)));
+
+        // A period after every movement: nothing in it, and it opens and closes at today's quantity.
+        var later = Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(1).ToString("o"));
+        var future = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card?from={later}");
+        Assert.Empty(future.Lines);
+        Assert.Equal((12, 12, 0, 0), (future.OpeningBalance, future.ClosingBalance, future.TotalIn, future.TotalOut));
+        Assert.Empty(future.TopCustomers);
+
+        // A period before the item existed: empty, balance 0.
+        var earlier = Uri.EscapeDataString(DateTimeOffset.UtcNow.AddDays(-1).ToString("o"));
+        var past = await admin.GetAs<ItemCardDto>($"/api/items/{item.Id}/card?to={earlier}");
+        Assert.Empty(past.Lines);
+        Assert.Equal((0, 0), (past.OpeningBalance, past.ClosingBalance));
     }
 }
