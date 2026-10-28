@@ -2,6 +2,8 @@
 
 Internal stock app for OnTech: categories and items with quantities, customers, and orders that take stock out of the store, with an optional receipt number. This repository holds the server (database + REST API) and the WPF desktop app that staff use on up to 3 PCs.
 
+New here? `docs/STATUS.md` lists every feature, its state, and where its code lives.
+
 ## Layout
 
 | Path | What it is |
