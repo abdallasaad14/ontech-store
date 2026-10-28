@@ -101,13 +101,13 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (f.Status is { } st) q = q.Where(o => o.Status == st);
         if (f.ReceiptNumber.Clean() is { } rn) q = q.Where(o => o.ReceiptNumber != null && o.ReceiptNumber.Contains(rn));
         if (f.OrderNumber.Clean() is { } on) q = q.Where(o => o.OrderNumber.Contains(on));
-        if (f.Search.Clean() is { } s)
-            q = q.Where(o => o.OrderNumber.Contains(s)
-                             || (o.ReceiptNumber != null && o.ReceiptNumber.Contains(s))
-                             || o.Customer.CompanyName.Contains(s)
-                             || (o.Customer.TaxNumber != null && o.Customer.TaxNumber.Contains(s))
-                             || (o.Notes != null && o.Notes.Contains(s))
-                             || o.Lines.Any(l => l.ItemName.Contains(s) || (l.ItemCode != null && l.ItemCode.Contains(s))));
+        if (f.Search.Clean()?.ToLower() is { } s) // ToLower: SQLite compares case-sensitively; SQL Server doesn't.
+            q = q.Where(o => o.OrderNumber.ToLower().Contains(s)
+                             || (o.ReceiptNumber != null && o.ReceiptNumber.ToLower().Contains(s))
+                             || o.Customer.CompanyName.ToLower().Contains(s)
+                             || (o.Customer.TaxNumber != null && o.Customer.TaxNumber.ToLower().Contains(s))
+                             || (o.Notes != null && o.Notes.ToLower().Contains(s))
+                             || o.Lines.Any(l => l.ItemName.ToLower().Contains(s) || (l.ItemCode != null && l.ItemCode.ToLower().Contains(s))));
         return q;
     }
 }

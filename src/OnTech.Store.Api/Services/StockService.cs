@@ -38,7 +38,7 @@ public sealed class StockService(StoreDbContext db)
         foreach (var w in wanted)
         {
             if (!items.TryGetValue(w.ItemId, out var item)) throw ApiException.NotFound($"Item #{w.ItemId}");
-            if (!item.IsActive) throw ApiException.BadRequest($"'{item.Name}' is disabled and cannot be ordered.");
+            if (!item.IsActive || !item.Category.IsActive) throw ApiException.BadRequest($"'{item.Name}' is disabled and cannot be ordered.");
         }
 
         var now = DateTime.UtcNow;

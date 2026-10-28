@@ -58,6 +58,9 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         if (losesAdmin && !await db.Users.AnyAsync(u => u.Id != id && u.IsAdmin && u.IsActive, ct))
             throw ApiException.Conflict("You can't remove or disable the last active admin.");
 
+        if (id == User.GetUserId() && (!req.IsActive || (user.IsAdmin && !req.IsAdmin)))
+            throw ApiException.BadRequest("You can't disable your own account or remove your own admin rights.");
+
         user.FullName = req.FullName.Trim();
         user.Username = username;
         user.NormalizedUsername = username.ToUpperInvariant();

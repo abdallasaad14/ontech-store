@@ -7,6 +7,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Workstation GC: a few PCs don't need a heap per CPU core. Under a 10-PC stress test this keeps the server near 350 MB instead of 900 MB. -->
+    <ServerGarbageCollection>false</ServerGarbageCollection>
     <Version>1.0.0</Version>
     <UserSecretsId>ontech-store-api</UserSecretsId>
   </PropertyGroup>
