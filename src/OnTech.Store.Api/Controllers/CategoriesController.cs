@@ -27,12 +27,16 @@ public class CategoriesController(StoreDbContext db) : ControllerBase
     public async Task<ActionResult<CategoryDto>> Create(SaveCategoryRequest req, CancellationToken ct)
     {
         var name = req.Name.Trim();
-        await EnsureNameFree(name, null, ct);
-        var code = req.Code.Clean()?.ToUpperInvariant() ?? await CatalogCodes.NextCategoryCodeAsync(db, ct);
-        await EnsureCodeFree(code, null, ct);
-        var cat = new Category { Code = code, Name = name, Description = req.Description?.Trim(), IsActive = req.IsActive, CreatedAt = DateTime.UtcNow };
-        db.Categories.Add(cat);
-        await db.SaveChangesAsync(ct);
+        var cat = await NumberingGate.RunAsync(async () =>
+        {
+            await EnsureNameFree(name, null, ct);
+            var code = req.Code.Clean()?.ToUpperInvariant() ?? await CatalogCodes.NextCategoryCodeAsync(db, ct);
+            await EnsureCodeFree(code, null, ct);
+            var created = new Category { Code = code, Name = name, Description = req.Description?.Trim(), IsActive = req.IsActive, CreatedAt = DateTime.UtcNow };
+            db.Categories.Add(created);
+            await db.SaveChangesAsync(ct);
+            return created;
+        }, ct);
         return CreatedAtAction(nameof(Get), new { id = cat.Id }, await Project(db.Categories.Where(c => c.Id == cat.Id)).FirstAsync(ct));
     }
 

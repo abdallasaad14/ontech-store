@@ -40,12 +40,15 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     {
         var name = req.CompanyName.Trim();
         if (name.Length == 0) throw ApiException.BadRequest("Company name is required.");
-        await EnsureUnique(name, req.TaxNumber.Clean(), req.CustomerNumber, null, ct);
         var c = new Customer { CreatedAt = DateTime.UtcNow, CreatedByUserId = User.GetUserId() };
-        Apply(c, req);
-        c.CustomerNumber ??= await NextNumberAsync(ct);
-        db.Customers.Add(c);
-        await db.SaveChangesAsync(ct);
+        await NumberingGate.RunAsync(async () =>
+        {
+            await EnsureUnique(name, req.TaxNumber.Clean(), req.CustomerNumber, null, ct);
+            Apply(c, req);
+            c.CustomerNumber ??= await NextNumberAsync(ct);
+            db.Customers.Add(c);
+            return await db.SaveChangesAsync(ct);
+        }, ct);
         return CreatedAtAction(nameof(Get), new { id = c.Id }, await Project(db.Customers.Where(x => x.Id == c.Id)).FirstAsync(ct));
     }
 
@@ -68,10 +71,16 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     /// </summary>
     [HttpPost("import")]
     [HasPermission(Permission.ManageCustomers)]
-    public async Task<ImportCustomersResult> Import(ImportCustomersRequest req, CancellationToken ct)
+    public Task<ImportCustomersResult> Import(ImportCustomersRequest req, CancellationToken ct) =>
+        NumberingGate.RunAsync(() => ImportRows(req, ct), ct);
+
+    private async Task<ImportCustomersResult> ImportRows(ImportCustomersRequest req, CancellationToken ct)
     {
         var usedNumbers = (await db.Customers.Where(c => c.CustomerNumber != null).Select(c => c.CustomerNumber!.Value).ToListAsync(ct)).ToHashSet();
         var next = usedNumbers.Count == 0 ? 1 : usedNumbers.Max() + 1;
+        // A row without a number is skipped when its name is already in (or earlier in the file), so a sheet
+        // without numbers can be imported twice safely. Numbered rows are matched by number only.
+        var usedNames = (await db.Customers.Select(c => c.CompanyName).ToListAsync(ct)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var userId = User.GetUserId();
         var now = DateTime.UtcNow;
         var messages = new List<string>();
@@ -90,6 +99,7 @@ public class CustomersController(StoreDbContext db) : ControllerBase
             if (name.Length > 200) { messages.Add($"{label}: company name is longer than 200 characters"); continue; }
             if (r.CustomerNumber is <= 0) { messages.Add($"{label} ({name}): number must be 1 or more"); continue; }
             if (r.CustomerNumber is { } n && usedNumbers.Contains(n)) { messages.Add($"{label} ({name}): number {n} already exists"); continue; }
+            if (!usedNames.Add(name) && r.CustomerNumber is null) { messages.Add($"{label}: '{name}' already exists"); continue; }
 
             var number = r.CustomerNumber ?? next++;
             usedNumbers.Add(number);

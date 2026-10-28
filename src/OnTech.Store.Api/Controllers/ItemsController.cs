@@ -25,8 +25,8 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         if (!includeInactive) q = q.Where(i => i.IsActive && i.Category.IsActive);
         if (lowStockOnly) q = q.Where(i => i.LowStockThreshold > 0 && i.Quantity <= i.LowStockThreshold);
         if (inStockOnly) q = q.Where(i => i.Quantity > 0);
-        if (search.Clean() is { } s)
-            q = q.Where(i => i.Name.Contains(s) || (i.Code != null && i.Code.Contains(s)) || i.Category.Name.Contains(s));
+        if (search.Clean()?.ToLower() is { } s) // ToLower: SQLite compares case-sensitively; SQL Server doesn't.
+            q = q.Where(i => i.Name.ToLower().Contains(s) || (i.Code != null && i.Code.ToLower().Contains(s)) || i.Category.Name.ToLower().Contains(s));
         var items = await q.OrderBy(i => i.Category.Name).ThenBy(i => i.Name).ToListAsync(ct);
         return items.Select(i => i.ToDto()).ToList();
     }
@@ -41,16 +41,20 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
     {
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == req.CategoryId, ct) ?? throw ApiException.NotFound("Category");
         var name = req.Name.Trim();
-        await EnsureNameFree(req.CategoryId, name, null, ct);
         var now = DateTime.UtcNow;
-        var item = new Item
+        var item = await NumberingGate.RunAsync(async () =>
         {
-            Category = category, Name = name, Code = req.Code.Clean() ?? await CatalogCodes.NextItemCodeAsync(db, category, ct), Description = req.Description.Clean(),
-            Quantity = req.InitialQuantity, LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
-        };
-        db.Items.Add(item);
-        stock.RecordInitialStock(item, User.GetUserId());
-        await db.SaveChangesAsync(ct);
+            await EnsureNameFree(req.CategoryId, name, null, ct);
+            var created = new Item
+            {
+                Category = category, Name = name, Code = req.Code.Clean() ?? await CatalogCodes.NextItemCodeAsync(db, category, ct), Description = req.Description.Clean(),
+                Quantity = req.InitialQuantity, LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
+            };
+            db.Items.Add(created);
+            stock.RecordInitialStock(created, User.GetUserId());
+            await db.SaveChangesAsync(ct);
+            return created;
+        }, ct);
         return CreatedAtAction(nameof(Get), new { id = item.Id }, item.ToDto());
     }
 
