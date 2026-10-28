@@ -5,6 +5,7 @@ namespace OnTech.Store.Contracts;
 public sealed class CategoryDto
 {
     public int Id { get; init; }
+    public string? Code { get; init; }
     public string Name { get; init; } = "";
     public string? Description { get; init; }
     public bool IsActive { get; init; }
@@ -14,6 +15,8 @@ public sealed class CategoryDto
 
 public sealed class SaveCategoryRequest
 {
+    /// <summary>Leave empty to get the next free code (C01, C02, ...) on create, or to keep the current one on edit.</summary>
+    [MaxLength(10)] public string? Code { get; set; }
     [Required, MaxLength(100)] public string Name { get; set; } = "";
     [MaxLength(500)] public string? Description { get; set; }
     public bool IsActive { get; set; } = true;

@@ -33,6 +33,8 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
 
         b.Entity<Category>(e =>
         {
+            e.Property(x => x.Code).HasMaxLength(10);
+            e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Name).HasMaxLength(100).IsRequired();
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasIndex(x => x.Name).IsUnique();

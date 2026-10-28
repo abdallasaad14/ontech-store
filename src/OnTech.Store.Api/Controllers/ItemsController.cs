@@ -45,7 +45,7 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         var now = DateTime.UtcNow;
         var item = new Item
         {
-            Category = category, Name = name, Code = req.Code.Clean(), Description = req.Description.Clean(),
+            Category = category, Name = name, Code = req.Code.Clean() ?? await CatalogCodes.NextItemCodeAsync(db, category, ct), Description = req.Description.Clean(),
             Quantity = req.InitialQuantity, LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
         };
         db.Items.Add(item);
@@ -66,7 +66,7 @@ public class ItemsController(StoreDbContext db, StockService stock) : Controller
         await EnsureNameFree(req.CategoryId, name, id, ct);
         item.CategoryId = req.CategoryId;
         item.Name = name;
-        item.Code = req.Code.Clean();
+        item.Code = req.Code.Clean() ?? item.Code; // Empty keeps the generated code.
         item.Description = req.Description.Clean();
         item.LowStockThreshold = req.LowStockThreshold;
         item.IsActive = req.IsActive;

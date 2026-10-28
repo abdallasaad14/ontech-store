@@ -335,4 +335,33 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         Assert.Equal("Star Medical Center", Assert.Single(await admin.GetAs<List<CustomerDto>>("/api/customers?search=2"), c => c.CustomerNumber == 2).CompanyName);
         Assert.Equal(1, _f.WithDb(db => db.AppliedSeeds.Count()));
     }
+
+    [Fact]
+    public async Task Categories_and_items_get_generated_codes()
+    {
+        var admin = await _f.LoginAsync();
+        // The opening data is coded in sheet order: Data card is C01, Fargo C04.
+        var categories = await admin.GetAs<List<CategoryDto>>("/api/categories");
+        Assert.Equal("C01", categories.Single(c => c.Name == "Data card").Code);
+        var fargo = categories.Single(c => c.Name == "Fargo");
+        Assert.Equal("C04", fargo.Code);
+        var fargoItems = await admin.GetAs<List<ItemDto>>($"/api/items?categoryId={fargo.Id}");
+        Assert.Equal("C04-001", fargoItems.Single(i => i.Name == "HDP 5000 PRINTER SingleSide").Code);
+        Assert.All(fargoItems, i => Assert.StartsWith("C04-", i.Code));
+
+        var tag = Guid.NewGuid().ToString("N")[..6];
+        var cat = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Coded {tag}" })).Read<CategoryDto>();
+        Assert.Matches(@"^C\d{2,}$", cat.Code);
+        var first = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "One" })).Read<ItemDto>();
+        var second = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Two" })).Read<ItemDto>();
+        var own = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = "Three", Code = "MODEL-X" })).Read<ItemDto>();
+        Assert.Equal($"{cat.Code}-001", first.Code);
+        Assert.Equal($"{cat.Code}-002", second.Code);
+        Assert.Equal("MODEL-X", own.Code);
+
+        // Saving an item with the code box empty keeps its code.
+        var edited = await (await admin.Put($"/api/items/{first.Id}", new UpdateItemRequest { CategoryId = cat.Id, Name = "One renamed" })).Read<ItemDto>();
+        Assert.Equal($"{cat.Code}-001", edited.Code);
+        Assert.Equal(HttpStatusCode.Conflict, (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Clash {tag}", Code = "C01" })).StatusCode);
+    }
 }

@@ -183,3 +183,7 @@ On the Customers page, **Import from Excel** reads the first sheet (or a sheet n
 
 `src/OnTech.Store.Api/Data/Seed/opening-data.json` holds OnTech's stock (11 categories, 318 items with their balances) and 505 customers, taken from the old Excel sheets on 2026-10-28. The server loads it once on startup into any database (new or existing): categories and items that already exist by name, and customers whose number or name is already there (for example after Import from Excel), are left alone. Every item with a balance gets an *Initial* stock movement. The load is recorded in the `AppliedSeeds` table, so restarting the server, or later edits and orders, never bring it back. Cleanups made while converting: `!A1` link leftovers and extra spaces removed from names, the two "DURAGRD LAMINATE" rows in Data card merged, and "palstic box" (−2 in the sheet) set to 0.
 
+## Codes
+
+Categories get codes `C01`, `C02`, ... and items get their category's code plus a number, e.g. `C04-001`. Leave the code box empty when adding a category or item to get the next one; type your own (e.g. a model number) to override it. An item keeps its code if it moves to another category. The opening data is coded in the sheet's order (Data card = C01 ... SUPREMA = C11), and any category or item still without a code gets one on startup. Item search matches codes, so typing `C04` lists the Fargo items.
+

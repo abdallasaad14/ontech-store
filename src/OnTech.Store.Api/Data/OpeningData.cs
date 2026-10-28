@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using OnTech.Store.Api.Services;
 using OnTech.Store.Contracts;
 
 namespace OnTech.Store.Api.Data;
@@ -28,20 +29,24 @@ public static class OpeningData
         var adminId = await db.Users.Where(u => u.IsAdmin).OrderBy(u => u.Id).Select(u => u.Id).FirstAsync();
         var categories = await db.Categories.Include(c => c.Items).ToListAsync();
         int newItems = 0, newCustomers = 0;
+        // Codes follow the sheet's order (Data card = C01, its first item C01-001), so they are set here, not by insert order.
+        var nextCategory = CatalogCodes.Max(categories.Where(c => c.Code != null).Select(c => c.Code!), "C") + 1;
 
         foreach (var sc in data.Categories)
         {
             var category = categories.FirstOrDefault(c => c.Name.Equals(sc.Name, StringComparison.OrdinalIgnoreCase));
             if (category is null)
             {
-                category = new Category { Name = sc.Name, CreatedAt = now };
+                category = new Category { Code = CatalogCodes.CategoryCode(nextCategory++), Name = sc.Name, CreatedAt = now };
                 db.Categories.Add(category);
                 categories.Add(category);
             }
+            category.Code ??= CatalogCodes.CategoryCode(nextCategory++);
+            var nextItem = CatalogCodes.Max(await db.Items.Where(i => i.Code != null).Select(i => i.Code!).ToListAsync(), category.Code + "-") + 1;
             foreach (var si in sc.Items)
             {
                 if (category.Items.Any(i => i.Name.Equals(si.Name, StringComparison.OrdinalIgnoreCase))) continue;
-                var item = new Item { Category = category, Name = si.Name, Quantity = si.Quantity, CreatedAt = now, UpdatedAt = now };
+                var item = new Item { Category = category, Code = CatalogCodes.ItemCode(category.Code, nextItem++), Name = si.Name, Quantity = si.Quantity, CreatedAt = now, UpdatedAt = now };
                 category.Items.Add(item);
                 if (item.Quantity > 0)
                     db.StockMovements.Add(new StockMovement

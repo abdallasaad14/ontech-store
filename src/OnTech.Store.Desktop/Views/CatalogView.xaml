@@ -38,6 +38,7 @@
                             <DataTemplate>
                                 <DockPanel>
                                     <TextBlock DockPanel.Dock="Right" Text="{Binding TotalQuantity}" Foreground="{StaticResource TextMutedBrush}" FontWeight="Normal"/>
+                                    <TextBlock Text="{Binding Code}" Foreground="{StaticResource TextMutedBrush}" FontWeight="Normal" Margin="0,0,8,0"/>
                                     <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -108,6 +109,9 @@
                         <StackPanel Visibility="{Binding IsCategoryForm, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="Name *" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                            <TextBlock Text="Code" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Text="{Binding CategoryCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Leave empty for the next code (C01, C02, ...)." Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                             <TextBlock Text="Description" Style="{StaticResource FieldLabel}"/>
                             <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding CategoryDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <CheckBox Content="Active" IsChecked="{Binding CategoryActive}" Margin="0,0,0,18"/>
@@ -118,8 +122,9 @@
                             <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding ItemCategory}" DisplayMemberPath="Name" Margin="0,0,0,12"/>
                             <TextBlock Text="Item name *" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding ItemName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            <TextBlock Text="Code / model" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                            <TextBlock Text="Code" Style="{StaticResource FieldLabel}"/>
+                            <TextBox Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                            <TextBlock Text="Leave empty to generate one from the category, e.g. C01-004." Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                             <TextBlock Text="Description" Style="{StaticResource FieldLabel}"/>
                             <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding ItemDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <StackPanel Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}}">

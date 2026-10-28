@@ -26,6 +26,8 @@ public class User
 public class Category
 {
     public int Id { get; set; }
+    /// <summary>Short code such as C01; items in it get codes like C01-001. Unique.</summary>
+    public string? Code { get; set; }
     public string Name { get; set; } = "";
     public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
