@@ -6,6 +6,9 @@
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
             <Button DockPanel.Dock="Right" Content="+ Add customer" Style="{StaticResource PrimaryButton}" VerticalAlignment="Top"
                     Command="{Binding StartNewCommand}" Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}"/>
+            <Button DockPanel.Dock="Right" Content="Import from Excel" VerticalAlignment="Top" Margin="0,0,8,0"
+                    ToolTip="Add customers from an .xlsx or .csv sheet (number + company name, phone and tax number optional)"
+                    Command="{Binding ImportCommand}" Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}"/>
             <StackPanel>
                 <TextBlock Text="Customers" Style="{StaticResource PageTitle}"/>
                 <TextBlock Text="Companies that take items from the store." Style="{StaticResource PageSubtitle}"/>
@@ -24,7 +27,7 @@
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <CheckBox DockPanel.Dock="Right" Content="Show disabled" IsChecked="{Binding ShowDisabled}" Margin="12,0,0,0"/>
                         <Button DockPanel.Dock="Right" Content="Search" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="Company, phone, tax number or contact">
+                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="Customer number or company name (also phone, tax number, contact)">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>
@@ -33,8 +36,9 @@
                     <DataGrid x:Name="CustomersGrid" ItemsSource="{Binding Customers}" SelectedItem="{Binding Selected}" Margin="6,0,6,6"
                               MouseDoubleClick="OnDoubleClick">
                         <DataGrid.Columns>
+                            <DataGridTextColumn Header="NO." Binding="{Binding CustomerNumber}" Width="70"/>
                             <DataGridTextColumn Header="COMPANY" Binding="{Binding CompanyName}" Width="2*" FontWeight="SemiBold"/>
-                            <DataGridTextColumn Header="NUMBER" Binding="{Binding PhoneNumber}" Width="*"/>
+                            <DataGridTextColumn Header="PHONE" Binding="{Binding PhoneNumber}" Width="*"/>
                             <DataGridTextColumn Header="TAX NUMBER" Binding="{Binding TaxNumber}" Width="*"/>
                             <DataGridTextColumn Header="CONTACT" Binding="{Binding ContactPerson}" Width="*"/>
                             <DataGridTextColumn Header="ORDERS" Binding="{Binding OrderCount}" Width="80"/>
@@ -63,9 +67,12 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
+                        <TextBlock Text="Customer number" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Text="{Binding CustomerNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                        <TextBlock Text="Leave empty to use the next free number." Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                         <TextBlock Text="Company name *" Style="{StaticResource FieldLabel}"/>
                         <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="Number" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock Text="Phone" Style="{StaticResource FieldLabel}"/>
                         <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="Tax number" Style="{StaticResource FieldLabel}"/>
                         <TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>

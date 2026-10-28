@@ -57,6 +57,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.Notes).HasMaxLength(1000);
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
+            e.HasIndex(x => x.CustomerNumber).IsUnique();
         });
 
         b.Entity<Order>(e =>

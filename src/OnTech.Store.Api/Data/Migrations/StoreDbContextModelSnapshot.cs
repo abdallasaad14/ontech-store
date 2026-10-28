@@ -80,6 +80,9 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CustomerNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -102,6 +105,10 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyName");
+
+                    b.HasIndex("CustomerNumber")
+                        .IsUnique()
+                        .HasFilter("[CustomerNumber] IS NOT NULL");
 
                     b.HasIndex("TaxNumber");
 

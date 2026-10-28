@@ -285,4 +285,42 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         var swagger = await _f.CreateClient().GetAsync("/swagger/v1/swagger.json");
         Assert.Equal(HttpStatusCode.OK, swagger.StatusCode);
     }
+
+    [Fact]
+    public async Task Customers_import_from_sheet_and_search_by_number_or_name()
+    {
+        var admin = await _f.LoginAsync();
+        var tag = Guid.NewGuid().ToString("N")[..6];
+        var n = Random.Shared.Next(1_000_000, 9_000_000);
+        var req = new ImportCustomersRequest
+        {
+            Rows =
+            {
+                new() { CustomerNumber = n, CompanyName = $"  Star Medical {tag} " },
+                new() { CustomerNumber = n + 1, CompanyName = $"Food Bank {tag}" },
+                new() { CustomerNumber = n + 2, CompanyName = $"food bank {tag}" }, // same name, different number: kept
+                new() { CustomerNumber = n + 3, CompanyName = "  " },
+                new() { CustomerNumber = n, CompanyName = $"Duplicate {tag}" },
+            },
+        };
+        var result = await (await admin.Post("/api/customers/import", req)).Read<ImportCustomersResult>();
+        Assert.Equal(3, result.Added);
+        Assert.Equal(2, result.Skipped);
+        Assert.Equal(2, result.Messages.Count);
+
+        // Importing the same sheet again adds nothing.
+        var again = await (await admin.Post("/api/customers/import", req)).Read<ImportCustomersResult>();
+        Assert.Equal(0, again.Added);
+
+        var byNumber = await admin.GetAs<List<CustomerDto>>($"/api/customers?search={n}");
+        var star = Assert.Single(byNumber);
+        Assert.Equal($"Star Medical {tag}", star.CompanyName);
+        Assert.Equal(2, (await admin.GetAs<List<CustomerDto>>($"/api/customers?search=bank%20{tag}")).Count);
+
+        // New customers get the next number; a taken number is refused.
+        var added = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"New Co {tag}" })).Read<CustomerDto>();
+        Assert.True(added.CustomerNumber > n + 2);
+        var clash = await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Other {tag}", CustomerNumber = n });
+        Assert.Equal(HttpStatusCode.Conflict, clash.StatusCode);
+    }
 }

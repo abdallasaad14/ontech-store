@@ -39,6 +39,10 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(Summary), nameof(HasSummary))]
     private CustomerDto? _selectedCustomer;
 
+    /// <summary>Narrows the customer list by number or name; one match is picked straight away.</summary>
+    [ObservableProperty] private string? _customerSearch;
+    private List<CustomerDto> _allCustomers = new();
+
     [ObservableProperty] private bool _withReceipt;
     [ObservableProperty] private string? _receiptNumber;
     [ObservableProperty] private string? _notes;
@@ -84,8 +88,9 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
             var customers = Api.GetCustomersAsync();
             Categories.Clear();
             foreach (var c in await categories) Categories.Add(c);
-            Customers.Clear();
-            foreach (var c in await customers) Customers.Add(c);
+            _allCustomers = await customers;
+            CustomerSearch = null;
+            FilterCustomers();
 
             if (PreselectItemId is { } id)
             {
@@ -157,6 +162,21 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         OnPropertyChanged(nameof(HasSummary));
     }
 
+    partial void OnCustomerSearchChanged(string? value) => FilterCustomers();
+
+    private void FilterCustomers()
+    {
+        var text = CustomerSearch?.Trim() ?? "";
+        var keep = SelectedCustomer;
+        var matches = text.Length == 0
+            ? _allCustomers
+            : _allCustomers.Where(c => c.CustomerNumber?.ToString() == text || c.CompanyName.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
+        Customers.Clear();
+        foreach (var c in matches) Customers.Add(c);
+        if (matches.Count == 1) SelectedCustomer = matches[0];
+        else if (keep is not null) SelectedCustomer = Customers.FirstOrDefault(c => c.Id == keep.Id);
+    }
+
     [RelayCommand]
     private Task QuickAddCustomerAsync()
     {
@@ -165,8 +185,10 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         return RunAsync(async () =>
         {
             var created = await Api.CreateCustomerAsync(new SaveCustomerRequest { CompanyName = name.Trim() });
-            Customers.Add(created);
-            SelectedCustomer = created;
+            _allCustomers.Add(created);
+            CustomerSearch = null;
+            FilterCustomers();
+            SelectedCustomer = Customers.FirstOrDefault(c => c.Id == created.Id);
             SuccessMessage = $"Customer \"{created.CompanyName}\" added. You can add the phone and tax number later under Customers.";
         });
     }

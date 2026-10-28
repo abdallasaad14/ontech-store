@@ -61,7 +61,7 @@ What each screen does:
 | Home | everyone | Greeting, the three big actions (New Order, Add Quantity, Add Customer), today's numbers, and the stock table with In stock / Low / Out of stock. Double-click an item to order it. |
 | New Order | `CreateOrders` | Category → item (shows what's available) → quantity → customer, optional receipt number and notes. "Add another item" puts several items in one order. Shows how many are left after the order. If another PC took the stock first, the app says which item is short and refreshes the numbers. |
 | Add Quantity | `AddStock` | Category → item → quantity received, optional note. |
-| Customers | everyone (edit needs `ManageCustomers`) | Search, add, edit, disable. Company name is the only required field. |
+| Customers | everyone (edit needs `ManageCustomers`) | Search by customer number or name, add, edit, disable. Company name is the only required field; new customers get the next free number. **Import from Excel** adds customers from an `.xlsx`/`.csv` sheet (see below). |
 | Orders Log | `ViewOrders` | Search, with/without receipt filter, paging, order details, cancel (needs `CancelOrders`). The full log with every filter and receipt PDFs is the next step. |
 | Items & Categories | `ManageCatalog` (admin menu) | Add/edit categories and items with a starting quantity and low-stock level, stock counts (corrections with a reason), disable. |
 | Users | `ManageUsers` (admin menu) | Add users with a username + first password, admin flag or individual permissions, reset passwords, disable. |
@@ -95,7 +95,7 @@ Customers 1─* Orders 1─* OrderLines *─────────────
 
 - **Users**: name, username (unique, not case-sensitive, letters/digits/`.`/`-`/`_`), PBKDF2 password hash, `IsAdmin`, `Permissions` bit mask, `IsActive`, `MustChangePassword`.
 - **Categories**: unique name, active flag. **Items**: category, name (unique per category), optional code/model, `Quantity` (DB check: never below 0), `LowStockThreshold`.
-- **Customers**: `CompanyName` (required, unique), phone, tax number (unique when set), contact person, email, address, notes.
+- **Customers**: `CustomerNumber` (unique, next free number when left empty), `CompanyName` (required, unique when added by hand; an import keeps two same-name rows that have different numbers), phone, tax number (unique when set), contact person, email, address, notes.
 - **Orders**: `ORD-000123` number, customer, `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
 - **StockMovements**: every quantity change (Initial, Restock, Order, OrderCancelled, Adjustment) with the change, the quantity after, the user and the order. Stock can always be explained line by line.
 
@@ -134,8 +134,9 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 | POST/PUT/DELETE | `/api/items[/{id}]` | ManageCatalog | Add (with initial quantity) / edit details / disable |
 | POST | `/api/items/{id}/add-quantity` | AddStock | Add received stock |
 | POST | `/api/items/{id}/adjust` | ManageCatalog | Set counted quantity, reason required |
-| GET | `/api/customers?search=` | any | Customer picker |
+| GET | `/api/customers?search=` | any | Customer picker. A number matches that customer number exactly; text matches name, phone, tax number, contact |
 | POST/PUT/DELETE | `/api/customers[/{id}]` | ManageCustomers | Add / edit / disable |
+| POST | `/api/customers/import` | ManageCustomers | Bulk add `{ rows: [{ customerNumber, companyName, phoneNumber, taxNumber }] }`. Rows whose number already exists, or with no name, are skipped and listed in `messages`, so importing the same sheet twice is safe |
 | POST | `/api/orders` | CreateOrders | Create order, deduct stock (see below) |
 | GET | `/api/orders` | ViewOrders | Orders log (filters below), paged |
 | GET | `/api/orders/{id}` | ViewOrders | One order with lines |
@@ -173,3 +174,8 @@ POST /api/orders
 All optional, combined with AND: `search` (order no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
 
 Response: `{ items: OrderDto[], page, pageSize, totalCount, totalPages }`.
+
+## Importing customers
+
+On the Customers page, **Import from Excel** reads the first sheet (or a sheet named *Customers*) of an `.xlsx` or `.csv` file. With a header row, columns are found by name (Number / No / Code, Name / Company, Phone, Tax, in English or Arabic). Without a header, the column of whole numbers is the customer number and the column of text is the company name, which is how OnTech's old customer sheet is laid out. The app shows how many customers it found and asks before importing.
+

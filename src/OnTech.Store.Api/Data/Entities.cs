@@ -52,6 +52,8 @@ public class Item
 public class Customer
 {
     public int Id { get; set; }
+    /// <summary>OnTech's own customer number (from the old customer sheet). Unique; new customers get the next free one.</summary>
+    public int? CustomerNumber { get; set; }
     public string CompanyName { get; set; } = "";
     public string? PhoneNumber { get; set; }
     public string? TaxNumber { get; set; }

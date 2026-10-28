@@ -132,6 +132,9 @@ public sealed class StoreApiClient
     public Task<CustomerDto> UpdateCustomerAsync(int id, SaveCustomerRequest req, CancellationToken ct = default) =>
         SendAsync<CustomerDto>(HttpMethod.Put, $"api/customers/{id}", req, ct);
 
+    public Task<ImportCustomersResult> ImportCustomersAsync(ImportCustomersRequest req, CancellationToken ct = default) =>
+        SendAsync<ImportCustomersResult>(HttpMethod.Post, "api/customers/import", req, ct);
+
     public Task DisableCustomerAsync(int id, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Delete, $"api/customers/{id}", null, ct);
 
