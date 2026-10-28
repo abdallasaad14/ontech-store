@@ -86,3 +86,28 @@ public static class HttpExtensions
     public static Task<HttpResponseMessage> Put<T>(this HttpClient c, string url, T body) => c.PutAsJsonAsync(url, body, StoreApiFactory.Json);
     public static async Task<T> GetAs<T>(this HttpClient c, string url) => await (await c.GetAsync(url)).Read<T>();
 }
+
+/// <summary>Stock only changes through stock-in vouchers and orders, so tests fill items the same way.</summary>
+public static class TestStock
+{
+    private static int _next;
+
+    /// <summary>A fresh, unique voucher number.</summary>
+    public static string Voucher() => $"V{Interlocked.Increment(ref _next)}-{Guid.NewGuid().ToString("N")[..6]}";
+
+    public static async Task<ItemDto> AddItem(this HttpClient admin, CreateItemRequest req, int quantity)
+    {
+        var item = await (await admin.Post("/api/items", req)).Read<ItemDto>();
+        if (quantity > 0) await admin.StockIn(item.Id, quantity);
+        return await admin.GetAs<ItemDto>($"/api/items/{item.Id}");
+    }
+
+    public static async Task<StockInDto> StockIn(this HttpClient admin, int itemId, int quantity, SupplierDto? supplier = null)
+    {
+        supplier ??= await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Test supplier {Guid.NewGuid():N}" })).Read<SupplierDto>();
+        return await (await admin.Post("/api/stock-ins", new CreateStockInRequest
+        {
+            SupplierId = supplier.Id, VoucherNumber = Voucher(), Lines = { new OrderLineRequest { ItemId = itemId, Quantity = quantity } },
+        })).Read<StockInDto>();
+    }
+}

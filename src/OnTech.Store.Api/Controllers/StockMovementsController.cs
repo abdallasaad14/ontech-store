@@ -7,7 +7,7 @@ using OnTech.Store.Contracts;
 
 namespace OnTech.Store.Api.Controllers;
 
-/// <summary>The full history of stock in and out (initial stock, restocks, orders, cancellations, adjustments).</summary>
+/// <summary>The full history of stock in and out (initial stock, stock-in vouchers, orders, cancellations; older restocks and adjustments).</summary>
 [ApiController]
 [Route("api/stock-movements")]
 [HasPermission(Permission.ViewStock)]
@@ -30,7 +30,8 @@ public class StockMovementsController(StoreDbContext db) : ControllerBase
             .Select(m => new
             {
                 m.Id, m.ItemId, ItemName = m.Item.Name, CategoryName = m.Item.Category.Name, m.Type, m.Change, m.QuantityAfter,
-                m.OrderId, OrderNumber = m.Order != null ? m.Order.OrderNumber : null, m.UserId, UserName = m.User.FullName, m.Note, m.CreatedAt,
+                m.OrderId, OrderNumber = m.Order != null ? m.Order.OrderNumber : null,
+                m.StockInId, StockInNumber = m.StockIn != null ? m.StockIn.StockInNumber : null, m.UserId, UserName = m.User.FullName, m.Note, m.CreatedAt,
             })
             .ToListAsync(ct);
 
@@ -39,7 +40,8 @@ public class StockMovementsController(StoreDbContext db) : ControllerBase
             Items = rows.Select(m => new StockMovementDto
             {
                 Id = m.Id, ItemId = m.ItemId, ItemName = m.ItemName, CategoryName = m.CategoryName, Type = m.Type, Change = m.Change,
-                QuantityAfter = m.QuantityAfter, OrderId = m.OrderId, OrderNumber = m.OrderNumber, UserId = m.UserId,
+                QuantityAfter = m.QuantityAfter, OrderId = m.OrderId, OrderNumber = m.OrderNumber,
+                StockInId = m.StockInId, StockInNumber = m.StockInNumber, UserId = m.UserId,
                 UserName = m.UserName, Note = m.Note, CreatedAt = m.CreatedAt.ToUtcOffset(),
             }).ToList(),
             Page = f.Page,

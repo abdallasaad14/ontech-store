@@ -6,7 +6,7 @@ using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
 
-public enum Page { Home, NewOrder, AddQuantity, Customers, Orders, Catalog, Users }
+public enum Page { Home, NewOrder, StockIn, Customers, Suppliers, Orders, StockIns, Catalog, Users }
 
 public sealed record NavItem(Page Page, string Title, string Glyph);
 
@@ -20,9 +20,11 @@ public sealed partial class ShellViewModel : ObservableObject
         _session = session;
         Add(MainMenu, Page.Home, "Home", "\uE80F", null);
         Add(MainMenu, Page.NewOrder, "New Order", "\uE7BF", Permission.CreateOrders);
-        Add(MainMenu, Page.AddQuantity, "Add Quantity", "\uE710", Permission.AddStock);
+        Add(MainMenu, Page.StockIn, "Stock In", "\uE896", Permission.AddStock);
         Add(MainMenu, Page.Customers, "Customers", "\uE716", null);
+        Add(MainMenu, Page.Suppliers, "Suppliers", "\uE7B8", null);
         Add(MainMenu, Page.Orders, "Orders Log", "\uE8A5", Permission.ViewOrders);
+        Add(MainMenu, Page.StockIns, "Stock In Log", "\uE81C", Permission.ViewOrders);
         Add(AdminMenu, Page.Catalog, "Items & Categories", "\uE8F1", Permission.ManageCatalog);
         Add(AdminMenu, Page.Users, "Users", "\uE77B", Permission.ManageUsers);
         Navigate(MainMenu.Concat(AdminMenu).Any(i => i.Page == startPage) ? startPage : Page.Home);
@@ -74,9 +76,11 @@ public sealed partial class ShellViewModel : ObservableObject
         {
             Page.Home => new HomeViewModel(_session, this),
             Page.NewOrder => new NewOrderViewModel(_session, this),
-            Page.AddQuantity => new AddQuantityViewModel(_session),
+            Page.StockIn => new StockInViewModel(_session, this),
             Page.Customers => new CustomersViewModel(_session),
+            Page.Suppliers => new SuppliersViewModel(_session),
             Page.Orders => new OrdersViewModel(_session),
+            Page.StockIns => new StockInsViewModel(_session),
             Page.Catalog => new CatalogViewModel(_session),
             Page.Users => new UsersViewModel(_session),
             _ => throw new ArgumentOutOfRangeException(nameof(page)),
@@ -105,6 +109,8 @@ public sealed partial class ShellViewModel : ObservableObject
     private void SwitchLanguage()
     {
         if (CurrentPage is NewOrderViewModel { Lines.Count: > 0 } && !Dialogs.Confirm(L.T("Changing the language reopens the window and clears this order. Continue?")))
+            return;
+        if (CurrentPage is StockInViewModel { Lines.Count: > 0 } && !Dialogs.Confirm(L.T("Changing the language reopens the window and clears this stock-in. Continue?")))
             return;
         LanguageChangeRequested?.Invoke(this, EventArgs.Empty);
     }

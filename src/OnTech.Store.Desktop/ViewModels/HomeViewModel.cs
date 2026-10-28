@@ -73,7 +73,7 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
     }
 
     [RelayCommand] private void NewOrder() => shell.Navigate(Page.NewOrder);
-    [RelayCommand] private void AddQuantity() => shell.Navigate(Page.AddQuantity);
+    [RelayCommand] private void StockIn() => shell.Navigate(Page.StockIn);
     [RelayCommand] private void AddCustomer() => shell.Open(Page.Customers, vm => ((CustomersViewModel)vm).StartNew());
 
     [RelayCommand]

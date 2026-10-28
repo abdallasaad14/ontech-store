@@ -6,7 +6,7 @@
     <DockPanel Margin="32,28,32,24">
         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
             <TextBlock Text="{l:T 'Orders Log'}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{l:T 'Every order taken from the store, newest first. Search by order number, receipt number, customer or item.'}" Style="{StaticResource PageSubtitle}"/>
+            <TextBlock Text="{l:T 'Every order taken from the store, newest first. Search by order number, issue voucher, receipt number, customer or item.'}" Style="{StaticResource PageSubtitle}"/>
         </StackPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
 
@@ -40,6 +40,7 @@
                             <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding CreatedAt, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="140"/>
                             <DataGridTextColumn Header="{l:T 'CUSTOMER'}" Binding="{Binding CustomerName}" Width="2*"/>
                             <DataGridTextColumn Header="{l:T 'UNITS'}" Binding="{Binding TotalQuantity}" Width="70"/>
+                            <DataGridTextColumn Header="{l:T 'ISSUE VOUCHER'}" Binding="{Binding IssueVoucherNumber}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'RECEIPT'}" Binding="{Binding ReceiptNumber}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'BY'}" Binding="{Binding CreatedByUserName}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'STATUS'}" Binding="{Binding Status, Converter={StaticResource Translate}, Mode=OneWay}" Width="100"/>
@@ -72,6 +73,9 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+
+                        <TextBlock Text="{l:T 'ISSUE VOUCHER'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
+                        <TextBlock Text="{Binding IssueVoucherNumber, TargetNullValue={l:T 'Not recorded (older order)'}}" FontWeight="SemiBold"/>
 
                         <TextBlock Text="{l:T 'RECEIPT'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
                         <TextBlock Text="{Binding ReceiptNumber, TargetNullValue={l:T 'No receipt'}}"/>

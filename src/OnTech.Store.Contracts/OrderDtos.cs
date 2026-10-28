@@ -6,6 +6,8 @@ public sealed class CreateOrderRequest
 {
     [Range(1, int.MaxValue)] public int CustomerId { get; set; }
     [Required, MinLength(1)] public List<OrderLineRequest> Lines { get; set; } = new();
+    /// <summary>The warehouse issue voucher number (إذن صرف). Required on every order and unique.</summary>
+    [Required, MaxLength(50)] public string IssueVoucherNumber { get; set; } = "";
     public bool WithReceipt { get; set; }
     /// <summary>Required when <see cref="WithReceipt"/> is true; must be unique.</summary>
     [MaxLength(50)] public string? ReceiptNumber { get; set; }
@@ -31,6 +33,8 @@ public sealed class OrderDto
     public string CustomerName { get; init; } = "";
     public string? CustomerTaxNumber { get; init; }
     public string? CustomerPhoneNumber { get; init; }
+    /// <summary>Empty only for orders saved before the voucher number was required.</summary>
+    public string? IssueVoucherNumber { get; init; }
     public bool WithReceipt { get; init; }
     public string? ReceiptNumber { get; init; }
     public string? Notes { get; init; }
@@ -68,7 +72,7 @@ public enum OrderSort
 /// <summary>Filters for the orders log. Every field is optional and they combine with AND.</summary>
 public sealed class OrderQuery
 {
-    /// <summary>Free text: matches order number, receipt number, customer name/tax number, item name/code, notes.</summary>
+    /// <summary>Free text: matches order number, issue voucher number, receipt number, customer name/tax number, item name/code, notes.</summary>
     [MaxLength(100)] public string? Search { get; set; }
     public DateTimeOffset? From { get; set; }
     public DateTimeOffset? To { get; set; }
@@ -80,6 +84,8 @@ public sealed class OrderQuery
     /// <summary>Partial match on the receipt number.</summary>
     [MaxLength(50)] public string? ReceiptNumber { get; set; }
     [MaxLength(30)] public string? OrderNumber { get; set; }
+    /// <summary>Partial match on the issue voucher number.</summary>
+    [MaxLength(50)] public string? IssueVoucherNumber { get; set; }
     public OrderStatus? Status { get; set; }
     public OrderSort Sort { get; set; } = OrderSort.NewestFirst;
     [Range(1, int.MaxValue)] public int Page { get; set; } = 1;

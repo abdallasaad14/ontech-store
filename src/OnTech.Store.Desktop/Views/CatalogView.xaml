@@ -86,8 +86,6 @@
                                         <StackPanel Orientation="Horizontal">
                                             <Button Content="{l:T 'Edit'}" Style="{StaticResource RowLink}"
                                                     Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
-                                            <Button Content="{l:T 'Count'}" Style="{StaticResource RowLink}" ToolTip="{l:T 'Correct the quantity after a stock count'}"
-                                                    Command="{Binding DataContext.AdjustItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                             <Button Content="{l:T 'Disable'}" Style="{StaticResource RowLink}" Foreground="{StaticResource DangerBrush}"
                                                     Command="{Binding DataContext.DisableItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"
                                                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}"/>
@@ -128,10 +126,8 @@
                             <TextBlock Text="{l:T 'Digits only. Leave empty to get the category code plus a number, e.g. 01004.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                             <TextBlock Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding ItemDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            <StackPanel Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="{l:T 'Starting quantity'}" Style="{StaticResource FieldLabel}"/>
-                                <TextBox Text="{Binding ItemInitialQuantity, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            </StackPanel>
+                            <TextBlock Text="{l:T 'New items start at 0. Add their stock with Stock In, from a supplier.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"
+                                       Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}}"/>
                             <TextBlock Text="{l:T 'Low stock warning at'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding ItemLowStock, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Shows &quot;Low&quot; when the quantity falls to this number. 0 turns the warning off.'}" Margin="0,5,0,12"/>

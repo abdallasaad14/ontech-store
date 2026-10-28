@@ -30,6 +30,7 @@ internal static class Arabic
         ["Enter your username and password."] = "اكتب اسم المستخدم وكلمة المرور.",
         ["Change the language"] = "تغيير اللغة",
         ["Changing the language reopens the window and clears this order. Continue?"] = "تغيير اللغة هيفتح الشاشة من جديد ويمسح الطلب ده. تكمل؟",
+        ["Changing the language reopens the window and clears this stock-in. Continue?"] = "تغيير اللغة هيفتح الشاشة من جديد ويمسح إذن الإضافة ده. تكمل؟",
         ["Sign out"] = "تسجيل الخروج",
         ["Admin"] = "مسؤول",
         ["Store user"] = "مستخدم المخزن",
@@ -64,6 +65,9 @@ internal static class Arabic
         ["Add Quantity"] = "إضافة كمية",
         ["Customers"] = "العملاء",
         ["Orders Log"] = "سجل الطلبات",
+        ["Stock In"] = "دخول بضاعة",
+        ["Suppliers"] = "الموردين",
+        ["Stock In Log"] = "سجل دخول البضاعة",
         ["Items & Categories"] = "الأصناف والفئات",
         ["Users"] = "المستخدمين",
 
@@ -85,6 +89,7 @@ internal static class Arabic
         ["Good evening, {0}"] = "مساء الخير يا {0}",
         ["Take items out for a customer"] = "صرف أصناف لعميل",
         ["Stock received for existing items"] = "كميات وصلت لأصناف موجودة",
+        ["Items received from a supplier"] = "بضاعة واصلة من مورد",
         ["Add Customer"] = "إضافة عميل",
         ["Company name, number, tax number"] = "اسم الشركة، الرقم، الرقم الضريبي",
         ["Units in stock"] = "الوحدات في المخزن",
@@ -137,6 +142,34 @@ internal static class Arabic
         ["Order {0} saved for {1}: {2} unit(s) taken from stock, receipt {3}."] = "تم حفظ الطلب {0} لـ {1}: اتصرف {2} وحدة من المخزن، إيصال {3}.",
         ["Order {0} saved for {1}: {2} unit(s) taken from stock."] = "تم حفظ الطلب {0} لـ {1}: اتصرف {2} وحدة من المخزن.",
         ["Discard this order?"] = "تلغي الطلب ده؟",
+        ["Issue voucher number *"] = "رقم إذن الصرف *",
+        ["The number on the warehouse issue voucher. Required, and each number is used once."] = "رقم إذن الصرف من المخزن. لازم يتكتب، وكل رقم بيتستخدم مرة واحدة.",
+        ["Enter the issue voucher number."] = "اكتب رقم إذن الصرف.",
+        ["Order {0} saved for {1}: {2} unit(s) taken from stock, issue voucher {3}, receipt {4}."] = "تم حفظ الطلب {0} لـ {1}: اتصرف {2} وحدة من المخزن، إذن صرف {3}، إيصال {4}.",
+        ["Order {0} saved for {1}: {2} unit(s) taken from stock, issue voucher {3}."] = "تم حفظ الطلب {0} لـ {1}: اتصرف {2} وحدة من المخزن، إذن صرف {3}.",
+
+        // ---- Stock in (from a supplier) ----
+        ["Record items received from a supplier. Stock is added when you save. New items are added by an admin under Items & Categories."] =
+            "سجّل البضاعة اللي وصلت من مورد. الكمية بتتضاف للمخزن لما تحفظ. الأصناف الجديدة بيضيفها المسؤول من الأصناف والفئات.",
+        ["Quantity received"] = "الكمية الواصلة",
+        ["Keep this item and pick another one from the same delivery"] = "سيب الصنف ده واختار صنف تاني من نفس التوريدة",
+        ["+ New supplier"] = "+ مورد جديد",
+        ["Supplier (type number or name)"] = "المورد (اكتب الرقم أو الاسم)",
+        ["Type the supplier number or part of the name"] = "اكتب رقم المورد أو جزء من الاسم",
+        ["Receipt voucher number *"] = "رقم إذن الإضافة *",
+        ["The number on the warehouse receipt voucher. Required, and each number is used once."] = "رقم إذن الإضافة للمخزن. لازم يتكتب، وكل رقم بيتستخدم مرة واحدة.",
+        ["Supplier invoice number (optional)"] = "رقم فاتورة المورد (اختياري)",
+        ["Save stock-in"] = "حفظ إذن الإضافة",
+        ["Receiving {0} × {1} from {2}. {3} in stock after this."] = "هيدخل {0} × {1} من {2}. هيبقى في المخزن {3} بعد كده.",
+        ["Receiving {0} × {1}. {2} in stock after this."] = "هيدخل {0} × {1}. هيبقى في المخزن {2} بعد كده.",
+        ["New supplier"] = "مورد جديد",
+        ["Add supplier"] = "إضافة مورد",
+        ["Supplier \"{0}\" added. You can add the phone and tax number later under Suppliers."] =
+            "تم إضافة المورد \"{0}\". تقدر تضيف التليفون والرقم الضريبي بعدين من صفحة الموردين.",
+        ["Choose the supplier."] = "اختار المورد.",
+        ["Enter the receipt voucher number."] = "اكتب رقم إذن الإضافة.",
+        ["Stock-in {0} saved from {1}: {2} unit(s) added to stock, voucher {3}."] = "تم حفظ إذن الإضافة {0} من {1}: اتضاف {2} وحدة للمخزن، إذن رقم {3}.",
+        ["Discard this stock-in?"] = "تلغي إذن الإضافة ده؟",
 
         // ---- Add quantity ----
         ["Record stock that arrived for an item that already exists. New items are added by an admin under Items & Categories."] =
@@ -192,6 +225,19 @@ internal static class Arabic
             "إيقاف {0}؟ طلباتهم القديمة هتفضل في السجل، بس مش هينفع تختارهم في طلبات جديدة.",
         ["{0} was disabled."] = "تم إيقاف {0}.",
 
+        // ---- Suppliers ----
+        ["+ Add supplier"] = "+ إضافة مورد",
+        ["Companies that the store receives items from."] = "الشركات اللي المخزن بيستلم منها بضاعة.",
+        ["Supplier number or company name (also phone, tax number, contact)"] = "رقم المورد أو اسم الشركة (أو التليفون، الرقم الضريبي، المسؤول)",
+        ["STOCK-INS"] = "أذون الإضافة",
+        ["Edit supplier"] = "تعديل مورد",
+        ["Supplier number"] = "رقم المورد",
+        ["Supplier number must be a whole number, 1 or more."] = "رقم المورد لازم يكون رقم صحيح، 1 أو أكتر.",
+        ["Supplier \"{0}\" added."] = "تم إضافة المورد \"{0}\".",
+        ["Supplier \"{0}\" saved."] = "تم حفظ المورد \"{0}\".",
+        ["Disable {0}? Their past stock-ins stay in the log, but they can't be picked for new ones."] =
+            "إيقاف {0}؟ أذون الإضافة القديمة بتاعته هتفضل في السجل، بس مش هينفع تختاره في أذون جديدة.",
+
         // ---- Orders log ----
         ["Every order taken from the store, newest first. Search by order number, receipt number, customer or item."] =
             "كل طلب خرج من المخزن، الأحدث الأول. ابحث برقم الطلب أو رقم الإيصال أو العميل أو الصنف.",
@@ -218,6 +264,22 @@ internal static class Arabic
         ["Cancel {0}"] = "إلغاء {0}",
         ["Why is this order cancelled? Its items go back into stock."] = "ليه الطلب ده بيتلغي؟ الأصناف بتاعته هترجع المخزن.",
         ["{0} was cancelled and its stock returned."] = "تم إلغاء {0} ورجعت الكمية للمخزن.",
+        ["Every order taken from the store, newest first. Search by order number, issue voucher, receipt number, customer or item."] =
+            "كل طلب خرج من المخزن، الأحدث الأول. ابحث برقم الطلب أو إذن الصرف أو رقم الإيصال أو العميل أو الصنف.",
+        ["ISSUE VOUCHER"] = "إذن الصرف",
+        ["Not recorded (older order)"] = "مش متسجل (طلب قديم)",
+
+        // ---- Stock in log ----
+        ["Everything received from suppliers, newest first. Search by number, voucher, supplier invoice, supplier or item."] =
+            "كل البضاعة اللي وصلت من الموردين، الأحدث الأول. ابحث بالرقم أو إذن الإضافة أو فاتورة المورد أو المورد أو الصنف.",
+        ["SUPPLIER"] = "المورد",
+        ["RECEIPT VOUCHER"] = "إذن الإضافة",
+        ["SUPPLIER INVOICE"] = "فاتورة المورد",
+        ["Cancel stock-in"] = "إلغاء إذن الإضافة",
+        ["No stock-ins"] = "مفيش أذون إضافة",
+        ["Page {0} of {1} · {2} stock-ins"] = "صفحة {0} من {1} · {2} إذن إضافة",
+        ["Why is this stock-in cancelled? Its items are taken back out of stock."] = "ليه إذن الإضافة ده بيتلغي؟ الأصناف بتاعته هتتشال من المخزن تاني.",
+        ["{0} was cancelled and its stock taken back out."] = "تم إلغاء {0} واتشالت الكمية من المخزن.",
 
         // ---- Items & categories ----
         ["+ Category"] = "+ فئة",
@@ -260,6 +322,7 @@ internal static class Arabic
         ["Low stock warning must be 0 or more."] = "حد التنبيه لازم يكون 0 أو أكتر.",
         ["Starting quantity must be 0 or more."] = "الكمية في البداية لازم تكون 0 أو أكتر.",
         ["\"{0}\" saved."] = "تم حفظ \"{0}\".",
+        ["New items start at 0. Add their stock with Stock In, from a supplier."] = "الأصناف الجديدة بتبدأ بصفر. ضيف الكمية من دخول بضاعة، من مورد.",
 
         // ---- Users ----
         ["+ Add user"] = "+ إضافة مستخدم",
@@ -299,6 +362,15 @@ internal static class Arabic
         ["Admin (everything)"] = "مسؤول (كل حاجة)",
         ["No access"] = "مفيش صلاحيات",
         ["Standard store user"] = "مستخدم مخزن عادي",
+        ["Stock in"] = "دخول بضاعة",
+        ["Record items received from a supplier"] = "يسجّل البضاعة اللي وصلت من مورد",
+        ["Add and edit suppliers"] = "يضيف ويعدّل الموردين",
+        ["Logs"] = "السجلات",
+        ["Search and view past orders and stock-ins"] = "يدور ويشوف الطلبات وأذون الإضافة القديمة",
+        ["Cancel orders and stock-ins"] = "إلغاء الطلبات وأذون الإضافة",
+        ["Cancel an order or a stock-in and put the stock right"] = "يلغي طلب أو إذن إضافة والكمية تتظبط",
+        ["Add and edit categories and items"] = "يضيف ويعدّل الفئات والأصناف",
+        ["Home page actions, suppliers and the logs"] = "أزرار الصفحة الرئيسية والموردين والسجلات",
         ["Enter the user's name."] = "اكتب اسم المستخدم بالكامل.",
         ["Enter a username."] = "اكتب اسم مستخدم.",
         ["Username can only use letters, numbers, dot (.), dash (-) and underscore (_), with no spaces."] =
@@ -335,6 +407,13 @@ internal static class Arabic
         ["User is disabled."] = "المستخدم موقوف.",
         ["Database is not reachable."] = "قاعدة البيانات مش متاحة.",
         ["Codes can only contain digits."] = "الكود لازم يكون أرقام بس.",
+        ["Issue voucher number is required."] = "رقم إذن الصرف مطلوب.",
+        ["Voucher number is required."] = "رقم إذن الإضافة مطلوب.",
+        ["A stock-in voucher needs at least one item."] = "إذن الإضافة لازم يكون فيه صنف واحد على الأقل.",
+        ["This supplier is disabled."] = "المورد ده موقوف.",
+        ["This stock-in is already cancelled."] = "إذن الإضافة ده ملغي بالفعل.",
+        ["Some of this stock has already been taken out, so the stock-in can't be cancelled."] =
+            "جزء من الكمية دي اتصرف بالفعل، فمينفعش إذن الإضافة يتلغي.",
     };
 
     /// <summary>Messages that carry a name or number: English pattern → Arabic, with $1, $2 for the captured parts.</summary>
@@ -353,6 +432,12 @@ internal static class Arabic
         (P(@"Item code '(.+)' is already used\."), "كود الصنف '$1' مستخدم قبل كده."),
         (P(@"Customer number (\d+) is already used\."), "رقم العميل $1 مستخدم قبل كده."),
         (P(@"Receipt number '(.+)' is already used by another order\."), "رقم الإيصال '$1' مستخدم في طلب تاني."),
+        (P(@"Issue voucher number '(.+)' is already used by another order\."), "رقم إذن الصرف '$1' مستخدم في طلب تاني."),
+        (P(@"Voucher number '(.+)' is already used by another stock-in\."), "رقم إذن الإضافة '$1' مستخدم في إذن تاني."),
+        (P(@"A supplier named '(.+)' already exists\."), "فيه مورد اسمه '$1' بالفعل."),
+        (P(@"A supplier with tax number '(.+)' already exists\."), "فيه مورد بالرقم الضريبي '$1' بالفعل."),
+        (P(@"Supplier number (\d+) is already used\."), "رقم المورد $1 مستخدم قبل كده."),
+        (P(@"'(.+)' is disabled\."), "'$1' موقوف."),
         (P(@"The username '(.+)' is already taken\."), "اسم المستخدم '$1' مستخدم قبل كده."),
         // Customer import, per row
         (P(@"Row (\d+): no company name"), "صف $1: مفيش اسم شركة"),

@@ -22,11 +22,12 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     [
         (Permission.ViewStock, "View stock", "See categories, items and quantities"),
         (Permission.CreateOrders, "New orders", "Take items out of the store for a customer"),
-        (Permission.AddStock, "Add quantity", "Add received stock to existing items"),
+        (Permission.AddStock, "Stock in", "Record items received from a supplier"),
         (Permission.ManageCustomers, "Customers", "Add and edit customers"),
-        (Permission.ViewOrders, "Orders log", "Search and view past orders"),
-        (Permission.CancelOrders, "Cancel orders", "Cancel an order and return its stock"),
-        (Permission.ManageCatalog, "Items & categories", "Add and edit categories and items, stock counts"),
+        (Permission.ManageSuppliers, "Suppliers", "Add and edit suppliers"),
+        (Permission.ViewOrders, "Logs", "Search and view past orders and stock-ins"),
+        (Permission.CancelOrders, "Cancel orders and stock-ins", "Cancel an order or a stock-in and put the stock right"),
+        (Permission.ManageCatalog, "Items & categories", "Add and edit categories and items"),
         (Permission.ManageUsers, "Users", "Add users, set permissions, reset passwords"),
     ];
 

@@ -334,7 +334,7 @@
                 "tags": [
                     "Customers"
                 ],
-                "summary": "Customers for pickers and the customers list. Search matches company name, phone, tax number or contact.",
+                "summary": "Customers for pickers and the customers list. Search matches customer number, company name, phone, tax number or contact.",
                 "parameters": [
                     {
                         "name": "search",
@@ -546,6 +546,55 @@
                 "responses": {
                     "200": {
                         "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/customers/import": {
+            "post": {
+                "tags": [
+                    "Customers"
+                ],
+                "summary": "Adds many customers at once (the Import button on the Customers page). Rows with no company name,\r\nor whose number is already taken, are skipped and reported; everything else is saved in one go.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportCustomersRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportCustomersRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ImportCustomersRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ImportCustomersResult"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ImportCustomersResult"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ImportCustomersResult"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -773,7 +822,7 @@
                 "tags": [
                     "Items"
                 ],
-                "summary": "Edits item details. Quantity is changed only through add-quantity, adjust and orders.",
+                "summary": "Edits item details. Quantity is changed only by orders and stock-in vouchers.",
                 "parameters": [
                     {
                         "name": "id",
@@ -846,126 +895,6 @@
                 "responses": {
                     "200": {
                         "description": "OK"
-                    }
-                }
-            }
-        },
-        "/api/items/{id}/add-quantity": {
-            "post": {
-                "tags": [
-                    "Items"
-                ],
-                "summary": "Adds received stock to an existing item (the \"Add Quantity\" home page action).",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AddQuantityRequest"
-                            }
-                        },
-                        "text/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AddQuantityRequest"
-                            }
-                        },
-                        "application/*+json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AddQuantityRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ItemDto"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ItemDto"
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ItemDto"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/items/{id}/adjust": {
-            "post": {
-                "tags": [
-                    "Items"
-                ],
-                "summary": "Sets the quantity to a counted value (stock-take correction). The difference is logged.",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int32"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdjustQuantityRequest"
-                            }
-                        },
-                        "text/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdjustQuantityRequest"
-                            }
-                        },
-                        "application/*+json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/AdjustQuantityRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ItemDto"
-                                }
-                            },
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ItemDto"
-                                }
-                            },
-                            "text/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ItemDto"
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -1047,7 +976,7 @@
                     {
                         "name": "Search",
                         "in": "query",
-                        "description": "Free text: matches order number, receipt number, customer name/tax number, item name/code, notes.",
+                        "description": "Free text: matches order number, issue voucher number, receipt number, customer name/tax number, item name/code, notes.",
                         "schema": {
                             "maxLength": 100,
                             "type": "string"
@@ -1122,6 +1051,15 @@
                         "in": "query",
                         "schema": {
                             "maxLength": 30,
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "IssueVoucherNumber",
+                        "in": "query",
+                        "description": "Partial match on the issue voucher number.",
+                        "schema": {
+                            "maxLength": 50,
                             "type": "string"
                         }
                     },
@@ -1324,6 +1262,253 @@
                 }
             }
         },
+        "/api/stock-ins": {
+            "post": {
+                "tags": [
+                    "StockIns"
+                ],
+                "summary": "Records stock received from a supplier and adds the quantities, in one transaction.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateStockInRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateStockInRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateStockInRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "tags": [
+                    "StockIns"
+                ],
+                "summary": "The stock-in log, newest first, with search, filters and paging.",
+                "parameters": [
+                    {
+                        "name": "Search",
+                        "in": "query",
+                        "description": "Free text: matches stock-in number, voucher number, supplier invoice, supplier name/tax number, item name/code, notes.",
+                        "schema": {
+                            "maxLength": 100,
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "From",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "To",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "SupplierId",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "ItemId",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "Status",
+                        "in": "query",
+                        "schema": {
+                            "$ref": "#/components/schemas/OrderStatus"
+                        }
+                    },
+                    {
+                        "name": "Page",
+                        "in": "query",
+                        "schema": {
+                            "maximum": 2147483647,
+                            "minimum": 1,
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "PageSize",
+                        "in": "query",
+                        "schema": {
+                            "maximum": 200,
+                            "minimum": 1,
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDtoPagedResult"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDtoPagedResult"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDtoPagedResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/stock-ins/{id}": {
+            "get": {
+                "tags": [
+                    "StockIns"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/stock-ins/{id}/cancel": {
+            "post": {
+                "tags": [
+                    "StockIns"
+                ],
+                "summary": "Cancels a stock-in entered by mistake and takes its quantities back out. It stays in the log as Cancelled.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CancelStockInRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CancelStockInRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CancelStockInRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StockInDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/stock-movements": {
             "get": {
                 "tags": [
@@ -1418,6 +1603,227 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/api/suppliers": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Suppliers for pickers and the suppliers list. Search matches supplier number, company name, phone, tax number or contact.",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "includeInactive",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupplierDto"
+                                    }
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupplierDto"
+                                    }
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SupplierDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveSupplierRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveSupplierRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveSupplierRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/suppliers/{id}": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveSupplierRequest"
+                            }
+                        },
+                        "text/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveSupplierRequest"
+                            }
+                        },
+                        "application/*+json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SaveSupplierRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            },
+                            "text/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SupplierDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Disables the supplier; their stock-in vouchers stay in the log.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -1680,36 +2086,12 @@
     },
     "components": {
         "schemas": {
-            "AddQuantityRequest": {
-                "type": "object",
-                "properties": {
-                    "quantity": {
-                        "maximum": 1000000,
-                        "minimum": 1,
-                        "type": "integer",
-                        "format": "int32"
-                    },
-                    "note": {
-                        "maxLength": 500,
-                        "type": "string",
-                        "nullable": true
-                    }
-                },
-                "additionalProperties": false
-            },
-            "AdjustQuantityRequest": {
+            "CancelOrderRequest": {
                 "required": [
                     "reason"
                 ],
                 "type": "object",
                 "properties": {
-                    "newQuantity": {
-                        "maximum": 1000000,
-                        "minimum": 0,
-                        "type": "integer",
-                        "description": "The real counted quantity; the difference is recorded as an adjustment.",
-                        "format": "int32"
-                    },
                     "reason": {
                         "maxLength": 500,
                         "minLength": 1,
@@ -1718,7 +2100,7 @@
                 },
                 "additionalProperties": false
             },
-            "CancelOrderRequest": {
+            "CancelStockInRequest": {
                 "required": [
                     "reason"
                 ],
@@ -1738,6 +2120,10 @@
                     "id": {
                         "type": "integer",
                         "format": "int32"
+                    },
+                    "code": {
+                        "type": "string",
+                        "nullable": true
                     },
                     "name": {
                         "type": "string",
@@ -1800,19 +2186,13 @@
                     "code": {
                         "maxLength": 64,
                         "type": "string",
-                        "description": "Optional model number, SKU or part code.",
+                        "description": "Digits only, unique across all items. Leave empty to get the next one (category code + 3 digits, e.g. 01007).",
                         "nullable": true
                     },
                     "description": {
                         "maxLength": 500,
                         "type": "string",
                         "nullable": true
-                    },
-                    "initialQuantity": {
-                        "maximum": 1000000,
-                        "minimum": 0,
-                        "type": "integer",
-                        "format": "int32"
                     },
                     "lowStockThreshold": {
                         "maximum": 1000000,
@@ -1826,6 +2206,7 @@
             },
             "CreateOrderRequest": {
                 "required": [
+                    "issueVoucherNumber",
                     "lines"
                 ],
                 "type": "object",
@@ -1843,6 +2224,12 @@
                             "$ref": "#/components/schemas/OrderLineRequest"
                         }
                     },
+                    "issueVoucherNumber": {
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "The warehouse issue voucher number (إذن صرف). Required on every order and unique."
+                    },
                     "withReceipt": {
                         "type": "boolean"
                     },
@@ -1859,6 +2246,47 @@
                     }
                 },
                 "additionalProperties": false
+            },
+            "CreateStockInRequest": {
+                "required": [
+                    "lines",
+                    "voucherNumber"
+                ],
+                "type": "object",
+                "properties": {
+                    "supplierId": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lines": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderLineRequest"
+                        }
+                    },
+                    "voucherNumber": {
+                        "maxLength": 50,
+                        "minLength": 1,
+                        "type": "string",
+                        "description": "The warehouse receipt voucher number (إذن إضافة). Required and unique."
+                    },
+                    "supplierInvoiceNumber": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "description": "The supplier's invoice or delivery note number, if there is one.",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "maxLength": 1000,
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false,
+                "description": "Stock received from a supplier. This and orders are the only ways quantities change."
             },
             "CreateUserRequest": {
                 "required": [
@@ -1904,6 +2332,11 @@
                     "id": {
                         "type": "integer",
                         "format": "int32"
+                    },
+                    "customerNumber": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
                     },
                     "companyName": {
                         "type": "string",
@@ -1991,6 +2424,67 @@
                         "items": {
                             "$ref": "#/components/schemas/ItemDto"
                         },
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false
+            },
+            "ImportCustomerRow": {
+                "type": "object",
+                "properties": {
+                    "customerNumber": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "companyName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "phoneNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "taxNumber": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false
+            },
+            "ImportCustomersRequest": {
+                "required": [
+                    "rows"
+                ],
+                "type": "object",
+                "properties": {
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ImportCustomerRow"
+                        }
+                    }
+                },
+                "additionalProperties": false,
+                "description": "Bulk-adds customers, e.g. from the old Excel sheet. Rows whose number already exists are skipped, so the same file can be imported twice safely."
+            },
+            "ImportCustomersResult": {
+                "type": "object",
+                "properties": {
+                    "added": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "skipped": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "One line per skipped row, e.g. \"Row 12: number 7 already exists\".",
                         "nullable": true
                     }
                 },
@@ -2110,6 +2604,11 @@
                     },
                     "customerPhoneNumber": {
                         "type": "string",
+                        "nullable": true
+                    },
+                    "issueVoucherNumber": {
+                        "type": "string",
+                        "description": "Empty only for orders saved before the voucher number was required.",
                         "nullable": true
                     },
                     "withReceipt": {
@@ -2275,10 +2774,11 @@
                     "CreateOrders",
                     "AddStock",
                     "ViewOrders",
-                    "StandardUser",
                     "CancelOrders",
                     "ManageCatalog",
                     "ManageUsers",
+                    "ManageSuppliers",
+                    "StandardUser",
                     "All"
                 ],
                 "type": "string",
@@ -2334,6 +2834,12 @@
                 ],
                 "type": "object",
                 "properties": {
+                    "code": {
+                        "maxLength": 10,
+                        "type": "string",
+                        "description": "Digits only. Leave empty to get the next free code (01, 02, ...) on create, or to keep the current one on edit.",
+                        "nullable": true
+                    },
                     "name": {
                         "maxLength": 100,
                         "minLength": 1,
@@ -2356,6 +2862,14 @@
                 ],
                 "type": "object",
                 "properties": {
+                    "customerNumber": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Leave empty on create to get the next free number.",
+                        "format": "int32",
+                        "nullable": true
+                    },
                     "companyName": {
                         "maxLength": 200,
                         "minLength": 1,
@@ -2398,6 +2912,173 @@
                 },
                 "additionalProperties": false
             },
+            "SaveSupplierRequest": {
+                "required": [
+                    "companyName"
+                ],
+                "type": "object",
+                "properties": {
+                    "supplierNumber": {
+                        "maximum": 2147483647,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Leave empty on create to get the next free number.",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "companyName": {
+                        "maxLength": 200,
+                        "minLength": 1,
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "taxNumber": {
+                        "maxLength": 50,
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "contactPerson": {
+                        "maxLength": 150,
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "maxLength": 256,
+                        "type": "string",
+                        "format": "email",
+                        "nullable": true
+                    },
+                    "address": {
+                        "maxLength": 500,
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "maxLength": 1000,
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "isActive": {
+                        "type": "boolean"
+                    }
+                },
+                "additionalProperties": false
+            },
+            "StockInDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stockInNumber": {
+                        "type": "string",
+                        "description": "Human-friendly number, e.g. IN-000012.",
+                        "nullable": true
+                    },
+                    "supplierId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "supplierName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "supplierTaxNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "voucherNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "supplierInvoiceNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/OrderStatus"
+                    },
+                    "totalQuantity": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "createdByUserId": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "createdByUserName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "cancelledAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "cancelledByUserName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cancelReason": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/OrderLineDto"
+                        },
+                        "nullable": true
+                    }
+                },
+                "additionalProperties": false
+            },
+            "StockInDtoPagedResult": {
+                "required": [
+                    "items"
+                ],
+                "type": "object",
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StockInDto"
+                        },
+                        "nullable": true
+                    },
+                    "page": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "pageSize": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalPages": {
+                        "type": "integer",
+                        "format": "int32",
+                        "readOnly": true
+                    }
+                },
+                "additionalProperties": false
+            },
             "StockMovementDto": {
                 "type": "object",
                 "properties": {
@@ -2435,6 +3116,15 @@
                         "nullable": true
                     },
                     "orderNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "stockInId": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "stockInNumber": {
                         "type": "string",
                         "nullable": true
                     },
@@ -2496,9 +3186,66 @@
                     "Restock",
                     "Order",
                     "OrderCancelled",
-                    "Adjustment"
+                    "Adjustment",
+                    "StockIn",
+                    "StockInCancelled"
                 ],
                 "type": "string"
+            },
+            "SupplierDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "supplierNumber": {
+                        "type": "integer",
+                        "format": "int32",
+                        "nullable": true
+                    },
+                    "companyName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "phoneNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "taxNumber": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "contactPerson": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "address": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "notes": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "isActive": {
+                        "type": "boolean"
+                    },
+                    "stockInCount": {
+                        "type": "integer",
+                        "description": "Stock-in vouchers from this supplier (not counting cancelled ones).",
+                        "format": "int32"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "additionalProperties": false
             },
             "UpdateItemRequest": {
                 "required": [

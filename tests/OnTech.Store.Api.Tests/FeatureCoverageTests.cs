@@ -20,7 +20,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var admin = await _f.LoginAsync();
         var tag = Tag();
         var cat = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Test cat {tag}" })).Read<CategoryDto>();
-        var item = await (await admin.Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = $"Test item {tag}", InitialQuantity = qty, LowStockThreshold = 2 })).Read<ItemDto>();
+        var item = await admin.AddItem(new CreateItemRequest { CategoryId = cat.Id, Name = $"Test item {tag}", LowStockThreshold = 2 }, qty);
         var customer = await (await admin.Post("/api/customers", new SaveCustomerRequest { CompanyName = $"Test customer {tag}" })).Read<CustomerDto>();
         return (admin, cat, item, customer);
     }
@@ -45,9 +45,12 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         { Permission.ViewStock, "GET", "/api/stock-movements" },
         { Permission.ManageCatalog, "POST", "/api/categories" },
         { Permission.ManageCatalog, "POST", "/api/items" },
-        { Permission.ManageCatalog, "POST", "/api/items/{item}/adjust" },
         { Permission.ManageCatalog, "DELETE", "/api/items/{item}" },
-        { Permission.AddStock, "POST", "/api/items/{item}/add-quantity" },
+        { Permission.AddStock, "POST", "/api/stock-ins" },
+        { Permission.ViewOrders, "GET", "/api/stock-ins" },
+        { Permission.CancelOrders, "POST", "/api/stock-ins/1/cancel" },
+        { Permission.ManageSuppliers, "POST", "/api/suppliers" },
+        { Permission.ManageSuppliers, "DELETE", "/api/suppliers/{supplier}" },
         { Permission.CreateOrders, "POST", "/api/orders" },
         { Permission.ViewOrders, "GET", "/api/orders" },
         { Permission.CancelOrders, "POST", "/api/orders/1/cancel" },
@@ -63,7 +66,8 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
     public async Task Endpoint_is_refused_without_its_permission_and_allowed_with_it(Permission needed, string method, string url)
     {
         var (admin, _, item, customer) = await SetupAsync();
-        url = url.Replace("{item}", item.Id.ToString()).Replace("{customer}", customer.Id.ToString());
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Guard supplier {Tag()}" })).Read<SupplierDto>();
+        url = url.Replace("{item}", item.Id.ToString()).Replace("{customer}", customer.Id.ToString()).Replace("{supplier}", supplier.Id.ToString());
 
         var without = await UserWithAsync(admin, Permission.All & ~needed);
         var res = await without.SendAsync(new HttpRequestMessage(new HttpMethod(method), url) { Content = method == "GET" ? null : System.Net.Http.Json.JsonContent.Create(new { }) });
@@ -85,7 +89,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
             FullName = "Shop user", Username = username, Password = "Password1!", Permissions = Permission.StandardUser, MustChangePassword = false,
         })).Read<UserDto>();
         var client = await _f.LoginAsync(username, "Password1!");
-        var order = new CreateOrderRequest { CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } };
+        var order = new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } };
         Assert.Equal(HttpStatusCode.Created, (await client.Post("/api/orders", order)).StatusCode);
 
         await (await admin.Put($"/api/users/{user.Id}", new UpdateUserRequest
@@ -146,13 +150,15 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
             new { customerId = customer.Id, lines = new[] { new { itemId = item.Id, quantity = 0 } } },
             new { customerId = customer.Id, lines = new[] { new { itemId = item.Id, quantity = -5 } } },
             new { customerId = 0, lines = new[] { new { itemId = item.Id, quantity = 1 } } },
-            new { customerId = customer.Id, withReceipt = true, receiptNumber = "  ", lines = new[] { new { itemId = item.Id, quantity = 1 } } },
+            new { customerId = customer.Id, issueVoucherNumber = TestStock.Voucher(), withReceipt = true, receiptNumber = "  ", lines = new[] { new { itemId = item.Id, quantity = 1 } } },
+            new { customerId = customer.Id, lines = new[] { new { itemId = item.Id, quantity = 1 } } }, // no issue voucher
+            new { customerId = customer.Id, issueVoucherNumber = "   ", lines = new[] { new { itemId = item.Id, quantity = 1 } } },
         };
         foreach (var body in bad)
             Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", body)).StatusCode);
 
-        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/orders", new { customerId = 999999, lines = new[] { new { itemId = item.Id, quantity = 1 } } })).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/orders", new { customerId = customer.Id, lines = new[] { new { itemId = 999999, quantity = 1 } } })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/orders", new { customerId = 999999, issueVoucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = item.Id, quantity = 1 } } })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/orders", new { customerId = customer.Id, issueVoucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = 999999, quantity = 1 } } })).StatusCode);
         Assert.Equal(50, (await admin.GetAs<ItemDto>($"/api/items/{item.Id}")).Quantity);
     }
 
@@ -160,13 +166,26 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
     public async Task Bad_stock_input_is_rejected_with_400()
     {
         var (admin, cat, item, _) = await SetupAsync();
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post($"/api/items/{item.Id}/add-quantity", new { quantity = 0 })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post($"/api/items/{item.Id}/add-quantity", new { quantity = -3 })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post($"/api/items/{item.Id}/adjust", new { newQuantity = -1, reason = "count" })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post($"/api/items/{item.Id}/adjust", new { newQuantity = 3 })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/items", new { categoryId = cat.Id, name = "Neg", initialQuantity = -1 })).StatusCode);
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Bad input supplier {Tag()}" })).Read<SupplierDto>();
+        var bad = new object[]
+        {
+            new { supplierId = supplier.Id, voucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = item.Id, quantity = 0 } } },
+            new { supplierId = supplier.Id, voucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = item.Id, quantity = -3 } } },
+            new { supplierId = supplier.Id, voucherNumber = TestStock.Voucher(), lines = Array.Empty<object>() },
+            new { supplierId = supplier.Id, lines = new[] { new { itemId = item.Id, quantity = 1 } } }, // no voucher
+            new { supplierId = supplier.Id, voucherNumber = "  ", lines = new[] { new { itemId = item.Id, quantity = 1 } } },
+            new { supplierId = 0, voucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = item.Id, quantity = 1 } } },
+        };
+        foreach (var body in bad)
+            Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/stock-ins", body)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/stock-ins", new { supplierId = 999999, voucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = item.Id, quantity = 1 } } })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/stock-ins", new { supplierId = supplier.Id, voucherNumber = TestStock.Voucher(), lines = new[] { new { itemId = 999999, quantity = 1 } } })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/items", new { categoryId = cat.Id, name = "" })).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post("/api/items/999999/add-quantity", new { quantity = 1 })).StatusCode);
+        // The old ways of typing in a quantity are gone.
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post($"/api/items/{item.Id}/add-quantity", new { quantity = 1 })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await admin.Post($"/api/items/{item.Id}/adjust", new { newQuantity = 3, reason = "count" })).StatusCode);
+        var fresh = await (await admin.Post("/api/items", new { categoryId = cat.Id, name = $"Starts empty {Tag()}", initialQuantity = 40 })).Read<ItemDto>();
+        Assert.Equal(0, fresh.Quantity);
         Assert.Equal(50, (await admin.GetAs<ItemDto>($"/api/items/{item.Id}")).Quantity);
     }
 
@@ -186,13 +205,15 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var line = new OrderLineRequest { ItemId = item.Id, Quantity = 1 };
 
         await admin.DeleteAsync($"/api/customers/{customer.Id}");
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { line } })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, Lines = { line } })).StatusCode);
         Assert.DoesNotContain(await admin.GetAs<List<CustomerDto>>("/api/customers"), c => c.Id == customer.Id);
 
         var (_, _, _, customer2) = await SetupAsync();
         await admin.DeleteAsync($"/api/items/{item.Id}");
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer2.Id, Lines = { line } })).StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post($"/api/items/{item.Id}/add-quantity", new AddQuantityRequest { Quantity = 1 })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer2.Id, Lines = { line } })).StatusCode);
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Disabled test supplier {Tag()}" })).Read<SupplierDto>();
+        var stockIn = new CreateStockInRequest { SupplierId = supplier.Id, VoucherNumber = TestStock.Voucher(), Lines = { line } };
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/stock-ins", stockIn)).StatusCode);
         Assert.DoesNotContain(await admin.GetAs<List<ItemDto>>($"/api/items?categoryId={cat.Id}"), i => i.Id == item.Id);
 
         // A category with items is disabled, not deleted; its items drop out of the pickers.
@@ -200,7 +221,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         Assert.Equal(HttpStatusCode.NoContent, (await admin.DeleteAsync($"/api/categories/{cat3.Id}")).StatusCode);
         Assert.False((await admin.GetAs<CategoryDto>($"/api/categories/{cat3.Id}")).IsActive);
         Assert.DoesNotContain(await admin.GetAs<List<ItemDto>>("/api/items"), i => i.Id == item3.Id);
-        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer2.Id, Lines = { new OrderLineRequest { ItemId = item3.Id, Quantity = 1 } } })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer2.Id, Lines = { new OrderLineRequest { ItemId = item3.Id, Quantity = 1 } } })).StatusCode);
     }
 
     // ---------- Catalog, codes and the opening data ----------
@@ -253,12 +274,12 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
     public async Task Low_stock_shows_on_the_dashboard_and_filters()
     {
         var (admin, _, item, customer) = await SetupAsync(qty: 3);
-        await (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } })).Read<OrderDto>();
+        await (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } })).Read<OrderDto>();
         var low = await admin.GetAs<List<ItemDto>>("/api/items?lowStockOnly=true");
         Assert.Contains(low, i => i.Id == item.Id && i.IsLowStock && i.Quantity == 2);
 
         var before = await admin.GetAs<DashboardSummaryDto>("/api/dashboard/summary");
-        await (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 2 } } })).Read<OrderDto>();
+        await (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 2 } } })).Read<OrderDto>();
         var after = await admin.GetAs<DashboardSummaryDto>("/api/dashboard/summary");
         Assert.Equal(before.OrdersToday + 1, after.OrdersToday);
         Assert.Equal(before.UnitsOutToday + 2, after.UnitsOutToday);
@@ -320,6 +341,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         {
             var o = await (await admin.Post("/api/orders", new CreateOrderRequest
             {
+                IssueVoucherNumber = TestStock.Voucher(),
                 CustomerId = customer.Id, WithReceipt = i % 2 == 0, ReceiptNumber = i % 2 == 0 ? $"R{tag}-{i}" : null,
                 Notes = $"note {tag}", Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = i } },
             })).Read<OrderDto>();
@@ -361,7 +383,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
     public async Task Orders_log_date_filter_uses_the_whole_range()
     {
         var (admin, _, item, customer) = await SetupAsync();
-        var o = await (await admin.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } })).Read<OrderDto>();
+        var o = await (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } } })).Read<OrderDto>();
         var from = Uri.EscapeDataString(o.CreatedAt.AddMinutes(-1).ToString("O"));
         var to = Uri.EscapeDataString(o.CreatedAt.AddMinutes(1).ToString("O"));
         Assert.Equal(1, (await admin.GetAs<PagedResult<OrderDto>>($"/api/orders?customerId={customer.Id}&from={from}&to={to}")).TotalCount);
@@ -391,7 +413,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var cat = await (await admin.Post("/api/categories", new SaveCategoryRequest { Name = $"Rush cat {Tag()}" })).Read<CategoryDto>();
         var pcs = await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => _f.LoginAsync()));
         var results = await Task.WhenAll(Enumerable.Range(0, 9).Select(i =>
-            pcs[i % 3].Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = $"Rush item {i}", InitialQuantity = 1 })));
+            pcs[i % 3].Post("/api/items", new CreateItemRequest { CategoryId = cat.Id, Name = $"Rush item {i}" })));
         foreach (var r in results) Assert.Equal(HttpStatusCode.Created, r.StatusCode);
         var created = await Task.WhenAll(results.Select(r => r.Read<ItemDto>()));
         Assert.Equal(9, created.Select(c => c.Code).Distinct().Count());
@@ -405,11 +427,36 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var receipt = $"DUP-{Tag()}";
         var results = await Task.WhenAll(pcs.Select(pc => pc.Post("/api/orders", new CreateOrderRequest
         {
+            IssueVoucherNumber = TestStock.Voucher(),
             CustomerId = customer.Id, WithReceipt = true, ReceiptNumber = receipt, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
         })));
         Assert.Single(results, r => r.StatusCode == HttpStatusCode.Created);
         Assert.All(results.Where(r => r.StatusCode != HttpStatusCode.Created), r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
         Assert.Equal(49, (await admin.GetAs<ItemDto>($"/api/items/{item.Id}")).Quantity);
+    }
+
+    [Fact]
+    public async Task Same_voucher_from_two_pcs_at_once_is_used_once()
+    {
+        var (admin, _, item, customer) = await SetupAsync();
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Dup supplier {Tag()}" })).Read<SupplierDto>();
+        var pcs = await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => _f.LoginAsync()));
+        var voucher = $"DUP-{Tag()}";
+
+        var orders = await Task.WhenAll(pcs.Select(pc => pc.Post("/api/orders", new CreateOrderRequest
+        {
+            IssueVoucherNumber = voucher, CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
+        })));
+        Assert.Single(orders, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.All(orders.Where(r => r.StatusCode != HttpStatusCode.Created), r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+
+        var stockIns = await Task.WhenAll(pcs.Select(pc => pc.Post("/api/stock-ins", new CreateStockInRequest
+        {
+            VoucherNumber = voucher, SupplierId = supplier.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 5 } },
+        })));
+        Assert.Single(stockIns, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.All(stockIns.Where(r => r.StatusCode != HttpStatusCode.Created), r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+        Assert.Equal(54, (await admin.GetAs<ItemDto>($"/api/items/{item.Id}")).Quantity);
     }
 
     [Fact]
@@ -419,6 +466,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var pcs = await Task.WhenAll(Enumerable.Range(0, 3).Select(_ => _f.LoginAsync()));
         var ordered = 0; var restocked = 0; var returned = 0;
         var orderIds = new System.Collections.Concurrent.ConcurrentBag<int>();
+        var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Rush supplier {Tag()}" })).Read<SupplierDto>();
 
         await Task.WhenAll(pcs.Select(async (pc, n) =>
         {
@@ -426,8 +474,11 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
             {
                 if ((i + n) % 4 == 0)
                 {
-                    var r = await pc.Post($"/api/items/{item.Id}/add-quantity", new AddQuantityRequest { Quantity = 2 });
-                    Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+                    var r = await pc.Post("/api/stock-ins", new CreateStockInRequest
+                    {
+                        SupplierId = supplier.Id, VoucherNumber = TestStock.Voucher(), Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 2 } },
+                    });
+                    Assert.Equal(HttpStatusCode.Created, r.StatusCode);
                     Interlocked.Add(ref restocked, 2);
                 }
                 else if (i % 5 == 4 && orderIds.TryTake(out var id))
@@ -439,7 +490,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
                 }
                 else
                 {
-                    var r = await pc.Post("/api/orders", new CreateOrderRequest { CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 3 } } });
+                    var r = await pc.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 3 } } });
                     Assert.True(r.StatusCode is HttpStatusCode.Created or HttpStatusCode.Conflict, $"{r.StatusCode}: {await r.Content.ReadAsStringAsync()}");
                     if (r.StatusCode == HttpStatusCode.Created) { orderIds.Add((await r.Read<OrderDto>()).Id); Interlocked.Add(ref ordered, 3); }
                 }

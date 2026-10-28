@@ -11,9 +11,11 @@
         <!-- Each page view model is shown with its view. -->
         <DataTemplate DataType="{x:Type vm:HomeViewModel}"><views:HomeView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:NewOrderViewModel}"><views:NewOrderView/></DataTemplate>
-        <DataTemplate DataType="{x:Type vm:AddQuantityViewModel}"><views:AddQuantityView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StockInViewModel}"><views:StockInView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:CustomersViewModel}"><views:CustomersView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SuppliersViewModel}"><views:SuppliersView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:OrdersViewModel}"><views:OrdersView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StockInsViewModel}"><views:StockInsView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:CatalogViewModel}"><views:CatalogView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:UsersViewModel}"><views:UsersView/></DataTemplate>
 

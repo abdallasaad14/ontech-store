@@ -101,7 +101,7 @@
                         <StackPanel Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}">
                             <DockPanel Margin="0,12,0,6">
                                 <Button DockPanel.Dock="Right" Content="{l:T 'Standard set'}" Style="{StaticResource LinkButton}" FontSize="12"
-                                        Command="{Binding UseStandardPermissionsCommand}" ToolTip="{l:T 'Home page actions plus the orders log'}"/>
+                                        Command="{Binding UseStandardPermissionsCommand}" ToolTip="{l:T 'Home page actions, suppliers and the logs'}"/>
                                 <TextBlock Text="{l:T 'PERMISSIONS'}" Style="{StaticResource FieldLabel}" VerticalAlignment="Center" Margin="0"/>
                             </DockPanel>
                             <ItemsControl ItemsSource="{Binding PermissionOptions}">

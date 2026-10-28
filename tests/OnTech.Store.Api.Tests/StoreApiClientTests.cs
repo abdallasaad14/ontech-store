@@ -69,8 +69,18 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
         var tag = Guid.NewGuid().ToString("N")[..6];
 
         var printers = await api.CreateCategoryAsync(new SaveCategoryRequest { Name = $"Printers {tag}" });
-        var fargo = await api.CreateItemAsync(new CreateItemRequest { CategoryId = printers.Id, Name = "Fargo", InitialQuantity = 5, LowStockThreshold = 2 });
-        fargo = await api.AddQuantityAsync(fargo.Id, 3, "Delivery 42");
+        var fargo = await api.CreateItemAsync(new CreateItemRequest { CategoryId = printers.Id, Name = "Fargo", LowStockThreshold = 2 });
+        Assert.Equal(0, fargo.Quantity);
+        var supplier = await api.CreateSupplierAsync(new SaveSupplierRequest { CompanyName = $"Zebra {tag}" });
+        Assert.Contains(await api.GetSuppliersAsync(tag), s => s.Id == supplier.Id);
+        var stockIn = await api.CreateStockInAsync(new CreateStockInRequest
+        {
+            SupplierId = supplier.Id, VoucherNumber = $"IN-{tag}", SupplierInvoiceNumber = "Delivery 42",
+            Lines = [new OrderLineRequest { ItemId = fargo.Id, Quantity = 5 }, new OrderLineRequest { ItemId = fargo.Id, Quantity = 3 }],
+        });
+        Assert.Equal(8, stockIn.TotalQuantity);
+        Assert.Equal(stockIn.Id, Assert.Single((await api.SearchStockInsAsync(new StockInQuery { SupplierId = supplier.Id })).Items).Id);
+        fargo = await api.GetItemAsync(fargo.Id);
         Assert.Equal(8, fargo.Quantity);
 
         var customer = await api.CreateCustomerAsync(new SaveCustomerRequest { CompanyName = $"Acme {tag}", TaxNumber = $"T-{tag}" });
@@ -79,6 +89,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
 
         var order = await api.CreateOrderAsync(new CreateOrderRequest
         {
+            IssueVoucherNumber = TestStock.Voucher(),
             CustomerId = customer.Id, WithReceipt = true, ReceiptNumber = $"R-{tag}",
             Lines = [new OrderLineRequest { ItemId = fargo.Id, Quantity = 6 }],
         });
@@ -88,6 +99,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
         // Not enough stock: the message names the item and nothing is taken.
         var shortage = await Assert.ThrowsAsync<ApiError>(() => api.CreateOrderAsync(new CreateOrderRequest
         {
+            IssueVoucherNumber = TestStock.Voucher(),
             CustomerId = customer.Id, Lines = [new OrderLineRequest { ItemId = fargo.Id, Quantity = 3 }],
         }));
         Assert.Equal(HttpStatusCode.Conflict, shortage.Status);
@@ -98,6 +110,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
         // Receipt numbers are unique.
         var duplicate = await Assert.ThrowsAsync<ApiError>(() => api.CreateOrderAsync(new CreateOrderRequest
         {
+            IssueVoucherNumber = TestStock.Voucher(),
             CustomerId = customer.Id, WithReceipt = true, ReceiptNumber = $"R-{tag}",
             Lines = [new OrderLineRequest { ItemId = fargo.Id, Quantity = 1 }],
         }));
