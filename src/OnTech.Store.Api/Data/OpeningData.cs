@@ -7,7 +7,7 @@ namespace OnTech.Store.Api.Data;
 /// <summary>
 /// OnTech's stock and customers as they were when the app went live (Seed/opening-data.json, built from the
 /// old Excel sheets). Loaded once on startup: categories, items and customers that already exist by name
-/// (or by customer number) are left alone, and the load is recorded in AppliedSeeds so it never runs again.
+/// (or, for customers, by number or name) are left alone, and the load is recorded in AppliedSeeds so it never runs again.
 /// </summary>
 public static class OpeningData
 {
@@ -53,8 +53,11 @@ public static class OpeningData
             }
         }
 
-        var usedNumbers = (await db.Customers.Where(c => c.CustomerNumber != null).Select(c => c.CustomerNumber!.Value).ToListAsync()).ToHashSet();
-        foreach (var sc in data.Customers.Where(c => usedNumbers.Add(c.Number)))
+        // Customers may already be in (e.g. from Import from Excel): skip any whose number or name is already there.
+        var existing = await db.Customers.Select(c => new { c.CustomerNumber, c.CompanyName }).ToListAsync();
+        var usedNumbers = existing.Where(c => c.CustomerNumber != null).Select(c => c.CustomerNumber!.Value).ToHashSet();
+        var usedNames = existing.Select(c => c.CompanyName.Trim()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var sc in data.Customers.Where(c => !usedNames.Contains(c.CompanyName) && usedNumbers.Add(c.Number)))
         {
             db.Customers.Add(new Customer { CustomerNumber = sc.Number, CompanyName = sc.CompanyName, CreatedAt = now, CreatedByUserId = adminId });
             newCustomers++;
