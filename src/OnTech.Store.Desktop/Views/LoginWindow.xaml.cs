@@ -1,4 +1,5 @@
 using System.Windows;
+using OnTech.Store.Desktop.Services;
 using OnTech.Store.Desktop.ViewModels;
 
 namespace OnTech.Store.Desktop.Views;
@@ -10,8 +11,10 @@ public partial class LoginWindow : Window
     public LoginWindow(LoginViewModel vm)
     {
         InitializeComponent();
+        L.Apply(this);
         DataContext = _vm = vm;
         vm.LoggedIn += (_, _) => DialogResult = true;
+        vm.LanguageChangeRequested += (_, _) => DialogResult = false;
         Loaded += (_, _) =>
         {
             if (string.IsNullOrEmpty(vm.Username)) UsernameBox.Focus();
@@ -36,7 +39,7 @@ public partial class LoginWindow : Window
         var show = ShowPassword.IsChecked == true;
         PasswordText.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         PasswordBox.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
-        ShowPassword.ToolTip = show ? "Hide password" : "Show password";
+        ShowPassword.ToolTip = L.T(show ? "Hide password" : "Show password");
         if (show)
         {
             PasswordText.Focus();

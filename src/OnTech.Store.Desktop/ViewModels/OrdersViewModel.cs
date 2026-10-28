@@ -12,16 +12,17 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
     public ObservableCollection<OrderDto> Orders { get; } = new();
     public bool CanCancel => Session.Can(Permission.CancelOrders);
 
-    public IReadOnlyList<string> ReceiptFilters { get; } = ["All orders", "With receipt", "Without receipt"];
+    // Shown in the current language; the position picks the filter (0 all, 1 with, 2 without).
+    public IReadOnlyList<string> ReceiptFilters { get; } = [L.T("All orders"), L.T("With receipt"), L.T("Without receipt")];
 
     [ObservableProperty] private string? _search;
-    [ObservableProperty] private string _receiptFilter = "All orders";
+    [ObservableProperty] private int _receiptFilterIndex;
     [ObservableProperty] private OrderDto? _selected;
     [ObservableProperty] private int _page = 1;
     [ObservableProperty] private int _totalPages;
     [ObservableProperty] private int _totalCount;
 
-    public string PageText => TotalCount == 0 ? "No orders" : $"Page {Page} of {TotalPages} · {TotalCount} orders";
+    public string PageText => TotalCount == 0 ? L.T("No orders") : L.T("Page {0} of {1} · {2} orders", Page, TotalPages, TotalCount);
 
     public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
 
@@ -30,7 +31,7 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
         var result = await Api.SearchOrdersAsync(new OrderQuery
         {
             Search = Search,
-            WithReceipt = ReceiptFilter switch { "With receipt" => true, "Without receipt" => false, _ => null },
+            WithReceipt = ReceiptFilterIndex switch { 1 => true, 2 => false, _ => null },
             Page = Page,
             PageSize = 50,
         });
@@ -50,7 +51,7 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
         return RunAsync(ReloadAsync);
     }
 
-    partial void OnReceiptFilterChanged(string value) => _ = SearchAsync();
+    partial void OnReceiptFilterIndexChanged(int value) => _ = SearchAsync();
 
     [RelayCommand]
     private Task NextPageAsync()
@@ -72,15 +73,15 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
     private Task CancelOrderAsync(OrderDto? order)
     {
         if (order is null || order.Status == OrderStatus.Cancelled) return Task.CompletedTask;
-        var reason = Dialogs.Prompt($"Cancel {order.OrderNumber}",
-            "Why is this order cancelled? Its items go back into stock.", okText: "Cancel order");
+        var reason = Dialogs.Prompt(L.T("Cancel {0}", order.OrderNumber),
+            L.T("Why is this order cancelled? Its items go back into stock."), okText: L.T("Cancel order"));
         if (string.IsNullOrWhiteSpace(reason)) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             var cancelled = await Api.CancelOrderAsync(order.Id, reason.Trim());
             await ReloadAsync();
             Selected = Orders.FirstOrDefault(o => o.Id == cancelled.Id);
-            SuccessMessage = $"{cancelled.OrderNumber} was cancelled and its stock returned.";
+            SuccessMessage = L.T("{0} was cancelled and its stock returned.", cancelled.OrderNumber);
         });
     }
 }

@@ -19,8 +19,8 @@ public sealed partial class AddQuantityViewModel(Session session) : PageViewMode
 
     public string? Summary => SelectedItem is { } i
         ? int.TryParse(QuantityText?.Trim(), out var q) && q > 0
-            ? $"{i.Name}: {i.Quantity} now, {i.Quantity + q} after adding {q}."
-            : $"{i.Name}: {i.Quantity} in stock now."
+            ? L.T("{0}: {1} now, {2} after adding {3}.", i.Name, i.Quantity, i.Quantity + q, q)
+            : L.T("{0}: {1} in stock now.", i.Name, i.Quantity)
         : null;
 
     public override Task LoadAsync() => RunAsync(async () =>
@@ -48,12 +48,12 @@ public sealed partial class AddQuantityViewModel(Session session) : PageViewMode
     [RelayCommand]
     private Task SaveAsync() => RunAsync(async () =>
     {
-        if (SelectedItem is null) throw new ArgumentException("Choose the item.");
-        if (!int.TryParse(QuantityText?.Trim(), out var qty) || qty <= 0) throw new ArgumentException("Enter a quantity of 1 or more.");
+        if (SelectedItem is null) throw new ArgumentException(L.T("Choose the item."));
+        if (!int.TryParse(QuantityText?.Trim(), out var qty) || qty <= 0) throw new ArgumentException(L.T("Enter a quantity of 1 or more."));
         var updated = await Api.AddQuantityAsync(SelectedItem.Id, qty, string.IsNullOrWhiteSpace(Note) ? null : Note.Trim());
         QuantityText = "";
         Note = null;
         await LoadItemsAsync();
-        SuccessMessage = $"Added {qty} × {updated.Name}. {updated.Quantity} now in stock.";
+        SuccessMessage = L.T("Added {0} × {1}. {2} now in stock.", qty, updated.Name, updated.Quantity);
     });
 }

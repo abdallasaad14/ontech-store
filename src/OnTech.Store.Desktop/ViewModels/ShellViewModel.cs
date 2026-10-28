@@ -15,7 +15,7 @@ public sealed partial class ShellViewModel : ObservableObject
 {
     private readonly Session _session;
 
-    public ShellViewModel(Session session)
+    public ShellViewModel(Session session, Page startPage = Page.Home)
     {
         _session = session;
         Add(MainMenu, Page.Home, "Home", "\uE80F", null);
@@ -25,12 +25,12 @@ public sealed partial class ShellViewModel : ObservableObject
         Add(MainMenu, Page.Orders, "Orders Log", "\uE8A5", Permission.ViewOrders);
         Add(AdminMenu, Page.Catalog, "Items & Categories", "\uE8F1", Permission.ManageCatalog);
         Add(AdminMenu, Page.Users, "Users", "\uE77B", Permission.ManageUsers);
-        Navigate(Page.Home);
+        Navigate(MainMenu.Concat(AdminMenu).Any(i => i.Page == startPage) ? startPage : Page.Home);
     }
 
     private void Add(ObservableCollection<NavItem> menu, Page page, string title, string glyph, Permission? needs)
     {
-        if (needs is null || _session.Can(needs.Value)) menu.Add(new NavItem(page, title, glyph));
+        if (needs is null || _session.Can(needs.Value)) menu.Add(new NavItem(page, L.T(title), glyph));
     }
 
     public ObservableCollection<NavItem> MainMenu { get; } = new();
@@ -38,11 +38,13 @@ public sealed partial class ShellViewModel : ObservableObject
     public bool HasAdminMenu => AdminMenu.Count > 0;
 
     public string UserName => _session.User.FullName;
-    public string UserRole => _session.User.IsAdmin ? "Admin" : "Store user";
+    public string UserRole => L.T(_session.User.IsAdmin ? "Admin" : "Store user");
+    public string OtherLanguage => L.OtherLanguageName;
     public string UserInitials => string.Concat(_session.User.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
     public string ServerAddress => _session.Api.ServerUrl?.Authority ?? "";
 
     [ObservableProperty] private PageViewModel? _currentPage;
+    public Page CurrentPageKind { get; private set; }
     [ObservableProperty] private NavItem? _selectedMainItem;
     [ObservableProperty] private NavItem? _selectedAdminItem;
 
@@ -60,6 +62,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     public event EventHandler? SignOutRequested;
     public event EventHandler? ChangePasswordRequested;
+    public event EventHandler? LanguageChangeRequested;
 
     [RelayCommand]
     public void Navigate(Page page) => Open(page, null);
@@ -80,6 +83,7 @@ public sealed partial class ShellViewModel : ObservableObject
         };
         setup?.Invoke(vm);
         CurrentPage = vm;
+        CurrentPageKind = page;
 
         _syncingSelection = true;
         SelectedMainItem = MainMenu.FirstOrDefault(i => i.Page == page);
@@ -96,4 +100,12 @@ public sealed partial class ShellViewModel : ObservableObject
 
     [RelayCommand]
     private void ChangePassword() => ChangePasswordRequested?.Invoke(this, EventArgs.Empty);
+
+    [RelayCommand]
+    private void SwitchLanguage()
+    {
+        if (CurrentPage is NewOrderViewModel { Lines.Count: > 0 } && !Dialogs.Confirm(L.T("Changing the language reopens the window and clears this order. Continue?")))
+            return;
+        LanguageChangeRequested?.Invoke(this, EventArgs.Empty);
+    }
 }

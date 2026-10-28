@@ -1,4 +1,5 @@
 using System.Windows;
+using OnTech.Store.Desktop.Services;
 using OnTech.Store.Desktop.ViewModels;
 
 namespace OnTech.Store.Desktop.Views;
@@ -10,6 +11,7 @@ public partial class ChangePasswordWindow : Window
     public ChangePasswordWindow(ChangePasswordViewModel vm)
     {
         InitializeComponent();
+        L.Apply(this);
         DataContext = _vm = vm;
         vm.Done += (_, _) => DialogResult = true;
         Loaded += (_, _) => Current.Focus();

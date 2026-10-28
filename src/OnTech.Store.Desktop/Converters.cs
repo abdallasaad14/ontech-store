@@ -65,3 +65,12 @@ public sealed class CanCancelOrderConverter : IMultiValueConverter
 
     public object[] ConvertBack(object? value, Type[] targetTypes, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
+
+/// <summary>Shows an enum value (e.g. an order status) or a fixed English word in the current language.</summary>
+public sealed class TranslateConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is null ? null : Services.L.T(value.ToString()!);
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}

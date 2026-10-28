@@ -1,6 +1,7 @@
 <UserControl x:Class="OnTech.Store.Desktop.Views.StockPill"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:OnTech.Store.Desktop.Services">
     <!-- DataContext: ItemDto. Green "In stock", amber "Low", red "Out of stock", gray "Disabled". -->
     <Border>
         <Border.Style>
@@ -22,19 +23,19 @@
         <TextBlock FontSize="11" FontWeight="SemiBold">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">
-                    <Setter Property="Text" Value="In stock"/>
+                    <Setter Property="Text" Value="{l:T 'In stock'}"/>
                     <Setter Property="Foreground" Value="{StaticResource OkBrush}"/>
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding IsLowStock}" Value="True">
-                            <Setter Property="Text" Value="Low"/>
+                            <Setter Property="Text" Value="{l:T 'Low'}"/>
                             <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Quantity}" Value="0">
-                            <Setter Property="Text" Value="Out of stock"/>
+                            <Setter Property="Text" Value="{l:T 'Out of stock'}"/>
                             <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding IsActive}" Value="False">
-                            <Setter Property="Text" Value="Disabled"/>
+                            <Setter Property="Text" Value="{l:T 'Disabled'}"/>
                             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
                         </DataTrigger>
                     </Style.Triggers>

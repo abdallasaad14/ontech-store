@@ -1,30 +1,35 @@
 <Window x:Class="OnTech.Store.Desktop.Views.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:OnTech.Store.Desktop.Services"
         xmlns:views="clr-namespace:OnTech.Store.Desktop.Views"
-        Title="OnTech Store - Sign in" Width="460" SizeToContent="Height" ResizeMode="CanMinimize"
+        Title="{l:T 'OnTech Store - Sign in'}" Width="460" SizeToContent="Height" ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen" Background="{StaticResource WindowBrush}"
         FontFamily="{StaticResource UiFont}" Icon="/Assets/app.ico">
     <Border Style="{StaticResource Card}" Margin="28" Padding="32,30">
         <StackPanel>
-            <Image Source="/Assets/ontech-logo-wordmark.png" Height="30" HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality"/>
+            <Grid>
+                <Image Source="/Assets/ontech-logo-wordmark.png" Height="30" HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality" FlowDirection="LeftToRight"/>
+                <Button Content="{Binding OtherLanguage}" Style="{StaticResource LinkButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Command="{Binding SwitchLanguageCommand}" ToolTip="{l:T 'Change the language'}"/>
+            </Grid>
             <TextBlock Text="STORE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="2,6,0,22"/>
 
-            <TextBlock Text="Sign in" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="Use the username and password your admin gave you." Style="{StaticResource PageSubtitle}" Margin="0,4,0,20"/>
+            <TextBlock Text="{l:T 'Sign in'}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{l:T 'Use the username and password your admin gave you.'}" Style="{StaticResource PageSubtitle}" Margin="0,4,0,20"/>
 
             <views:MessageBanners/>
 
-            <TextBlock Text="Username" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Text="{l:T 'Username'}" Style="{StaticResource FieldLabel}"/>
             <TextBox x:Name="UsernameBox" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14"/>
 
-            <TextBlock Text="Password" Style="{StaticResource FieldLabel}"/>
+            <TextBlock Text="{l:T 'Password'}" Style="{StaticResource FieldLabel}"/>
             <!-- The eye button swaps the hidden PasswordBox for a plain TextBox showing the same text. -->
             <Grid Margin="0,0,0,16">
                 <PasswordBox x:Name="PasswordBox" PasswordChanged="OnPasswordChanged" Padding="9,7,40,7"/>
                 <TextBox x:Name="PasswordText" TextChanged="OnPasswordTextChanged" Padding="9,7,40,7" Visibility="Collapsed"/>
                 <ToggleButton x:Name="ShowPassword" HorizontalAlignment="Right" Margin="0,0,4,0" Width="32" Height="28"
-                              Cursor="Hand" Focusable="False" ToolTip="Show password"
+                              Cursor="Hand" Focusable="False" ToolTip="{l:T 'Show password'}"
                               Checked="OnShowPasswordChanged" Unchecked="OnShowPasswordChanged">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
@@ -47,21 +52,21 @@
 
             <!-- Server address: collapsed to one line once this PC has signed in before. -->
             <DockPanel Visibility="{Binding IsEditingServer, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" Margin="0,0,0,18">
-                <Button DockPanel.Dock="Right" Content="Change" Style="{StaticResource LinkButton}" Command="{Binding EditServerCommand}"/>
+                <Button DockPanel.Dock="Right" Content="{l:T 'Change'}" Style="{StaticResource LinkButton}" Command="{Binding EditServerCommand}"/>
                 <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" FontSize="12">
-                    <Run Text="Server:"/> <Run Text="{Binding ServerUrl, Mode=OneWay}"/>
+                    <Run Text="{l:T 'Server:'}"/> <Run Text="{Binding ServerUrl, Mode=OneWay}"/>
                 </TextBlock>
             </DockPanel>
             <StackPanel Visibility="{Binding IsEditingServer, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,18">
-                <TextBlock Text="Server address" Style="{StaticResource FieldLabel}"/>
+                <TextBlock Text="{l:T 'Server address'}" Style="{StaticResource FieldLabel}"/>
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="Test" Margin="8,0,0,0" Command="{Binding TestConnectionCommand}"/>
+                    <Button DockPanel.Dock="Right" Content="{l:T 'Test'}" Margin="8,0,0,0" Command="{Binding TestConnectionCommand}"/>
                     <TextBox Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
                 </DockPanel>
-                <TextBlock Style="{StaticResource Hint}" Text="The IP address or name of the server PC, for example 192.168.1.10. Port 5080 is used if you don't type one."/>
+                <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The IP address or name of the server PC, for example 192.168.1.10. Port 5080 is used if you don\'t type one.'}"/>
             </StackPanel>
 
-            <Button Content="Sign in" Style="{StaticResource PrimaryButton}" IsDefault="True" MinHeight="40"
+            <Button Content="{l:T 'Sign in'}" Style="{StaticResource PrimaryButton}" IsDefault="True" MinHeight="40"
                     Command="{Binding SignInCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"/>
         </StackPanel>

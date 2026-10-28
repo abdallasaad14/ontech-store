@@ -18,17 +18,20 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
 {
     public ObservableCollection<UserDto> Users { get; } = new();
 
-    public IReadOnlyList<PermissionOption> PermissionOptions { get; } =
+    private static readonly (Permission Permission, string Title, string Description)[] PermissionTexts =
     [
-        new(Permission.ViewStock, "View stock", "See categories, items and quantities"),
-        new(Permission.CreateOrders, "New orders", "Take items out of the store for a customer"),
-        new(Permission.AddStock, "Add quantity", "Add received stock to existing items"),
-        new(Permission.ManageCustomers, "Customers", "Add and edit customers"),
-        new(Permission.ViewOrders, "Orders log", "Search and view past orders"),
-        new(Permission.CancelOrders, "Cancel orders", "Cancel an order and return its stock"),
-        new(Permission.ManageCatalog, "Items & categories", "Add and edit categories and items, stock counts"),
-        new(Permission.ManageUsers, "Users", "Add users, set permissions, reset passwords"),
+        (Permission.ViewStock, "View stock", "See categories, items and quantities"),
+        (Permission.CreateOrders, "New orders", "Take items out of the store for a customer"),
+        (Permission.AddStock, "Add quantity", "Add received stock to existing items"),
+        (Permission.ManageCustomers, "Customers", "Add and edit customers"),
+        (Permission.ViewOrders, "Orders log", "Search and view past orders"),
+        (Permission.CancelOrders, "Cancel orders", "Cancel an order and return its stock"),
+        (Permission.ManageCatalog, "Items & categories", "Add and edit categories and items, stock counts"),
+        (Permission.ManageUsers, "Users", "Add users, set permissions, reset passwords"),
     ];
+
+    public IReadOnlyList<PermissionOption> PermissionOptions { get; } =
+        PermissionTexts.Select(p => new PermissionOption(p.Permission, L.T(p.Title), L.T(p.Description))).ToList();
 
     [ObservableProperty] private UserDto? _selected;
     [ObservableProperty] private bool _isEditing;
@@ -41,16 +44,15 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     [ObservableProperty] private bool _mustChangePassword = true;
 
     public bool IsNew => EditingId is null;
-    public string FormTitle => IsNew ? "Add user" : "Edit user";
+    public string FormTitle => L.T(IsNew ? "Add user" : "Edit user");
 
-    public static string Describe(UserDto u) => u.IsAdmin ? "Admin (everything)" : PermissionSummary(u.Permissions);
+    public static string Describe(UserDto u) => u.IsAdmin ? L.T("Admin (everything)") : PermissionSummary(u.Permissions);
 
     private static string PermissionSummary(Permission p) => p switch
     {
-        Permission.None => "No access",
-        Permission.StandardUser => "Standard store user",
-        _ => string.Join(", ", Enum.GetValues<Permission>()
-            .Where(x => x != Permission.None && x != Permission.StandardUser && x != Permission.All && (p & x) == x)),
+        Permission.None => L.T("No access"),
+        Permission.StandardUser => L.T("Standard store user"),
+        _ => string.Join(L.IsArabic ? "، " : ", ", PermissionTexts.Where(x => (p & x.Permission) == x.Permission).Select(x => L.T(x.Title))),
     };
 
     public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
@@ -103,14 +105,14 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     [RelayCommand]
     private Task SaveAsync() => RunAsync(async () =>
     {
-        if (string.IsNullOrWhiteSpace(FullName)) throw new ArgumentException("Enter the user's name.");
-        if (string.IsNullOrWhiteSpace(Username)) throw new ArgumentException("Enter a username.");
-        if (!System.Text.RegularExpressions.Regex.IsMatch(Username.Trim(), UserNames.Pattern)) throw new ArgumentException(UserNames.Rule);
+        if (string.IsNullOrWhiteSpace(FullName)) throw new ArgumentException(L.T("Enter the user's name."));
+        if (string.IsNullOrWhiteSpace(Username)) throw new ArgumentException(L.T("Enter a username."));
+        if (!System.Text.RegularExpressions.Regex.IsMatch(Username.Trim(), UserNames.Pattern)) throw new ArgumentException(L.T(UserNames.Rule));
         UserDto saved;
         if (EditingId is { } id)
         {
             if (id == Session.User.Id && (!IsActive || (Session.User.IsAdmin && !IsAdmin)))
-                throw new ArgumentException("You can't remove your own admin rights or disable your own account.");
+                throw new ArgumentException(L.T("You can't remove your own admin rights or disable your own account."));
             saved = await Api.UpdateUserAsync(id, new UpdateUserRequest
             {
                 FullName = FullName.Trim(), Username = Username.Trim(), IsAdmin = IsAdmin, IsActive = IsActive, Permissions = CheckedPermissions(),
@@ -118,7 +120,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
         }
         else
         {
-            if (Password.Length < 8) throw new ArgumentException("The first password must be at least 8 characters.");
+            if (Password.Length < 8) throw new ArgumentException(L.T("The first password must be at least 8 characters."));
             saved = await Api.CreateUserAsync(new CreateUserRequest
             {
                 FullName = FullName.Trim(), Username = Username.Trim(), Password = Password, IsAdmin = IsAdmin,
@@ -129,21 +131,21 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
         Password = "";
         await ReloadAsync();
         Selected = Users.FirstOrDefault(u => u.Id == saved.Id);
-        SuccessMessage = $"{saved.FullName} saved.";
+        SuccessMessage = L.T("{0} saved.", saved.FullName);
     });
 
     [RelayCommand]
     private Task ResetPasswordAsync(UserDto? u)
     {
         if (u is null) return Task.CompletedTask;
-        var pwd = Dialogs.Prompt($"Reset password: {u.FullName}",
-            "New password (at least 8 characters). They will be asked to choose their own at next sign-in.", isPassword: true, okText: "Reset password");
+        var pwd = Dialogs.Prompt(L.T("Reset password: {0}", u.FullName),
+            L.T("New password (at least 8 characters). They will be asked to choose their own at next sign-in."), isPassword: true, okText: L.T("Reset password"));
         if (pwd is null) return Task.CompletedTask;
         return RunAsync(async () =>
         {
-            if (pwd.Length < 8) throw new ArgumentException("The password must be at least 8 characters.");
+            if (pwd.Length < 8) throw new ArgumentException(L.T("The password must be at least 8 characters."));
             await Api.ResetPasswordAsync(u.Id, pwd, mustChangePassword: true);
-            SuccessMessage = $"Password reset for {u.FullName}.";
+            SuccessMessage = L.T("Password reset for {0}.", u.FullName);
         });
     }
 
@@ -153,16 +155,16 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
         if (u is null) return Task.CompletedTask;
         if (u.Id == Session.User.Id)
         {
-            ErrorMessage = "You can't disable your own account.";
+            ErrorMessage = L.T("You can't disable your own account.");
             return Task.CompletedTask;
         }
-        if (!Dialogs.Confirm($"Disable {u.FullName}? They will be signed out on every PC and can't sign in again until enabled.")) return Task.CompletedTask;
+        if (!Dialogs.Confirm(L.T("Disable {0}? They will be signed out on every PC and can't sign in again until enabled.", u.FullName))) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             await Api.DisableUserAsync(u.Id);
             IsEditing = false;
             await ReloadAsync();
-            SuccessMessage = $"{u.FullName} was disabled.";
+            SuccessMessage = L.T("{0} was disabled.", u.FullName);
         });
     }
 }

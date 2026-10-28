@@ -30,7 +30,7 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     [ObservableProperty] private string? _notes;
     [ObservableProperty] private bool _isActive = true;
 
-    public string FormTitle => EditingId is null ? "Add customer" : "Edit customer";
+    public string FormTitle => L.T(EditingId is null ? "Add customer" : "Edit customer");
     partial void OnEditingIdChanged(int? value) => OnPropertyChanged(nameof(FormTitle));
 
     public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
@@ -79,10 +79,10 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     [RelayCommand]
     private Task SaveAsync() => RunAsync(async () =>
     {
-        if (string.IsNullOrWhiteSpace(CompanyName)) throw new ArgumentException("Company name is required.");
+        if (string.IsNullOrWhiteSpace(CompanyName)) throw new ArgumentException(L.T("Company name is required."));
         int? number = null;
         if (Clean(CustomerNumber) is { } numberText)
-            number = int.TryParse(numberText, out var n) && n > 0 ? n : throw new ArgumentException("Customer number must be a whole number, 1 or more.");
+            number = int.TryParse(numberText, out var n) && n > 0 ? n : throw new ArgumentException(L.T("Customer number must be a whole number, 1 or more."));
         var req = new SaveCustomerRequest
         {
             CustomerNumber = number,
@@ -99,7 +99,7 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
         IsEditing = false;
         await ReloadAsync();
         Selected = Customers.FirstOrDefault(c => c.Id == saved.Id);
-        SuccessMessage = EditingId is null ? $"Customer \"{saved.CompanyName}\" added." : $"Customer \"{saved.CompanyName}\" saved.";
+        SuccessMessage = L.T(EditingId is null ? "Customer \"{0}\" added." : "Customer \"{0}\" saved.", saved.CompanyName);
     });
 
     /// <summary>Adds customers from an Excel or CSV sheet. Numbers already in the store are skipped, so importing twice is safe.</summary>
@@ -107,39 +107,40 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
     private Task ImportAsync()
     {
         if (!CanEdit) return Task.CompletedTask;
-        var dlg = new OpenFileDialog { Title = "Import customers", Filter = "Excel or CSV|*.xlsx;*.csv|All files|*.*" };
+        var dlg = new OpenFileDialog { Title = L.T("Import customers"), Filter = L.T("Excel or CSV") + "|*.xlsx;*.csv|" + L.T("All files") + "|*.*" };
         if (dlg.ShowDialog() != true) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             List<ImportCustomerRow> rows;
             try { rows = CustomerSheet.Read(dlg.FileName); }
-            catch (System.IO.IOException) { throw new ArgumentException("Couldn't open the file. Close it in Excel and try again."); }
+            catch (System.IO.IOException) { throw new ArgumentException(L.T("Couldn't open the file. Close it in Excel and try again.")); }
             catch (Exception ex) when (ex is System.IO.InvalidDataException or InvalidOperationException or System.Xml.XmlException)
-            { throw new ArgumentException("Couldn't read this file. Save it as .xlsx or .csv and try again."); }
-            if (rows.Count == 0) throw new ArgumentException("No customers found in this file.");
+            { throw new ArgumentException(L.T("Couldn't read this file. Save it as .xlsx or .csv and try again.")); }
+            if (rows.Count == 0) throw new ArgumentException(L.T("No customers found in this file."));
 
-            var sample = string.Join("\n", rows.Take(3).Select(r => $"  {r.CustomerNumber?.ToString() ?? "(new number)"}  {r.CompanyName}"));
-            if (!Dialogs.Confirm($"Found {rows.Count} customers in {System.IO.Path.GetFileName(dlg.FileName)}, for example:\n\n{sample}\n\nImport them?")) return;
+            var sample = string.Join("\n", rows.Take(3).Select(r => $"  {r.CustomerNumber?.ToString() ?? L.T("(new number)")}  {r.CompanyName}"));
+            if (!Dialogs.Confirm(L.T("Found {0} customers in {1}, for example:", rows.Count, System.IO.Path.GetFileName(dlg.FileName)) + $"\n\n{sample}\n\n" + L.T("Import them?"))) return;
 
             var result = await Api.ImportCustomersAsync(new ImportCustomersRequest { Rows = rows });
             IsEditing = false;
             await ReloadAsync();
             SuccessMessage = result.Skipped == 0
-                ? $"{result.Added} customers imported."
-                : $"{result.Added} customers imported, {result.Skipped} skipped: " + string.Join("; ", result.Messages.Take(5)) + (result.Messages.Count > 5 ? "; ..." : "");
+                ? L.T("{0} customers imported.", result.Added)
+                : L.T("{0} customers imported, {1} skipped:", result.Added, result.Skipped) + " "
+                  + string.Join("; ", result.Messages.Take(5).Select(L.Message)) + (result.Messages.Count > 5 ? "; ..." : "");
         });
     }
 
     [RelayCommand]
     private Task DisableAsync(CustomerDto? c)
     {
-        if (c is null || !Dialogs.Confirm($"Disable {c.CompanyName}? Their past orders stay in the log, but they can't be picked for new orders.")) return Task.CompletedTask;
+        if (c is null || !Dialogs.Confirm(L.T("Disable {0}? Their past orders stay in the log, but they can't be picked for new orders.", c.CompanyName))) return Task.CompletedTask;
         return RunAsync(async () =>
         {
             await Api.DisableCustomerAsync(c.Id);
             IsEditing = false;
             await ReloadAsync();
-            SuccessMessage = $"{c.CompanyName} was disabled.";
+            SuccessMessage = L.T("{0} was disabled.", c.CompanyName);
         });
     }
 
