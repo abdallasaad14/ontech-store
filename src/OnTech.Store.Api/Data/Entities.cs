@@ -8,9 +8,10 @@ public class User
 {
     public int Id { get; set; }
     public string FullName { get; set; } = "";
-    public string Email { get; set; } = "";
-    /// <summary>Upper-cased email, used for case-insensitive unique lookups.</summary>
-    public string NormalizedEmail { get; set; } = "";
+    /// <summary>Sign-in name.</summary>
+    public string Username { get; set; } = "";
+    /// <summary>Upper-cased username, used for case-insensitive unique lookups.</summary>
+    public string NormalizedUsername { get; set; } = "";
     public string PasswordHash { get; set; } = "";
     public bool IsAdmin { get; set; }
     public bool IsActive { get; set; } = true;

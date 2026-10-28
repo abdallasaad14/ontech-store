@@ -29,13 +29,13 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
     [HttpPost]
     public async Task<ActionResult<UserDto>> Create(CreateUserRequest req, CancellationToken ct)
     {
-        var email = req.Email.Trim();
-        await EnsureEmailFree(email, null, ct);
+        var username = req.Username.Trim();
+        await EnsureUsernameFree(username, null, ct);
         var user = new User
         {
             FullName = req.FullName.Trim(),
-            Email = email,
-            NormalizedEmail = email.ToUpperInvariant(),
+            Username = username,
+            NormalizedUsername = username.ToUpperInvariant(),
             IsAdmin = req.IsAdmin,
             Permissions = req.Permissions & Permission.All,
             MustChangePassword = req.MustChangePassword,
@@ -51,16 +51,16 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
     public async Task<ActionResult<UserDto>> Update(int id, UpdateUserRequest req, CancellationToken ct)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct) ?? throw ApiException.NotFound("User");
-        var email = req.Email.Trim();
-        await EnsureEmailFree(email, id, ct);
+        var username = req.Username.Trim();
+        await EnsureUsernameFree(username, id, ct);
 
         var losesAdmin = user.IsAdmin && user.IsActive && (!req.IsAdmin || !req.IsActive);
         if (losesAdmin && !await db.Users.AnyAsync(u => u.Id != id && u.IsAdmin && u.IsActive, ct))
             throw ApiException.Conflict("You can't remove or disable the last active admin.");
 
         user.FullName = req.FullName.Trim();
-        user.Email = email;
-        user.NormalizedEmail = email.ToUpperInvariant();
+        user.Username = username;
+        user.NormalizedUsername = username.ToUpperInvariant();
         user.IsAdmin = req.IsAdmin;
         user.IsActive = req.IsActive;
         user.Permissions = req.Permissions & Permission.All;
@@ -91,10 +91,10 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         return NoContent();
     }
 
-    private async Task EnsureEmailFree(string email, int? exceptId, CancellationToken ct)
+    private async Task EnsureUsernameFree(string username, int? exceptId, CancellationToken ct)
     {
-        var normalized = email.ToUpperInvariant();
-        if (await db.Users.AnyAsync(u => u.NormalizedEmail == normalized && u.Id != exceptId, ct))
-            throw ApiException.Conflict($"A user with email '{email}' already exists.");
+        var normalized = username.ToUpperInvariant();
+        if (await db.Users.AnyAsync(u => u.NormalizedUsername == normalized && u.Id != exceptId, ct))
+            throw ApiException.Conflict($"The username '{username}' is already taken.");
     }
 }

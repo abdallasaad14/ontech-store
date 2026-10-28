@@ -13,12 +13,12 @@ public sealed partial class LoginViewModel : ViewModelBase
     {
         _settings = settings;
         _serverUrl = settings.ServerUrl;
-        _email = settings.LastEmail ?? "";
-        _isEditingServer = string.IsNullOrWhiteSpace(settings.LastEmail);
+        _username = settings.LastUsername ?? "";
+        _isEditingServer = string.IsNullOrWhiteSpace(settings.LastUsername);
     }
 
     [ObservableProperty] private string _serverUrl;
-    [ObservableProperty] private string _email;
+    [ObservableProperty] private string _username;
     [ObservableProperty] private bool _isEditingServer;
 
     /// <summary>Set from the PasswordBox in code-behind (PasswordBox can't be bound).</summary>
@@ -43,13 +43,13 @@ public sealed partial class LoginViewModel : ViewModelBase
     [RelayCommand]
     private Task SignInAsync() => RunAsync(async () =>
     {
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrEmpty(Password))
-            throw new ArgumentException("Enter your email and password.");
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
+            throw new ArgumentException("Enter your username and password.");
         var api = StoreApiClient.Create(ServerUrl);
-        var user = await api.LoginAsync(Email, Password);
+        var user = await api.LoginAsync(Username, Password);
         ServerUrl = api.ServerUrl!.ToString().TrimEnd('/');
         _settings.ServerUrl = ServerUrl;
-        _settings.LastEmail = user.Email;
+        _settings.LastUsername = user.Username;
         _settings.Save();
         Result = new Session(api, user);
         LoggedIn?.Invoke(this, EventArgs.Empty);

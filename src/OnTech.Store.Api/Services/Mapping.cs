@@ -10,7 +10,7 @@ public static class Mapping
     {
         Id = u.Id,
         FullName = u.FullName,
-        Email = u.Email,
+        Username = u.Username,
         IsAdmin = u.IsAdmin,
         IsActive = u.IsActive,
         MustChangePassword = u.MustChangePassword,

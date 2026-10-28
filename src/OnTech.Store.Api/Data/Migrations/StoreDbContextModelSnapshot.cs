@@ -332,11 +332,6 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -354,10 +349,10 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<bool>("MustChangePassword")
                         .HasColumnType("bit");
 
-                    b.Property<string>("NormalizedEmail")
+                    b.Property<string>("NormalizedUsername")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -367,9 +362,14 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("Permissions")
                         .HasColumnType("int");
 
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("NormalizedEmail")
+                    b.HasIndex("NormalizedUsername")
                         .IsUnique();
 
                     b.ToTable("Users");

@@ -7,7 +7,7 @@ namespace OnTech.Store.Api.Data;
 public sealed class SeedOptions
 {
     public const string Section = "Seed";
-    public string AdminEmail { get; set; } = "admin@ontech.local";
+    public string AdminUsername { get; set; } = "admin";
     public string AdminPassword { get; set; } = "ChangeMe!123";
     public string AdminName { get; set; } = "Administrator";
 }
@@ -42,8 +42,8 @@ public static class DatabaseSetup
         var admin = new User
         {
             FullName = seed.AdminName,
-            Email = seed.AdminEmail,
-            NormalizedEmail = seed.AdminEmail.ToUpperInvariant(),
+            Username = seed.AdminUsername,
+            NormalizedUsername = seed.AdminUsername.ToUpperInvariant(),
             IsAdmin = true,
             Permissions = Permission.All,
             MustChangePassword = true,
@@ -52,6 +52,6 @@ public static class DatabaseSetup
         admin.PasswordHash = scope.ServiceProvider.GetRequiredService<PasswordService>().Hash(admin, seed.AdminPassword);
         db.Users.Add(admin);
         await db.SaveChangesAsync();
-        log.LogWarning("Created first admin {Email}. Sign in and change the password.", seed.AdminEmail);
+        log.LogWarning("Created first admin '{Username}'. Sign in and change the password.", seed.AdminUsername);
     }
 }

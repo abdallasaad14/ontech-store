@@ -34,7 +34,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     [ObservableProperty] private bool _isEditing;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(FormTitle), nameof(IsNew))] private int? _editingId;
     [ObservableProperty] private string _fullName = "";
-    [ObservableProperty] private string _email = "";
+    [ObservableProperty] private string _username = "";
     [ObservableProperty] private string _password = "";
     [ObservableProperty] private bool _isAdmin;
     [ObservableProperty] private bool _isActive = true;
@@ -66,7 +66,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     private void NewUser()
     {
         EditingId = null;
-        FullName = Email = Password = "";
+        FullName = Username = Password = "";
         IsAdmin = false;
         IsActive = true;
         MustChangePassword = true;
@@ -80,7 +80,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
         if (u is null) return;
         EditingId = u.Id;
         FullName = u.FullName;
-        Email = u.Email;
+        Username = u.Username;
         Password = "";
         IsAdmin = u.IsAdmin;
         IsActive = u.IsActive;
@@ -104,7 +104,8 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     private Task SaveAsync() => RunAsync(async () =>
     {
         if (string.IsNullOrWhiteSpace(FullName)) throw new ArgumentException("Enter the user's name.");
-        if (string.IsNullOrWhiteSpace(Email)) throw new ArgumentException("Enter the user's email.");
+        if (string.IsNullOrWhiteSpace(Username)) throw new ArgumentException("Enter a username.");
+        if (!System.Text.RegularExpressions.Regex.IsMatch(Username.Trim(), UserNames.Pattern)) throw new ArgumentException(UserNames.Rule);
         UserDto saved;
         if (EditingId is { } id)
         {
@@ -112,7 +113,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
                 throw new ArgumentException("You can't remove your own admin rights or disable your own account.");
             saved = await Api.UpdateUserAsync(id, new UpdateUserRequest
             {
-                FullName = FullName.Trim(), Email = Email.Trim(), IsAdmin = IsAdmin, IsActive = IsActive, Permissions = CheckedPermissions(),
+                FullName = FullName.Trim(), Username = Username.Trim(), IsAdmin = IsAdmin, IsActive = IsActive, Permissions = CheckedPermissions(),
             });
         }
         else
@@ -120,7 +121,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
             if (Password.Length < 8) throw new ArgumentException("The first password must be at least 8 characters.");
             saved = await Api.CreateUserAsync(new CreateUserRequest
             {
-                FullName = FullName.Trim(), Email = Email.Trim(), Password = Password, IsAdmin = IsAdmin,
+                FullName = FullName.Trim(), Username = Username.Trim(), Password = Password, IsAdmin = IsAdmin,
                 Permissions = CheckedPermissions(), MustChangePassword = MustChangePassword,
             });
         }

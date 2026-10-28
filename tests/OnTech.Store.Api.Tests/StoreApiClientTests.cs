@@ -16,7 +16,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
     private async Task<StoreApiClient> AdminAsync()
     {
         var api = NewClient();
-        await api.LoginAsync(StoreApiFactory.AdminEmail, StoreApiFactory.AdminPassword);
+        await api.LoginAsync(StoreApiFactory.AdminUsername, StoreApiFactory.AdminPassword);
         return api;
     }
 
@@ -39,9 +39,9 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
     [Fact]
     public async Task Wrong_password_gives_readable_message()
     {
-        var ex = await Assert.ThrowsAsync<ApiError>(() => NewClient().LoginAsync(StoreApiFactory.AdminEmail, "wrong-password"));
+        var ex = await Assert.ThrowsAsync<ApiError>(() => NewClient().LoginAsync(StoreApiFactory.AdminUsername, "wrong-password"));
         Assert.Equal(HttpStatusCode.Unauthorized, ex.Status);
-        Assert.Equal("Email or password is incorrect.", ex.Message);
+        Assert.Equal("Username or password is incorrect.", ex.Message);
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
         var api = await AdminAsync();
         var ex = await Assert.ThrowsAsync<ApiError>(() => api.CreateUserAsync(new CreateUserRequest
         {
-            FullName = "Short Password", Email = $"u{Guid.NewGuid():N}@test.local", Password = "123",
+            FullName = "Short Password", Username = $"u{Guid.NewGuid():N}", Password = "123",
         }));
         Assert.Equal(HttpStatusCode.BadRequest, ex.Status);
         Assert.DoesNotContain("One or more validation errors", ex.Message);
@@ -130,19 +130,42 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
     }
 
     [Fact]
+    public async Task Username_is_case_insensitive_and_must_not_have_spaces()
+    {
+        var admin = await AdminAsync();
+        var spaced = await Assert.ThrowsAsync<ApiError>(() => admin.CreateUserAsync(new CreateUserRequest
+        {
+            FullName = "Has Space", Username = "has space", Password = "Space!12345",
+        }));
+        Assert.Equal(HttpStatusCode.BadRequest, spaced.Status);
+        Assert.Contains("no spaces", spaced.Message);
+
+        var name = $"Ahmed.{Guid.NewGuid():N}"[..14];
+        await admin.CreateUserAsync(new CreateUserRequest { FullName = "Ahmed", Username = name, Password = "Ahmed!12345" });
+        var me = await NewClient().LoginAsync(name.ToLowerInvariant(), "Ahmed!12345");
+        Assert.Equal(name, me.Username);
+
+        var taken = await Assert.ThrowsAsync<ApiError>(() => admin.CreateUserAsync(new CreateUserRequest
+        {
+            FullName = "Other Ahmed", Username = name.ToUpperInvariant(), Password = "Ahmed!12345",
+        }));
+        Assert.Equal(HttpStatusCode.Conflict, taken.Status);
+    }
+
+    [Fact]
     public async Task Users_permissions_and_password_change()
     {
         var admin = await AdminAsync();
-        var email = $"clerk{Guid.NewGuid():N}@test.local";
+        var username = $"clerk{Guid.NewGuid():N}";
         var clerk = await admin.CreateUserAsync(new CreateUserRequest
         {
-            FullName = "Store Clerk", Email = email, Password = "Clerk!12345",
+            FullName = "Store Clerk", Username = username, Password = "Clerk!12345",
             Permissions = Permission.ViewStock | Permission.CreateOrders, MustChangePassword = true,
         });
         Assert.Contains(await admin.GetUsersAsync(), u => u.Id == clerk.Id);
 
         var api = NewClient();
-        var me = await api.LoginAsync(email, "Clerk!12345");
+        var me = await api.LoginAsync(username, "Clerk!12345");
         Assert.True(me.MustChangePassword);
         await api.ChangePasswordAsync("Clerk!12345", "NewClerk!123");
         Assert.False((await api.RefreshMeAsync()).MustChangePassword);
@@ -154,7 +177,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
 
         await admin.ResetPasswordAsync(clerk.Id, "Reset!12345", mustChangePassword: true);
         await admin.DisableUserAsync(clerk.Id);
-        var disabled = await Assert.ThrowsAsync<ApiError>(() => NewClient().LoginAsync(email, "Reset!12345"));
+        var disabled = await Assert.ThrowsAsync<ApiError>(() => NewClient().LoginAsync(username, "Reset!12345"));
         Assert.Equal(HttpStatusCode.Forbidden, disabled.Status);
         Assert.Contains("disabled", disabled.Message);
     }

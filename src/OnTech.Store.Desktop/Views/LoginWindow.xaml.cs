@@ -14,7 +14,7 @@ public partial class LoginWindow : Window
         vm.LoggedIn += (_, _) => DialogResult = true;
         Loaded += (_, _) =>
         {
-            if (string.IsNullOrEmpty(vm.Email)) EmailBox.Focus();
+            if (string.IsNullOrEmpty(vm.Username)) UsernameBox.Focus();
             else PasswordBox.Focus();
         };
     }

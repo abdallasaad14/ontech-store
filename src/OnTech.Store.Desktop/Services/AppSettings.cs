@@ -7,7 +7,7 @@ namespace OnTech.Store.Desktop.Services;
 public sealed class AppSettings
 {
     public string ServerUrl { get; set; } = "http://localhost:5080";
-    public string? LastEmail { get; set; }
+    public string? LastUsername { get; set; }
 
     private static readonly string FilePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OnTechStore", "settings.json");

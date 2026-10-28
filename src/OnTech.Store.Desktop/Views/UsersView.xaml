@@ -22,7 +22,7 @@
                 <DataGrid x:Name="UsersGrid" ItemsSource="{Binding Users}" SelectedItem="{Binding Selected}" Margin="6" MouseDoubleClick="OnDoubleClick">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="NAME" Binding="{Binding FullName}" Width="*" FontWeight="SemiBold"/>
-                        <DataGridTextColumn Header="EMAIL" Binding="{Binding Email}" Width="*"/>
+                        <DataGridTextColumn Header="USERNAME" Binding="{Binding Username}" Width="*"/>
                         <DataGridTextColumn Header="ACCESS" Binding="{Binding Converter={StaticResource UserAccess}, Mode=OneWay}" Width="1.4*"/>
                         <DataGridTextColumn Header="LAST SIGN-IN" Binding="{Binding LastLoginAt, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="130"/>
                         <DataGridTemplateColumn Header="STATUS" Width="90">
@@ -84,8 +84,9 @@
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
                         <TextBlock Text="Full name *" Style="{StaticResource FieldLabel}"/>
                         <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="Email *" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Username * (used to sign in)" Style="{StaticResource FieldLabel}"/>
+                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource Hint}" Text="For example ahmed or ahmed.ali. No spaces." Margin="0,0,0,12"/>
                         <StackPanel Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="First password * (at least 8 characters)" Style="{StaticResource FieldLabel}"/>
                             <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>

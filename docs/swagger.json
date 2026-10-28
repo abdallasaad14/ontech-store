@@ -11,7 +11,7 @@
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Signs in with email and password and returns a bearer token for the other endpoints.",
+                "summary": "Signs in with username and password and returns a bearer token for the other endpoints.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1862,9 +1862,9 @@
             },
             "CreateUserRequest": {
                 "required": [
-                    "email",
                     "fullName",
-                    "password"
+                    "password",
+                    "username"
                 ],
                 "type": "object",
                 "properties": {
@@ -1873,11 +1873,12 @@
                         "minLength": 1,
                         "type": "string"
                     },
-                    "email": {
-                        "maxLength": 256,
-                        "minLength": 1,
+                    "username": {
+                        "maxLength": 64,
+                        "minLength": 3,
+                        "pattern": "^[A-Za-z0-9._-]+$",
                         "type": "string",
-                        "format": "email"
+                        "description": "What the user types to sign in: letters, digits, dot, dash or underscore. Not case-sensitive."
                     },
                     "password": {
                         "maxLength": 128,
@@ -2045,16 +2046,15 @@
             },
             "LoginRequest": {
                 "required": [
-                    "email",
-                    "password"
+                    "password",
+                    "username"
                 ],
                 "type": "object",
                 "properties": {
-                    "email": {
-                        "maxLength": 256,
+                    "username": {
+                        "maxLength": 64,
                         "minLength": 1,
-                        "type": "string",
-                        "format": "email"
+                        "type": "string"
                     },
                     "password": {
                         "maxLength": 128,
@@ -2541,8 +2541,8 @@
             },
             "UpdateUserRequest": {
                 "required": [
-                    "email",
-                    "fullName"
+                    "fullName",
+                    "username"
                 ],
                 "type": "object",
                 "properties": {
@@ -2551,11 +2551,12 @@
                         "minLength": 1,
                         "type": "string"
                     },
-                    "email": {
-                        "maxLength": 256,
-                        "minLength": 1,
+                    "username": {
+                        "maxLength": 64,
+                        "minLength": 3,
+                        "pattern": "^[A-Za-z0-9._-]+$",
                         "type": "string",
-                        "format": "email"
+                        "description": "What the user types to sign in: letters, digits, dot, dash or underscore. Not case-sensitive."
                     },
                     "isAdmin": {
                         "type": "boolean"
@@ -2580,7 +2581,7 @@
                         "type": "string",
                         "nullable": true
                     },
-                    "email": {
+                    "username": {
                         "type": "string",
                         "nullable": true
                     },

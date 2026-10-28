@@ -13,15 +13,15 @@ namespace OnTech.Store.Api.Controllers;
 [Route("api/auth")]
 public class AuthController(StoreDbContext db, PasswordService passwords, TokenService tokens) : ControllerBase
 {
-    /// <summary>Signs in with email and password and returns a bearer token for the other endpoints.</summary>
+    /// <summary>Signs in with username and password and returns a bearer token for the other endpoints.</summary>
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest req, CancellationToken ct)
     {
-        var normalized = req.Email.Trim().ToUpperInvariant();
-        var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized, ct);
+        var normalized = req.Username.Trim().ToUpperInvariant();
+        var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedUsername == normalized, ct);
         if (user is null || !passwords.Verify(user, req.Password, out var rehash))
-            throw new ApiException(StatusCodes.Status401Unauthorized, "Email or password is incorrect.");
+            throw new ApiException(StatusCodes.Status401Unauthorized, "Username or password is incorrect.");
         if (!user.IsActive)
             throw new ApiException(StatusCodes.Status403Forbidden, "This account is disabled. Ask an admin to enable it.");
 

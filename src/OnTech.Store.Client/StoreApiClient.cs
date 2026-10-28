@@ -56,9 +56,9 @@ public sealed class StoreApiClient
 
     public async Task CheckHealthAsync(CancellationToken ct = default) => await SendAsync(HttpMethod.Get, "api/health", null, ct);
 
-    public async Task<UserDto> LoginAsync(string email, string password, CancellationToken ct = default)
+    public async Task<UserDto> LoginAsync(string username, string password, CancellationToken ct = default)
     {
-        var res = await SendAsync<LoginResponse>(HttpMethod.Post, "api/auth/login", new LoginRequest { Email = email.Trim(), Password = password }, ct);
+        var res = await SendAsync<LoginResponse>(HttpMethod.Post, "api/auth/login", new LoginRequest { Username = username.Trim(), Password = password }, ct);
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", res.Token);
         TokenExpiresAt = res.ExpiresAt;
         return CurrentUser = res.User;

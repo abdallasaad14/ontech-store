@@ -27,7 +27,7 @@ Hardware: any normal office PC is enough for 3 clients. The API idles at roughly
    ```
    This publishes to `C:\OnTechStore\Server`, generates a unique JWT signing key, installs the **OnTech Store Server** service (auto start, auto restart on crash), grants the service account access to SQL Express, and opens TCP 5080 on private/domain networks.
 4. Open `http://localhost:5080/api/health`. On first start the server creates the database and the first admin:
-   - Email `admin@ontech.local`, password `ChangeMe!123` (change in `appsettings.json` under `Seed` before first start, or change the password after first login; the account is flagged to change it).
+   - Username `admin`, password `ChangeMe!123` (change in `appsettings.json` under `Seed` before first start, or change the password after first login; the account is flagged to change it).
 5. Schedule `scripts\backup-database.ps1` daily in Task Scheduler (SQL Express has no SQL Agent). Copy the backup folder off the PC regularly.
 
 Client PCs connect to `http://<server-ip>:5080`.
@@ -51,20 +51,20 @@ Client PCs connect to `http://<server-ip>:5080`.
    dotnet publish src\OnTech.Store.Desktop -c Release -r win-x64 --self-contained false -o publish\desktop
    ```
    Copy the `publish\desktop` folder to each PC (about 1 MB) and make a shortcut to `OnTechStore.exe`.
-3. On first start, type the server PC's address on the sign-in screen (for example `192.168.1.10`; port 5080 is added for you), press **Test**, then sign in. The address and last email are remembered per PC in `%LocalAppData%\OnTechStore\settings.json`.
+3. On first start, type the server PC's address on the sign-in screen (for example `192.168.1.10`; port 5080 is added for you), press **Test**, then sign in. The address and last username are remembered per PC in `%LocalAppData%\OnTechStore\settings.json`.
 
 What each screen does:
 
 | Screen | Who sees it | What it does |
 |---|---|---|
-| Sign in | everyone | Server address, email, password. Users flagged by an admin must pick a new password first. |
+| Sign in | everyone | Server address, username, password. Users flagged by an admin must pick a new password first. |
 | Home | everyone | Greeting, the three big actions (New Order, Add Quantity, Add Customer), today's numbers, and the stock table with In stock / Low / Out of stock. Double-click an item to order it. |
 | New Order | `CreateOrders` | Category → item (shows what's available) → quantity → customer, optional receipt number and notes. "Add another item" puts several items in one order. Shows how many are left after the order. If another PC took the stock first, the app says which item is short and refreshes the numbers. |
 | Add Quantity | `AddStock` | Category → item → quantity received, optional note. |
 | Customers | everyone (edit needs `ManageCustomers`) | Search, add, edit, disable. Company name is the only required field. |
 | Orders Log | `ViewOrders` | Search, with/without receipt filter, paging, order details, cancel (needs `CancelOrders`). The full log with every filter and receipt PDFs is the next step. |
 | Items & Categories | `ManageCatalog` (admin menu) | Add/edit categories and items with a starting quantity and low-stock level, stock counts (corrections with a reason), disable. |
-| Users | `ManageUsers` (admin menu) | Add users with email + first password, admin flag or individual permissions, reset passwords, disable. |
+| Users | `ManageUsers` (admin menu) | Add users with a username + first password, admin flag or individual permissions, reset passwords, disable. |
 
 The menu only shows what the signed-in user is allowed to do, and the server checks every permission again, so a hidden button is never the only protection.
 
@@ -93,7 +93,7 @@ Customers 1─* Orders 1─* OrderLines *─────────────
                  └──────────────────────────────────────────────┘ (order movements)
 ```
 
-- **Users**: name, email (unique, case-insensitive), PBKDF2 password hash, `IsAdmin`, `Permissions` bit mask, `IsActive`, `MustChangePassword`.
+- **Users**: name, username (unique, not case-sensitive, letters/digits/`.`/`-`/`_`), PBKDF2 password hash, `IsAdmin`, `Permissions` bit mask, `IsActive`, `MustChangePassword`.
 - **Categories**: unique name, active flag. **Items**: category, name (unique per category), optional code/model, `Quantity` (DB check: never below 0), `LowStockThreshold`.
 - **Customers**: `CompanyName` (required, unique), phone, tax number (unique when set), contact person, email, address, notes.
 - **Orders**: `ORD-000123` number, customer, `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
@@ -122,7 +122,7 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 
 | Method | Path | Permission | Purpose |
 |---|---|---|---|
-| POST | `/api/auth/login` | — | Email + password → token, expiry, user + permissions |
+| POST | `/api/auth/login` | — | Username + password → token, expiry, user + permissions |
 | GET | `/api/auth/me` | any | Current user |
 | POST | `/api/auth/change-password` | any | Change own password |
 | GET/POST | `/api/users` | ManageUsers | List / add user |
