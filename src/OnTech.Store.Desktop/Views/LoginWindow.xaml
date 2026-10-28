@@ -19,7 +19,31 @@
             <TextBox x:Name="EmailBox" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14"/>
 
             <TextBlock Text="Password" Style="{StaticResource FieldLabel}"/>
-            <PasswordBox x:Name="PasswordBox" PasswordChanged="OnPasswordChanged" Margin="0,0,0,16"/>
+            <!-- The eye button swaps the hidden PasswordBox for a plain TextBox showing the same text. -->
+            <Grid Margin="0,0,0,16">
+                <PasswordBox x:Name="PasswordBox" PasswordChanged="OnPasswordChanged" Padding="9,7,40,7"/>
+                <TextBox x:Name="PasswordText" TextChanged="OnPasswordTextChanged" Padding="9,7,40,7" Visibility="Collapsed"/>
+                <ToggleButton x:Name="ShowPassword" HorizontalAlignment="Right" Margin="0,0,4,0" Width="32" Height="28"
+                              Cursor="Hand" Focusable="False" ToolTip="Show password"
+                              Checked="OnShowPasswordChanged" Unchecked="OnShowPasswordChanged">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="Bd" Background="Transparent" CornerRadius="5">
+                                <TextBlock x:Name="Glyph" Text="&#xE7B3;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                                           Foreground="{StaticResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Glyph" Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
+            </Grid>
 
             <!-- Server address: collapsed to one line once this PC has signed in before. -->
             <DockPanel Visibility="{Binding IsEditingServer, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" Margin="0,0,0,18">
