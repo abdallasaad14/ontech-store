@@ -73,7 +73,6 @@ public class ItemsController(StoreDbContext db) : ControllerBase
             .Select(m => new
             {
                 m.Id, m.CreatedAt, m.Type, m.Change, m.QuantityAfter, m.OrderId, m.StockInId, UserName = m.User.FullName, m.Note,
-                OrderNumber = m.Order != null ? m.Order.OrderNumber : null,
                 IssueVoucher = m.Order != null ? m.Order.IssueVoucherNumber : null,
                 Receipt = m.Order != null ? m.Order.ReceiptNumber : null,
                 CustomerId = m.Order != null ? (int?)m.Order.CustomerId : null,
@@ -90,7 +89,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
             Id = m.Id, Date = m.CreatedAt.ToUtcOffset(), Type = m.Type,
             In = Math.Max(m.Change, 0), Out = Math.Max(-m.Change, 0), Balance = m.QuantityAfter,
             OrderId = m.OrderId, StockInId = m.StockInId,
-            DocumentNumber = m.OrderNumber ?? m.StockInNumber,
+            DocumentNumber = m.StockInNumber, // an order's number is its voucher number, shown already
             VoucherNumber = m.IssueVoucher ?? m.InVoucher,
             InvoiceNumber = m.Receipt ?? m.SupplierInvoice,
             PartyName = m.Customer ?? m.Supplier,

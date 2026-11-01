@@ -224,8 +224,8 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         ResetForm();
         await LoadItemsAsync(); // fresh quantities, including changes from other PCs
         SuccessMessage = order.WithReceipt
-            ? L.T("Order {0} saved for {1}: {2} unit(s) taken from stock, issue voucher {3}, receipt {4}.", order.OrderNumber, order.CustomerName, order.TotalQuantity, order.IssueVoucherNumber, order.ReceiptNumber)
-            : L.T("Order {0} saved for {1}: {2} unit(s) taken from stock, issue voucher {3}.", order.OrderNumber, order.CustomerName, order.TotalQuantity, order.IssueVoucherNumber);
+            ? L.T("Issue voucher {0} saved for {1}: {2} unit(s) taken from stock, receipt {3}.", order.IssueVoucherNumber, order.CustomerName, order.TotalQuantity, order.ReceiptNumber)
+            : L.T("Issue voucher {0} saved for {1}: {2} unit(s) taken from stock.", order.IssueVoucherNumber, order.CustomerName, order.TotalQuantity);
     });
 
     private void ResetForm()

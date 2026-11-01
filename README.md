@@ -132,7 +132,7 @@ Suppliers 1─* StockIns 1─* StockInLines *─────────┘     
 - **Users**: name, username (unique, not case-sensitive, letters/digits/`.`/`-`/`_`), PBKDF2 password hash, `IsAdmin`, `Permissions` bit mask, `IsActive`, `MustChangePassword`.
 - **Categories**: unique name, active flag. **Items**: category, name (unique per category), optional code/model, `Quantity` (DB check: never below 0), `LowStockThreshold`.
 - **Customers**: `CustomerNumber` (unique, next free number when left empty), `CompanyName` (required, unique when added by hand; an import keeps two same-name rows that have different numbers), phone, tax number (unique when set), contact person, email, address, notes.
-- **Orders**: `ORD-000123` number, customer, `IssueVoucherNumber` (إذن صرف, required on new orders, unique; empty on orders saved before it existed), `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
+- **Orders**: numbered by their `IssueVoucherNumber` (إذن صرف, required, unique, up to 30 characters); `OrderNumber` is the same value. Orders saved before this kept their old `ORD-000123` number as their voucher (the server does this once on startup, after a backup on SQLite). Then customer, `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
 - **Suppliers**: same fields as customers, with `SupplierNumber`.
 - **StockIns**: `IN-000012` number, supplier, `VoucherNumber` (إذن إضافة, required, unique), optional supplier invoice number, notes, status, who and when. **StockInLines** keep the same snapshots as order lines.
 - **StockMovements**: every quantity change (StockIn, StockInCancelled, Order, OrderCancelled; Initial for the opening data; Restock and Adjustment only in history from before stock-ins) with the change, the quantity after, the user and the order or stock-in. Stock can always be explained line by line.
@@ -204,7 +204,7 @@ POST /api/orders
 }
 ```
 
-- `201` returns the full order (`orderNumber`, lines, customer, who created it).
+- `201` returns the full order (`orderNumber` = the issue voucher number, lines, customer, who created it).
 - `400` if the issue voucher number is missing, `withReceipt` is true without a receipt number, or an item/customer is disabled.
 - `409` if the issue voucher or receipt number is already used, or stock is short. A shortage response lists every short item, and **nothing is taken**:
   ```json
@@ -216,7 +216,7 @@ POST /api/orders
 
 ### Orders log filters (`GET /api/orders`)
 
-All optional, combined with AND: `search` (order no., issue voucher no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `issueVoucherNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
+All optional, combined with AND: `search` (issue voucher no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `issueVoucherNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
 
 Response: `{ items: OrderDto[], page, pageSize, totalCount, totalPages }`.
 

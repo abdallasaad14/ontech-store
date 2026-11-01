@@ -73,7 +73,7 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
     private Task CancelOrderAsync(OrderDto? order)
     {
         if (order is null || order.Status == OrderStatus.Cancelled) return Task.CompletedTask;
-        var reason = Dialogs.Prompt(L.T("Cancel {0}", order.OrderNumber),
+        var reason = Dialogs.Prompt(L.T("Cancel issue voucher {0}", order.IssueVoucherNumber),
             L.T("Why is this order cancelled? Its items go back into stock."), okText: L.T("Cancel order"));
         if (string.IsNullOrWhiteSpace(reason)) return Task.CompletedTask;
         return RunAsync(async () =>
@@ -81,7 +81,7 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
             var cancelled = await Api.CancelOrderAsync(order.Id, reason.Trim());
             await ReloadAsync();
             Selected = Orders.FirstOrDefault(o => o.Id == cancelled.Id);
-            SuccessMessage = L.T("{0} was cancelled and its stock returned.", cancelled.OrderNumber);
+            SuccessMessage = L.T("Issue voucher {0} was cancelled and its stock returned.", cancelled.IssueVoucherNumber);
         });
     }
 }

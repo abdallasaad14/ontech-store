@@ -106,7 +106,7 @@
                             <DataGridTextColumn Header="{l:T 'BALANCE'}" Binding="{Binding Balance}" Width="75" FontWeight="Bold"/>
                             <DataGridTextColumn Header="{l:T 'CUSTOMER / SUPPLIER'}" Binding="{Binding PartyName}" Width="2*"/>
                             <DataGridTextColumn Header="{l:T 'VOUCHER NO.'}" Binding="{Binding VoucherNumber}" Width="*"/>
-                            <DataGridTextColumn Header="{l:T 'ORDER / STOCK-IN NO.'}" Binding="{Binding DocumentNumber}" Width="*"/>
+                            <DataGridTextColumn Header="{l:T 'STOCK-IN NO.'}" Binding="{Binding DocumentNumber}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'RECEIPT / INVOICE'}" Binding="{Binding InvoiceNumber}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'BY'}" Binding="{Binding UserName}" Width="*"/>
                         </DataGrid.Columns>

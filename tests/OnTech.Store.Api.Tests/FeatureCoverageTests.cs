@@ -539,7 +539,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         var issued = card.Lines[1];
         Assert.Equal((0, 4), (issued.In, issued.Out));
         Assert.Equal(customer.CompanyName, issued.PartyName);
-        Assert.Equal(order.OrderNumber, issued.DocumentNumber);
+        Assert.Null(issued.DocumentNumber); // the order's number is its voucher, already in VoucherNumber
         Assert.Equal(order.IssueVoucherNumber, issued.VoucherNumber);
         Assert.Equal(order.ReceiptNumber, issued.InvoiceNumber);
 

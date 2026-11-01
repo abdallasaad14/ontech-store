@@ -139,10 +139,26 @@ public static class DatabaseSetup
             await UpgradeSqliteAsync(db, log);
         }
 
+        await UseVoucherAsOrderNumberAsync(db, log);
         if (!await db.Users.AnyAsync(u => u.IsAdmin)) await CreateFirstAdminAsync(scope.ServiceProvider, db, log);
         await OpeningData.ApplyAsync(db, log);
         await CatalogCodes.MakeNumericAsync(db);
         await CatalogCodes.BackfillAsync(db);
+    }
+
+    /// <summary>
+    /// The issue voucher number is the order's number. Orders saved before that keep their old ORD-000123 number as their voucher
+    /// (when no other order already uses it), and every order's number is set to its voucher. Runs once; afterwards nothing changes.
+    /// </summary>
+    private static async Task UseVoucherAsOrderNumberAsync(StoreDbContext db, ILogger log)
+    {
+        if (!await db.Orders.AnyAsync(o => o.IssueVoucherNumber == null || o.OrderNumber != o.IssueVoucherNumber)) return;
+        if (db.Database.IsSqlite()) await BackupSqliteAsync(db, db.Database.GetDbConnection().DataSource, "before-voucher-numbers", log);
+        await db.Orders.Where(o => o.IssueVoucherNumber == null && !db.Orders.Any(x => x.IssueVoucherNumber == o.OrderNumber))
+            .ExecuteUpdateAsync(u => u.SetProperty(o => o.IssueVoucherNumber, o => o.OrderNumber));
+        var changed = await db.Orders.Where(o => o.IssueVoucherNumber != null && o.OrderNumber != o.IssueVoucherNumber)
+            .ExecuteUpdateAsync(u => u.SetProperty(o => o.OrderNumber, o => o.IssueVoucherNumber!));
+        log.LogWarning("Orders are now numbered by their issue voucher ({Count} orders renumbered).", changed);
     }
 
     private static async Task CreateFirstAdminAsync(IServiceProvider services, StoreDbContext db, ILogger log)

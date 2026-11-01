@@ -230,9 +230,10 @@ public static class DemoDataTool
             var user = AnyUser();
             var at = ToUtc(local);
             var withReceipt = rng.NextDouble() < 0.6;
+            var voucher = $"DEMO-S-{++_issue:D5}";
             var order = new Order
             {
-                OrderNumber = "PENDING", Customer = PickCustomer(), IssueVoucherNumber = $"DEMO-S-{++_issue:D5}",
+                OrderNumber = voucher, Customer = PickCustomer(), IssueVoucherNumber = voucher,
                 WithReceipt = withReceipt, ReceiptNumber = withReceipt ? $"DEMO-R-{++_receipt:D5}" : null,
                 Notes = Note, Status = OrderStatus.Completed, CreatedByUser = user, CreatedAt = at,
             };
@@ -270,7 +271,6 @@ public static class DemoDataTool
         private async Task SaveAsync()
         {
             await db.SaveChangesAsync();
-            foreach (var o in db.ChangeTracker.Entries<Order>().Select(e => e.Entity).Where(o => o.OrderNumber == "PENDING")) o.OrderNumber = StockService.FormatOrderNumber(o.Id);
             foreach (var s in db.ChangeTracker.Entries<StockIn>().Select(e => e.Entity).Where(s => s.StockInNumber == "PENDING")) s.StockInNumber = StockService.FormatStockInNumber(s.Id);
             await db.SaveChangesAsync();
         }

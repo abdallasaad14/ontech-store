@@ -31,7 +31,7 @@ public sealed partial class VoucherViewModel(Session session, int? orderId, int?
         {
             var o = await Api.GetOrderAsync(oid);
             IsStockIn = false;
-            Heading = L.T("Order {0}", o.OrderNumber);
+            Heading = L.T("Issue voucher {0}", o.IssueVoucherNumber);
             Fill(o.CreatedAt, L.T("CUSTOMER"), o.CustomerName, L.T("ISSUE VOUCHER"), o.IssueVoucherNumber, L.T("RECEIPT"), o.ReceiptNumber,
                 o.Status, o.CancelledAt, o.CancelledByUserName, o.CancelReason, o.Notes, o.CreatedByUserName, o.Lines);
         }

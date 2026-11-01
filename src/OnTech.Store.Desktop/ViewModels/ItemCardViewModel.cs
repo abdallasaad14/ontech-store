@@ -108,7 +108,7 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
     public static IReadOnlyList<string> Headers =>
     [
         L.T("DATE"), L.T("MOVEMENT"), L.T("IN"), L.T("OUT"), L.T("BALANCE"), L.T("CUSTOMER / SUPPLIER"),
-        L.T("VOUCHER NO."), L.T("ORDER / STOCK-IN NO."), L.T("RECEIPT / INVOICE"), L.T("BY"),
+        L.T("VOUCHER NO."), L.T("STOCK-IN NO."), L.T("RECEIPT / INVOICE"), L.T("BY"),
     ];
 
     public static IReadOnlyList<object?> Cells(ItemCardLineDto l) =>

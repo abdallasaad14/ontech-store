@@ -2282,7 +2282,7 @@
                         }
                     },
                     "issueVoucherNumber": {
-                        "maxLength": 50,
+                        "maxLength": 30,
                         "minLength": 1,
                         "type": "string",
                         "description": "The warehouse issue voucher number (إذن صرف). Required on every order and unique."
@@ -2661,7 +2661,7 @@
                     },
                     "documentNumber": {
                         "type": "string",
-                        "description": "The order or stock-in number, e.g. ORD-000012 or IN-000003.",
+                        "description": "The stock-in number, e.g. IN-000003 (an order's number is its OnTech.Store.Contracts.ItemCardLineDto.VoucherNumber).",
                         "nullable": true
                     },
                     "orderId": {
@@ -2798,6 +2798,7 @@
                     },
                     "orderNumber": {
                         "type": "string",
+                        "description": "Same as OnTech.Store.Contracts.OrderDto.IssueVoucherNumber: the issue voucher number is the order's number.",
                         "nullable": true
                     },
                     "customerId": {
@@ -2818,7 +2819,6 @@
                     },
                     "issueVoucherNumber": {
                         "type": "string",
-                        "description": "Empty only for orders saved before the voucher number was required.",
                         "nullable": true
                     },
                     "withReceipt": {

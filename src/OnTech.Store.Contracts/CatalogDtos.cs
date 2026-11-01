@@ -128,7 +128,7 @@ public sealed class ItemCardLineDto
     public int Out { get; init; }
     /// <summary>Quantity in the store right after this movement.</summary>
     public int Balance { get; init; }
-    /// <summary>The order or stock-in number, e.g. ORD-000012 or IN-000003.</summary>
+    /// <summary>The stock-in number, e.g. IN-000003 (an order's number is its <see cref="VoucherNumber"/>).</summary>
     public string? DocumentNumber { get; init; }
     public int? OrderId { get; init; }
     public int? StockInId { get; init; }
