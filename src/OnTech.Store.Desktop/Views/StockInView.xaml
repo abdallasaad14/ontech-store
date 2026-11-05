@@ -42,8 +42,11 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <TextBlock Style="{StaticResource Hint}" Text="{Binding InStockHint}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold"
-                                       Visibility="{Binding InStockHint, Converter={StaticResource HasValueToVisibility}}"/>
+                            <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource HasValueToVisibility}}">
+                                <Button DockPanel.Dock="Right" Content="{l:T 'Item card'}" Style="{StaticResource LinkButton}" FontSize="12" Margin="10,0,0,0"
+                                        Command="{Binding OpenCardCommand}" ToolTip="{l:T 'Every movement of this item in and out'}"/>
+                                <TextBlock Style="{StaticResource Hint}" Text="{Binding InStockHint}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </DockPanel>
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,16">

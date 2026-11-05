@@ -12,6 +12,6 @@ public partial class CatalogView : UserControl
     private void OnItemDoubleClick(object sender, MouseButtonEventArgs e)
     {
         if (DataContext is CatalogViewModel vm && ItemsGrid.SelectedItem is ItemDto item)
-            vm.EditItemCommand.Execute(item);
+            vm.OpenCardCommand.Execute(item);
     }
 }

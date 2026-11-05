@@ -139,10 +139,34 @@ public static class DatabaseSetup
             await UpgradeSqliteAsync(db, log);
         }
 
+        await UseVoucherAsOrderNumberAsync(db, log);
         if (!await db.Users.AnyAsync(u => u.IsAdmin)) await CreateFirstAdminAsync(scope.ServiceProvider, db, log);
         await OpeningData.ApplyAsync(db, log);
         await CatalogCodes.MakeNumericAsync(db);
         await CatalogCodes.BackfillAsync(db);
+    }
+
+    /// <summary>
+    /// The issue voucher number is the order's number. Orders saved before that keep their old ORD-000123 number as their voucher
+    /// (when no other order already uses it), and every order's number is set to its voucher. Runs once; afterwards nothing changes.
+    /// A voucher longer than the order number column (saved when vouchers could be 50 characters) keeps its order's old number,
+    /// so the update never fails on SQL Server.
+    /// </summary>
+    private static async Task UseVoucherAsOrderNumberAsync(StoreDbContext db, ILogger log)
+    {
+        const int maxOrderNumber = 30;
+        var missingVoucher = db.Orders.Where(o => o.IssueVoucherNumber == null && !db.Orders.Any(x => x.IssueVoucherNumber == o.OrderNumber));
+        var toRenumber = db.Orders.Where(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.Length <= maxOrderNumber
+            && o.OrderNumber != o.IssueVoucherNumber);
+        if (!await missingVoucher.AnyAsync() && !await toRenumber.AnyAsync()) return;
+
+        if (db.Database.IsSqlite()) await BackupSqliteAsync(db, db.Database.GetDbConnection().DataSource, "before-voucher-numbers", log);
+        await missingVoucher.ExecuteUpdateAsync(u => u.SetProperty(o => o.IssueVoucherNumber, o => o.OrderNumber));
+        var changed = await toRenumber.ExecuteUpdateAsync(u => u.SetProperty(o => o.OrderNumber, o => o.IssueVoucherNumber!));
+        log.LogWarning("Orders are now numbered by their issue voucher ({Count} orders renumbered).", changed);
+
+        var tooLong = await db.Orders.CountAsync(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.Length > maxOrderNumber);
+        if (tooLong > 0) log.LogWarning("{Count} orders have an issue voucher longer than {Max} characters and keep their old order number.", tooLong, maxOrderNumber);
     }
 
     private static async Task CreateFirstAdminAsync(IServiceProvider services, StoreDbContext db, ILogger log)

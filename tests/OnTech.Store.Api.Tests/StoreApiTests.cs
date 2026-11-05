@@ -66,7 +66,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
             Lines = { new() { ItemId = fargo.Id, Quantity = 2 }, new() { ItemId = xpass.Id, Quantity = 1 }, new() { ItemId = fargo.Id, Quantity = 1 } },
         })).Read<OrderDto>();
 
-        Assert.StartsWith("ORD-", order.OrderNumber);
+        Assert.Equal(order.IssueVoucherNumber, order.OrderNumber); // the voucher is the order's number
         Assert.Equal(2, order.Lines.Count); // duplicate Fargo lines merged
         Assert.Equal(4, order.TotalQuantity);
         Assert.Equal(7, (await admin.GetAs<ItemDto>($"/api/items/{fargo.Id}")).Quantity);

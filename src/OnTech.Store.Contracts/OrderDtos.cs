@@ -7,7 +7,7 @@ public sealed class CreateOrderRequest
     [Range(1, int.MaxValue)] public int CustomerId { get; set; }
     [Required, MinLength(1)] public List<OrderLineRequest> Lines { get; set; } = new();
     /// <summary>The warehouse issue voucher number (إذن صرف). Required on every order and unique.</summary>
-    [Required, MaxLength(50)] public string IssueVoucherNumber { get; set; } = "";
+    [Required, MaxLength(30)] public string IssueVoucherNumber { get; set; } = "";
     public bool WithReceipt { get; set; }
     /// <summary>Required when <see cref="WithReceipt"/> is true; must be unique.</summary>
     [MaxLength(50)] public string? ReceiptNumber { get; set; }
@@ -28,12 +28,12 @@ public sealed class CancelOrderRequest
 public sealed class OrderDto
 {
     public int Id { get; init; }
+    /// <summary>Same as <see cref="IssueVoucherNumber"/>: the issue voucher number is the order's number.</summary>
     public string OrderNumber { get; init; } = "";
     public int CustomerId { get; init; }
     public string CustomerName { get; init; } = "";
     public string? CustomerTaxNumber { get; init; }
     public string? CustomerPhoneNumber { get; init; }
-    /// <summary>Empty only for orders saved before the voucher number was required.</summary>
     public string? IssueVoucherNumber { get; init; }
     public bool WithReceipt { get; init; }
     public string? ReceiptNumber { get; init; }
