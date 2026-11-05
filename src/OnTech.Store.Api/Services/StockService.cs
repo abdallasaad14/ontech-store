@@ -48,7 +48,7 @@ public sealed class StockService(StoreDbContext db)
             Status = OrderStatus.Completed,
             CreatedByUserId = userId,
             CreatedAt = now,
-            OrderNumber = "PENDING",
+            OrderNumber = voucher, // the issue voucher number is the order's number
             Lines = wanted.Select(w =>
             {
                 var item = items[w.ItemId];
@@ -75,8 +75,6 @@ public sealed class StockService(StoreDbContext db)
                 ? $"Receipt number '{receipt}' is already used by another order."
                 : $"Issue voucher number '{voucher}' is already used by another order.");
         }
-        order.OrderNumber = FormatOrderNumber(order.Id);
-
         // Deduct in a fixed order (by item id) so concurrent orders never deadlock on each other.
         var shortages = new List<object>();
         foreach (var w in wanted.OrderBy(w => w.ItemId))
@@ -252,7 +250,6 @@ public sealed class StockService(StoreDbContext db)
         await tx.CommitAsync(ct);
     }
 
-    public static string FormatOrderNumber(int id) => $"ORD-{id:D6}";
     public static string FormatStockInNumber(int id) => $"IN-{id:D6}";
 
     /// <summary>The same item picked twice becomes one line.</summary>

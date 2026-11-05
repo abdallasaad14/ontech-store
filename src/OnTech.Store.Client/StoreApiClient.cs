@@ -106,6 +106,9 @@ public sealed class StoreApiClient
     public Task<ItemDto> GetItemAsync(int id, CancellationToken ct = default) =>
         SendAsync<ItemDto>(HttpMethod.Get, $"api/items/{id}", null, ct);
 
+    public Task<ItemCardDto> GetItemCardAsync(int id, ItemCardQuery? q = null, CancellationToken ct = default) =>
+        SendAsync<ItemCardDto>(HttpMethod.Get, $"api/items/{id}/card" + Query(("from", q?.From), ("to", q?.To)), null, ct);
+
     public Task<ItemDto> CreateItemAsync(CreateItemRequest req, CancellationToken ct = default) =>
         SendAsync<ItemDto>(HttpMethod.Post, "api/items", req, ct);
 

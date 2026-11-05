@@ -12,6 +12,7 @@ Internal stock app for OnTech: categories and items with quantities, customers, 
 | `src/OnTech.Store.Desktop` | WPF (.NET 8) desktop app, `OnTechStore.exe`. MVVM with CommunityToolkit.Mvvm. |
 | `tests/OnTech.Store.Api.Tests` | End-to-end API tests (in-memory host + SQLite), including a 3-PC concurrency test, plus tests of the desktop app's API client against the real server. `FeatureCoverageTests` goes through every feature: the permission matrix, bad input, the opening data, the orders log and 3-PC races. |
 | `tools/OnTech.Store.LoadTest` | Load test: several PCs using a running server at once, with timings per screen and a stock check at the end. |
+| `tools/OnTech.Store.DemoData` | Fills a SQLite store database with made-up stock-ins and orders from 1 January to now, for trying the app. |
 | `db/OnTechStore.sql` | Idempotent SQL script of the schema, for review or manual setup. |
 | `docs/swagger.json` | OpenAPI spec snapshot. The live, clickable version is at `/swagger` on the server. |
 | `scripts/` | `install-service.ps1` (publish + install Windows service + firewall), `backup-database.ps1`. |
@@ -95,6 +96,19 @@ ASPNETCORE_ENVIRONMENT=Development dotnet run   # uses a local SQLite file, no S
 dotnet run -c Release --project tools/OnTech.Store.LoadTest -- --server 192.168.1.10 --user admin --password <password> --pcs 3 --seconds 60 --think-ms 300
 ```
 
+### Demo data
+
+`tools/OnTech.Store.DemoData` adds a made-up history so the item cards, logs and filters have something to show: deliveries from 8 demo suppliers and orders to the real customers on most days from 1 January to now (Friday off, Saturday quiet), with a few cancelled orders and stock-in vouchers. Stock never goes below zero, and every item ends with at least its opening quantity. Everything made up is marked: voucher and receipt numbers start with `DEMO-`, the suppliers are named "(تجريبي)", and the notes say "بيانات تجريبية". It runs once per database.
+
+```powershell
+# A separate copy (ontech-store-demo.db next to the source); the real database is only read:
+dotnet run --project tools/OnTech.Store.DemoData -- --source src\OnTech.Store.Api\ontech-store-dev.db
+# Or fill the database itself (stop the server first). A backup is saved next to it as <db>-backup-before-demo-<time>.db:
+dotnet run --project tools/OnTech.Store.DemoData -- --source src\OnTech.Store.Api\ontech-store-dev.db --in-place
+```
+
+To undo `--in-place`, stop the server and copy the backup back over the database file.
+
 It only orders and restocks a "Load test ..." category, items and customer that it makes for itself and disables at the end, but those orders stay in the orders log, so run it on a test copy of the server when you can. Exit code 0 means PASS.
 
 Results on 2026-10-28 (4-core Linux container, SQLite, Release build, opening data loaded): 3 PCs with a short pause between clicks made ~10 calls/second, every screen answered in under 10 ms at the median and under 20 ms at p95 (Save order p95 16 ms), with no errors and an exact stock check. A stress run of 10 PCs with no pause at all made ~400 calls/second, still with no errors and an exact stock check; reads stayed under 25 ms at p95, saves queued for SQLite's single writer (p95 ≈ 300 ms). SQL Server locks per row, so writes there should do better.
@@ -118,7 +132,7 @@ Suppliers 1─* StockIns 1─* StockInLines *─────────┘     
 - **Users**: name, username (unique, not case-sensitive, letters/digits/`.`/`-`/`_`), PBKDF2 password hash, `IsAdmin`, `Permissions` bit mask, `IsActive`, `MustChangePassword`.
 - **Categories**: unique name, active flag. **Items**: category, name (unique per category), optional code/model, `Quantity` (DB check: never below 0), `LowStockThreshold`.
 - **Customers**: `CustomerNumber` (unique, next free number when left empty), `CompanyName` (required, unique when added by hand; an import keeps two same-name rows that have different numbers), phone, tax number (unique when set), contact person, email, address, notes.
-- **Orders**: `ORD-000123` number, customer, `IssueVoucherNumber` (إذن صرف, required on new orders, unique; empty on orders saved before it existed), `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
+- **Orders**: numbered by their `IssueVoucherNumber` (إذن صرف, required, unique, up to 30 characters); `OrderNumber` is the same value. Orders saved before this kept their old `ORD-000123` number as their voucher (the server does this once on startup, after a backup on SQLite). Then customer, `WithReceipt` + `ReceiptNumber` (unique when set), notes, status (Completed / Cancelled), who and when. **OrderLines** keep a snapshot of item and category names so old orders and receipts never change when an item is renamed.
 - **Suppliers**: same fields as customers, with `SupplierNumber`.
 - **StockIns**: `IN-000012` number, supplier, `VoucherNumber` (إذن إضافة, required, unique), optional supplier invoice number, notes, status, who and when. **StockInLines** keep the same snapshots as order lines.
 - **StockMovements**: every quantity change (StockIn, StockInCancelled, Order, OrderCancelled; Initial for the opening data; Restock and Adjustment only in history from before stock-ins) with the change, the quantity after, the user and the order or stock-in. Stock can always be explained line by line.
@@ -156,6 +170,7 @@ All endpoints except login and health need `Authorization: Bearer <token>`. Erro
 | GET | `/api/categories` | ViewStock | With item count and total units |
 | POST/PUT/DELETE | `/api/categories[/{id}]` | ManageCatalog | Delete removes an empty category, else disables it |
 | GET | `/api/items?categoryId=&search=&inStockOnly=&lowStockOnly=` | ViewStock | Items with available quantity (New Order picker) |
+| GET | `/api/items/{id}/card?from=&to=` | ViewStock | Item card: every movement in/out, oldest first, with customer or supplier, voucher, order/stock-in number and balance after each; with a period, the balance before it and the top 5 customers |
 | POST/PUT/DELETE | `/api/items[/{id}]` | ManageCatalog | Add (starts at 0) / edit details / disable. Quantity is never set directly |
 | GET | `/api/customers?search=` | any | Customer picker. A number matches that customer number exactly; text matches name, phone, tax number, contact |
 | POST/PUT/DELETE | `/api/customers[/{id}]` | ManageCustomers | Add / edit / disable |
@@ -189,7 +204,7 @@ POST /api/orders
 }
 ```
 
-- `201` returns the full order (`orderNumber`, lines, customer, who created it).
+- `201` returns the full order (`orderNumber` = the issue voucher number, lines, customer, who created it).
 - `400` if the issue voucher number is missing, `withReceipt` is true without a receipt number, or an item/customer is disabled.
 - `409` if the issue voucher or receipt number is already used, or stock is short. A shortage response lists every short item, and **nothing is taken**:
   ```json
@@ -201,7 +216,7 @@ POST /api/orders
 
 ### Orders log filters (`GET /api/orders`)
 
-All optional, combined with AND: `search` (order no., issue voucher no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `issueVoucherNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
+All optional, combined with AND: `search` (issue voucher no., receipt no., customer name / tax no., item name / code, notes), `from`, `to` (ISO 8601, e.g. `2026-10-01T00:00:00+03:00`), `customerId`, `categoryId`, `itemId`, `createdByUserId`, `withReceipt` (true/false), `receiptNumber` (partial), `orderNumber` (partial), `issueVoucherNumber` (partial), `status` (`Completed`/`Cancelled`), `sort` (`NewestFirst`, `OldestFirst`, `CustomerName`, `ReceiptNumber`, `TotalQuantity`), `page`, `pageSize` (max 200).
 
 Response: `{ items: OrderDto[], page, pageSize, totalCount, totalPages }`.
 

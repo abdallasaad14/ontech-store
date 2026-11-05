@@ -72,11 +72,11 @@ public class Customer
 public class Order
 {
     public int Id { get; set; }
-    /// <summary>Human-friendly number, e.g. ORD-000123. Assigned from the Id when the order is saved.</summary>
+    /// <summary>The order's number: its issue voucher number (إذن صرف). Older orders used ORD-000123 numbers, which became their voucher numbers.</summary>
     public string OrderNumber { get; set; } = "";
     public int CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
-    /// <summary>Warehouse issue voucher number (إذن صرف). Required for new orders; null only on orders saved before it existed.</summary>
+    /// <summary>Warehouse issue voucher number (إذن صرف). Required and unique; it is also <see cref="OrderNumber"/>.</summary>
     public string? IssueVoucherNumber { get; set; }
     public bool WithReceipt { get; set; }
     public string? ReceiptNumber { get; set; }
