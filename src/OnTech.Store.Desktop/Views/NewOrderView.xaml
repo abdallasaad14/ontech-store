@@ -72,7 +72,7 @@
 
                         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,16">
                             <TextBlock Text="{l:T 'Issue voucher number *'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}" MaxLength="30"/>
                             <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The number on the warehouse issue voucher. Required, and each number is used once.'}"/>
                         </StackPanel>
 
