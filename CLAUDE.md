@@ -10,3 +10,6 @@ Every change to `src/OnTech.Store.Desktop` must look and work right in both lang
 - **Message boxes.** Go through `Dialogs`, or pass `L.MessageBoxOptions`.
 - **XAML escaping.** A quoted `{l:T}` value that starts with `{` needs escaped braces, for example `{l:T '\{0\} available'}`.
 - **Before pushing.** Build the app. Check that every new `L.T` or `{l:T}` text has an Arabic entry. Say in the PR how the change looks in Arabic.
+
+## Read docs/STATUS.md first
+`docs/STATUS.md` lists every feature, its state, and the files, endpoints, pages and tables that hold it. Read it before opening the code, and open only the files it points to. Any PR that adds or changes a feature must update `docs/STATUS.md` in the same PR.
