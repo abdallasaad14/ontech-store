@@ -4,7 +4,7 @@ Read this first. It lists every feature on `main`, its state, and the files that
 
 **Keep it current.** Any PR that adds or changes a feature updates this file in the same PR: the feature's row, its files, and the "Last updated" line.
 
-Last updated: 2026-10-28, main after PR #7.
+Last updated: 2026-11-05, main after PR #9.
 
 ## The app in one paragraph
 
@@ -16,10 +16,11 @@ OnTech's internal stock app. A small ASP.NET Core server (one office PC) keeps c
 |---|---|
 | `src/OnTech.Store.Api` | Server: ASP.NET Core 8 Web API, EF Core, JWT. Port 5080, Swagger at `/swagger`. SQL Server in production, SQLite in Development and tests. |
 | `src/OnTech.Store.Contracts` | DTOs and enums shared by server and app (`Permission`, `OrderStatus`, `StockMovementType`, `*Dtos.cs`). |
-| `src/OnTech.Store.Client` | `StoreApiClient` (typed HTTP client, one method per endpoint), `ApiError` (server error to readable text), `CustomerSheet` (reads .xlsx/.csv for import). |
+| `src/OnTech.Store.Client` | `StoreApiClient` (typed HTTP client, one method per endpoint), `ApiError` (server error to readable text), `CustomerSheet` (reads .xlsx/.csv for import), `XlsxWriter` (writes .xlsx with no extra package). |
 | `src/OnTech.Store.Desktop` | WPF app, exe `OnTechStore`. MVVM with CommunityToolkit.Mvvm. |
 | `tests/OnTech.Store.Api.Tests` | xUnit tests: end-to-end API on SQLite (`StoreApiTests`, `FeatureCoverageTests`), client against real server (`StoreApiClientTests`), `CustomerSheetTests`. Host is `StoreApiFactory`. |
 | `tools/OnTech.Store.LoadTest` | Simulates N PCs against a running server; timings per screen plus a stock check. |
+| `tools/OnTech.Store.DemoData` | Adds made-up stock-ins and orders (marked `DEMO-`) from 1 January to now, into a copy of the database, or in place with `--in-place` after a backup. |
 | `scripts/` | `install-service.ps1` (publish + Windows service + firewall), `backup-database.ps1` (SQL Server only). |
 | `db/OnTechStore.sql`, `docs/swagger.json` | Schema script and OpenAPI snapshot, for reference. |
 
@@ -44,14 +45,16 @@ State: ✅ done and merged · 🟡 basic version, more planned · ⏳ not starte
 | Digit-only codes | ✅ | #6 | `Services/CatalogCodes.cs` (next code, validation, converts old `C01`/`C01-001`, backfill on startup) | code boxes in `CatalogView` | Category `01`..`11`; item = category code + 3 digits (`04001`), unique across all categories. Search matches from the start of the code. |
 | Customers | ✅ | #1, #2, #3 | `CustomersController` (search by number or name; `POST /api/customers/import`) | `CustomersViewModel` / `CustomersView`, import via `Client/CustomerSheet.cs` | `CustomerNumber` unique, auto next. Import skips existing numbers, so re-importing is safe. |
 | Suppliers | ✅ | #7 | `SuppliersController` | `SuppliersViewModel` / `SuppliersView` | Same shape as customers (`SupplierNumber`), no import. |
-| New Order (issue voucher, إذن صرف) | ✅ | #1, #2, #7 | `OrdersController` `POST /api/orders` → `StockService.CreateOrderAsync` | `NewOrderViewModel` / `NewOrderView` | Several items per order. `IssueVoucherNumber` required and unique; receipt number optional, unique when set. Stock taken with a conditional `UPDATE ... WHERE Quantity >= n` in item-id order, so 3 PCs can't oversell; a shortage returns 409 and takes nothing. Order numbers `ORD-000123`. |
+| New Order (issue voucher, إذن صرف) | ✅ | #1, #2, #7 | `OrdersController` `POST /api/orders` → `StockService.CreateOrderAsync` | `NewOrderViewModel` / `NewOrderView` | Several items per order. `IssueVoucherNumber` required and unique; receipt number optional, unique when set. Stock taken with a conditional `UPDATE ... WHERE Quantity >= n` in item-id order, so 3 PCs can't oversell; a shortage returns 409 and takes nothing. The issue voucher (up to 30 characters) is the order's number; `OrderNumber` holds the same value. Old `ORD-000123` orders were renumbered on startup (#9). |
 | Stock In (receipt voucher, إذن إضافة) | ✅ | #7 | `StockInsController` `POST /api/stock-ins` → `StockService.CreateStockInAsync` | `StockInViewModel` / `StockInView` | Replaced the old Add Quantity screen. Supplier + unique `VoucherNumber` + optional supplier invoice. Numbers `IN-000012`. |
-| Orders log | 🟡 | #1, #2, #7 | `GET /api/orders` (many filters, paging), `/{id}`, `by-receipt/{n}`, `/{id}/cancel` → `StockService.CancelOrderAsync` | `OrdersViewModel` / `OrdersView` | Has search, receipt filter, paging, details, cancel. Plan step 3: full log with every filter in the UI and receipt PDFs. |
+| Orders log | 🟡 | #1, #2, #7 | `GET /api/orders` (many filters, paging), `/{id}`, `by-receipt/{n}`, `/{id}/cancel` → `StockService.CancelOrderAsync` | `OrdersViewModel` / `OrdersView` | Shows the voucher number only. Has search, receipt filter, paging, details, cancel. Plan step 3: full log with every filter in the UI and receipt PDFs. |
 | Stock In log | ✅ | #7 | `GET /api/stock-ins`, `/{id}`, `/{id}/cancel` → `StockService.CancelStockInAsync` (409 if that stock was already issued) | `StockInsViewModel` / `StockInsView` | |
 | Home page / dashboard | ✅ | #1, #2 | `DashboardController` `GET /api/dashboard/summary` | `HomeViewModel` / `HomeView`, `Views/StockPill` (In stock / Low / Out) | Three big actions: New Order, Stock In, Add Customer. Double-click an item to order it. |
-| Stock history (movements) | ✅ server only | #1 | `StockMovementsController` `GET /api/stock-movements` | none yet | Types in `StockMovementType`: Initial, Restock and Adjustment (history only), Order, OrderCancelled, StockIn, StockInCancelled. |
+| Stock history (movements) | ✅ | #1, #9 | `StockMovementsController` `GET /api/stock-movements` | shown per item on the item card | Types in `StockMovementType`: Initial, Restock and Adjustment (history only), Order, OrderCancelled, StockIn, StockInCancelled. |
+| Item card (كارت الصنف) | ✅ | #9 | `ItemsController` `GET /api/items/{id}/card?from=&to=` (ViewStock); balance from `StockMovement.QuantityAfter` | `ItemCardViewModel` / `Views/ItemCardWindow`, `VoucherViewModel` / `Views/VoucherWindow`, `Services/ItemCards.cs` (opens a card), `Services/ItemCardPrinter.cs` | Read only. Opening balance box, every movement with party, voucher and balance, period filter, top 5 customers, print/PDF, Excel. Opens from Items & Categories, Home, New Order and Stock In. |
+| Demo data | ✅ | #9 | `tools/OnTech.Store.DemoData` | | For trying the app with a year of movements. Never run `--in-place` on the real database without asking. |
 | Opening data (OnTech's stock and customers) | ✅ | #3 | `Data/OpeningData.cs` + `Data/Seed/opening-data.json` (11 categories, 318 items, 505 customers) | | Applied once on startup, recorded in the `AppliedSeeds` table. |
-| Arabic and right-to-left layout | ✅ | #5 | Server messages are English; the app translates them | `Services/L.cs`, `Services/Arabic.cs`, `Services/Dialogs.cs`, `Converters.cs` (`Translate`) | Language switch on the sign-in screen and in the sidebar. Rules in `CLAUDE.md`. |
+| Arabic and right-to-left layout | ✅ | #5 | Server messages are English; the app translates them | `Services/L.cs`, `Services/Arabic.cs`, `Services/Dialogs.cs`, `Converters.cs` (`Translate`) | Language switch on the sign-in screen and in the sidebar. Rules in `CLAUDE.md`. Arabic is simple business Arabic (اختر، أدخل، إذن صرف), no street slang; the owner chose this in #9. |
 | Design ("Clean sidebar") | ✅ | #2 | | `Themes/Theme.xaml`, `MainWindow.xaml` | Brand blue `#055A9A`, gray `#A6A5AA`, Segoe UI. |
 | Tests and load test | ✅ | #4 | `tests/OnTech.Store.Api.Tests`, `tools/OnTech.Store.LoadTest` | | Baseline: 3 PCs on SQLite, p95 under 20 ms, no errors. Server uses workstation GC. |
 | Safe SQLite upgrades | ✅ | #7 | `DatabaseSetup.UpgradeSqliteAsync`, `BackupSqliteAsync` (`VACUUM INTO <db>-backup-before-<change>-<time>.db`) | | |
@@ -60,7 +63,7 @@ State: ✅ done and merged · 🟡 basic version, more planned · ⏳ not starte
 
 ## Startup order (server)
 
-`Program.cs` → `DatabaseSetup.InitializeDatabaseAsync`: migrate (SQL Server) or `EnsureCreated` + `UpgradeSqliteAsync` (SQLite) → create the first admin if none → `OpeningData.ApplyAsync` → `CatalogCodes.MakeNumericAsync` → `CatalogCodes.BackfillAsync`.
+`Program.cs` → `DatabaseSetup.InitializeDatabaseAsync`: migrate (SQL Server) or `EnsureCreated` + `UpgradeSqliteAsync` (SQLite) → `UseVoucherAsOrderNumberAsync` (one-time renumbering; backs up SQLite first) → create the first admin if none → `OpeningData.ApplyAsync` → `CatalogCodes.MakeNumericAsync` → `CatalogCodes.BackfillAsync`.
 
 ## Database tables
 
