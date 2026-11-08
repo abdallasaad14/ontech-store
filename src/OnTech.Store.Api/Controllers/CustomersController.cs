@@ -15,6 +15,7 @@ public class CustomersController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Customers for pickers and the customers list. Search matches customer number, company name, phone, tax number or contact.</summary>
     [HttpGet]
+    [HasAnyPermission(ReadAccess.Customers)]
     public async Task<IReadOnlyList<CustomerDto>> List([FromQuery] string? search, [FromQuery] bool includeInactive = false, CancellationToken ct = default)
     {
         var q = db.Customers.AsNoTracking().Where(c => includeInactive || c.IsActive);
@@ -31,6 +32,7 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [HasAnyPermission(ReadAccess.Customers)]
     public async Task<ActionResult<CustomerDto>> Get(int id, CancellationToken ct) =>
         await Project(db.Customers.Where(c => c.Id == id)).FirstOrDefaultAsync(ct) ?? throw ApiException.NotFound("Customer");
 

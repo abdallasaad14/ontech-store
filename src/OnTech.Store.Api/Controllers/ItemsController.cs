@@ -14,7 +14,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Items with their available quantities. Filter by category for the New Order screen.</summary>
     [HttpGet]
-    [HasPermission(Permission.ViewStock)]
+    [HasAnyPermission(ReadAccess.Catalog)]
     public async Task<IReadOnlyList<ItemDto>> List(
         [FromQuery] int? categoryId, [FromQuery] string? search,
         [FromQuery] bool includeInactive = false, [FromQuery] bool lowStockOnly = false, [FromQuery] bool inStockOnly = false,
@@ -33,7 +33,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [HasPermission(Permission.ViewStock)]
+    [HasAnyPermission(ReadAccess.Catalog)]
     public async Task<ActionResult<ItemDto>> Get(int id, CancellationToken ct) => (await Load(id, ct)).ToDto();
 
     /// <summary>

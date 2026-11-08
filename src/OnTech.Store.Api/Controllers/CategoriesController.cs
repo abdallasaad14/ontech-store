@@ -13,12 +13,12 @@ namespace OnTech.Store.Api.Controllers;
 public class CategoriesController(StoreDbContext db) : ControllerBase
 {
     [HttpGet]
-    [HasPermission(Permission.ViewStock)]
+    [HasAnyPermission(ReadAccess.Catalog)]
     public async Task<IReadOnlyList<CategoryDto>> List([FromQuery] bool includeInactive = false, CancellationToken ct = default) =>
         await Project(db.Categories.Where(c => includeInactive || c.IsActive)).OrderBy(c => c.Code).ThenBy(c => c.Name).ToListAsync(ct);
 
     [HttpGet("{id:int}")]
-    [HasPermission(Permission.ViewStock)]
+    [HasAnyPermission(ReadAccess.Catalog)]
     public async Task<ActionResult<CategoryDto>> Get(int id, CancellationToken ct) =>
         await Project(db.Categories.Where(c => c.Id == id)).FirstOrDefaultAsync(ct) ?? throw ApiException.NotFound("Category");
 

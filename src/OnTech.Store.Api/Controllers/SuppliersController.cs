@@ -15,6 +15,7 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Suppliers for pickers and the suppliers list. Search matches supplier number, company name, phone, tax number or contact.</summary>
     [HttpGet]
+    [HasAnyPermission(ReadAccess.Suppliers)]
     public async Task<IReadOnlyList<SupplierDto>> List([FromQuery] string? search, [FromQuery] bool includeInactive = false, CancellationToken ct = default)
     {
         var q = db.Suppliers.AsNoTracking().Where(s => includeInactive || s.IsActive);
@@ -30,6 +31,7 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [HasAnyPermission(ReadAccess.Suppliers)]
     public async Task<ActionResult<SupplierDto>> Get(int id, CancellationToken ct) =>
         await Project(db.Suppliers.Where(s => s.Id == id)).FirstOrDefaultAsync(ct) ?? throw ApiException.NotFound("Supplier");
 
