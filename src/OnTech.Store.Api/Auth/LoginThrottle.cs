@@ -11,7 +11,7 @@ public sealed class LoginThrottle(TimeProvider clock)
 {
     public const int MaxFailures = 5;
     /// <summary>The "code" extension of the 429 answer. Same string as OnTech.Store.Contracts.ErrorCodes.TooManyAttempts.</summary>
-    public const string Code = "TooManyAttempts";
+    public const string Code = OnTech.Store.Contracts.ErrorCodes.TooManyAttempts;
     public const string TitleFormat = "Too many wrong passwords. Wait {0} seconds and try again.";
     public static readonly TimeSpan FirstLockout = TimeSpan.FromSeconds(30);
     public static readonly TimeSpan MaxLockout = TimeSpan.FromMinutes(5);

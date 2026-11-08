@@ -12,6 +12,8 @@ public static class ErrorCodes
     public const string Duplicate = "Duplicate";
     /// <summary>403: the user must change their password before doing anything else.</summary>
     public const string MustChangePassword = "MustChangePassword";
+    /// <summary>429: too many wrong passwords for this username; wait (see the Retry-After header) and try again.</summary>
+    public const string TooManyAttempts = "TooManyAttempts";
 }
 
 /// <summary>
