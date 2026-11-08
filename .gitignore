@@ -484,3 +484,9 @@ $RECYCLE.BIN/
 *.swp
 *.db
 *.db-*
+
+# Audit working files (large/binary, kept local)
+audit/build/
+audit/backups/
+*.db.*.bak
+

@@ -1,0 +1,18 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  OnTech.Store.Contracts -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0\OnTech.Store.Contracts.dll
+  OnTech.Store.Client -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0\OnTech.Store.Client.dll
+  OnTech.Store.LoadTest -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0\OnTechStoreLoadTest.dll
+C:\Users\PC\source\ontech-store\src\OnTech.Store.Api\Controllers\DashboardController.cs(18,108): warning CS1573: Parameter 'ct' has no matching param tag in the XML comment for 'DashboardController.Summary(int, CancellationToken)' (but other parameters do) [C:\Users\PC\source\ontech-store\src\OnTech.Store.Api\OnTech.Store.Api.csproj]
+  OnTech.Store.Api -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0\OnTech.Store.Api.dll
+  OnTech.Store.Desktop -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0-windows\OnTechStore.dll
+  OnTech.Store.DemoData -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0\OnTechStoreDemoData.dll
+  OnTech.Store.Api.Tests -> C:\Users\PC\source\ontech-store\audit\build\bin\Release\net8.0\OnTech.Store.Api.Tests.dll
+
+Build succeeded.
+
+C:\Users\PC\source\ontech-store\src\OnTech.Store.Api\Controllers\DashboardController.cs(18,108): warning CS1573: Parameter 'ct' has no matching param tag in the XML comment for 'DashboardController.Summary(int, CancellationToken)' (but other parameters do) [C:\Users\PC\source\ontech-store\src\OnTech.Store.Api\OnTech.Store.Api.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.02

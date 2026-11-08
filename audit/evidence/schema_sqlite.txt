@@ -1,0 +1,149 @@
+﻿type	name	sql
+table	AppliedSeeds	CREATE TABLE AppliedSeeds (Name TEXT NOT NULL CONSTRAINT PK_AppliedSeeds PRIMARY KEY, AppliedAt TEXT NOT NULL)
+table	Categories	CREATE TABLE "Categories" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Categories" PRIMARY KEY AUTOINCREMENT,
+    "Name" TEXT NOT NULL,
+    "Description" TEXT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL
+, Code TEXT NULL)
+index	IX_Categories_Code	CREATE UNIQUE INDEX IX_Categories_Code ON Categories (Code)
+index	IX_Categories_Name	CREATE UNIQUE INDEX "IX_Categories_Name" ON "Categories" ("Name")
+table	Customers	CREATE TABLE "Customers" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Customers" PRIMARY KEY AUTOINCREMENT,
+    "CompanyName" TEXT NOT NULL,
+    "PhoneNumber" TEXT NULL,
+    "TaxNumber" TEXT NULL,
+    "ContactPerson" TEXT NULL,
+    "Email" TEXT NULL,
+    "Address" TEXT NULL,
+    "Notes" TEXT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "CreatedByUserId" INTEGER NOT NULL
+, CustomerNumber INTEGER NULL)
+index	IX_Customers_CompanyName	CREATE INDEX "IX_Customers_CompanyName" ON "Customers" ("CompanyName")
+index	IX_Customers_CustomerNumber	CREATE UNIQUE INDEX IX_Customers_CustomerNumber ON Customers (CustomerNumber)
+index	IX_Customers_TaxNumber	CREATE INDEX "IX_Customers_TaxNumber" ON "Customers" ("TaxNumber")
+table	Items	CREATE TABLE "Items" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Items" PRIMARY KEY AUTOINCREMENT,
+    "CategoryId" INTEGER NOT NULL,
+    "Name" TEXT NOT NULL,
+    "Code" TEXT NULL,
+    "Description" TEXT NULL,
+    "Quantity" INTEGER NOT NULL,
+    "LowStockThreshold" INTEGER NOT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "UpdatedAt" TEXT NOT NULL,
+    CONSTRAINT "CK_Items_LowStockThreshold_NonNegative" CHECK ([LowStockThreshold] >= 0),
+    CONSTRAINT "CK_Items_Quantity_NonNegative" CHECK ([Quantity] >= 0),
+    CONSTRAINT "FK_Items_Categories_CategoryId" FOREIGN KEY ("CategoryId") REFERENCES "Categories" ("Id") ON DELETE RESTRICT
+)
+index	IX_Items_CategoryId_Name	CREATE UNIQUE INDEX "IX_Items_CategoryId_Name" ON "Items" ("CategoryId", "Name")
+index	IX_Items_Code	CREATE UNIQUE INDEX IX_Items_Code ON Items (Code) WHERE Code IS NOT NULL
+table	OrderLines	CREATE TABLE "OrderLines" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_OrderLines" PRIMARY KEY AUTOINCREMENT,
+    "OrderId" INTEGER NOT NULL,
+    "ItemId" INTEGER NOT NULL,
+    "Quantity" INTEGER NOT NULL,
+    "ItemName" TEXT NOT NULL,
+    "ItemCode" TEXT NULL,
+    "CategoryId" INTEGER NOT NULL,
+    "CategoryName" TEXT NOT NULL,
+    CONSTRAINT "CK_OrderLines_Quantity_Positive" CHECK ([Quantity] > 0),
+    CONSTRAINT "FK_OrderLines_Items_ItemId" FOREIGN KEY ("ItemId") REFERENCES "Items" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_OrderLines_Orders_OrderId" FOREIGN KEY ("OrderId") REFERENCES "Orders" ("Id") ON DELETE CASCADE
+)
+index	IX_OrderLines_CategoryId	CREATE INDEX "IX_OrderLines_CategoryId" ON "OrderLines" ("CategoryId")
+index	IX_OrderLines_ItemId	CREATE INDEX "IX_OrderLines_ItemId" ON "OrderLines" ("ItemId")
+index	IX_OrderLines_OrderId	CREATE INDEX "IX_OrderLines_OrderId" ON "OrderLines" ("OrderId")
+table	Orders	CREATE TABLE "Orders" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Orders" PRIMARY KEY AUTOINCREMENT,
+    "OrderNumber" TEXT NOT NULL,
+    "CustomerId" INTEGER NOT NULL,
+    "WithReceipt" INTEGER NOT NULL,
+    "ReceiptNumber" TEXT NULL,
+    "Notes" TEXT NULL,
+    "Status" INTEGER NOT NULL,
+    "CreatedByUserId" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "CancelledAt" TEXT NULL,
+    "CancelledByUserId" INTEGER NULL,
+    "CancelReason" TEXT NULL, IssueVoucherNumber TEXT NULL,
+    CONSTRAINT "FK_Orders_Customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES "Customers" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Orders_Users_CancelledByUserId" FOREIGN KEY ("CancelledByUserId") REFERENCES "Users" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_Orders_Users_CreatedByUserId" FOREIGN KEY ("CreatedByUserId") REFERENCES "Users" ("Id") ON DELETE RESTRICT
+)
+index	IX_Orders_CancelledByUserId	CREATE INDEX "IX_Orders_CancelledByUserId" ON "Orders" ("CancelledByUserId")
+index	IX_Orders_CreatedAt	CREATE INDEX "IX_Orders_CreatedAt" ON "Orders" ("CreatedAt")
+index	IX_Orders_CreatedByUserId_CreatedAt	CREATE INDEX "IX_Orders_CreatedByUserId_CreatedAt" ON "Orders" ("CreatedByUserId", "CreatedAt")
+index	IX_Orders_CustomerId_CreatedAt	CREATE INDEX "IX_Orders_CustomerId_CreatedAt" ON "Orders" ("CustomerId", "CreatedAt")
+index	IX_Orders_IssueVoucherNumber	CREATE UNIQUE INDEX IX_Orders_IssueVoucherNumber ON Orders (IssueVoucherNumber) WHERE [IssueVoucherNumber] IS NOT NULL
+index	IX_Orders_OrderNumber	CREATE INDEX "IX_Orders_OrderNumber" ON "Orders" ("OrderNumber")
+index	IX_Orders_ReceiptNumber	CREATE UNIQUE INDEX "IX_Orders_ReceiptNumber" ON "Orders" ("ReceiptNumber") WHERE [ReceiptNumber] IS NOT NULL
+table	StockInLines	CREATE TABLE StockInLines (
+    Id INTEGER NOT NULL CONSTRAINT PK_StockInLines PRIMARY KEY AUTOINCREMENT,
+    StockInId INTEGER NOT NULL CONSTRAINT FK_StockInLines_StockIns_StockInId REFERENCES StockIns (Id) ON DELETE CASCADE,
+    ItemId INTEGER NOT NULL CONSTRAINT FK_StockInLines_Items_ItemId REFERENCES Items (Id) ON DELETE RESTRICT,
+    Quantity INTEGER NOT NULL, ItemName TEXT NOT NULL, ItemCode TEXT NULL, CategoryId INTEGER NOT NULL, CategoryName TEXT NOT NULL,
+    CONSTRAINT CK_StockInLines_Quantity_Positive CHECK ([Quantity] > 0))
+index	IX_StockInLines_ItemId	CREATE INDEX IX_StockInLines_ItemId ON StockInLines (ItemId)
+index	IX_StockInLines_StockInId	CREATE INDEX IX_StockInLines_StockInId ON StockInLines (StockInId)
+table	StockIns	CREATE TABLE StockIns (
+    Id INTEGER NOT NULL CONSTRAINT PK_StockIns PRIMARY KEY AUTOINCREMENT,
+    StockInNumber TEXT NOT NULL,
+    SupplierId INTEGER NOT NULL CONSTRAINT FK_StockIns_Suppliers_SupplierId REFERENCES Suppliers (Id) ON DELETE RESTRICT,
+    VoucherNumber TEXT NOT NULL, SupplierInvoiceNumber TEXT NULL, Notes TEXT NULL, Status INTEGER NOT NULL,
+    CreatedByUserId INTEGER NOT NULL CONSTRAINT FK_StockIns_Users_CreatedByUserId REFERENCES Users (Id) ON DELETE RESTRICT,
+    CreatedAt TEXT NOT NULL, CancelledAt TEXT NULL,
+    CancelledByUserId INTEGER NULL CONSTRAINT FK_StockIns_Users_CancelledByUserId REFERENCES Users (Id) ON DELETE RESTRICT,
+    CancelReason TEXT NULL)
+index	IX_StockIns_CancelledByUserId	CREATE INDEX IX_StockIns_CancelledByUserId ON StockIns (CancelledByUserId)
+index	IX_StockIns_CreatedAt	CREATE INDEX IX_StockIns_CreatedAt ON StockIns (CreatedAt)
+index	IX_StockIns_CreatedByUserId	CREATE INDEX IX_StockIns_CreatedByUserId ON StockIns (CreatedByUserId)
+index	IX_StockIns_StockInNumber	CREATE INDEX IX_StockIns_StockInNumber ON StockIns (StockInNumber)
+index	IX_StockIns_SupplierId_CreatedAt	CREATE INDEX IX_StockIns_SupplierId_CreatedAt ON StockIns (SupplierId, CreatedAt)
+index	IX_StockIns_VoucherNumber	CREATE UNIQUE INDEX IX_StockIns_VoucherNumber ON StockIns (VoucherNumber)
+table	StockMovements	CREATE TABLE "StockMovements" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_StockMovements" PRIMARY KEY AUTOINCREMENT,
+    "ItemId" INTEGER NOT NULL,
+    "Type" INTEGER NOT NULL,
+    "Change" INTEGER NOT NULL,
+    "QuantityAfter" INTEGER NOT NULL,
+    "OrderId" INTEGER NULL,
+    "UserId" INTEGER NOT NULL,
+    "Note" TEXT NULL,
+    "CreatedAt" TEXT NOT NULL, StockInId INTEGER NULL CONSTRAINT FK_StockMovements_StockIns_StockInId REFERENCES StockIns (Id) ON DELETE RESTRICT,
+    CONSTRAINT "FK_StockMovements_Items_ItemId" FOREIGN KEY ("ItemId") REFERENCES "Items" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_StockMovements_Orders_OrderId" FOREIGN KEY ("OrderId") REFERENCES "Orders" ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_StockMovements_Users_UserId" FOREIGN KEY ("UserId") REFERENCES "Users" ("Id") ON DELETE RESTRICT
+)
+index	IX_StockMovements_CreatedAt	CREATE INDEX "IX_StockMovements_CreatedAt" ON "StockMovements" ("CreatedAt")
+index	IX_StockMovements_ItemId_CreatedAt	CREATE INDEX "IX_StockMovements_ItemId_CreatedAt" ON "StockMovements" ("ItemId", "CreatedAt")
+index	IX_StockMovements_OrderId	CREATE INDEX "IX_StockMovements_OrderId" ON "StockMovements" ("OrderId")
+index	IX_StockMovements_StockInId	CREATE INDEX IX_StockMovements_StockInId ON StockMovements (StockInId)
+index	IX_StockMovements_UserId	CREATE INDEX "IX_StockMovements_UserId" ON "StockMovements" ("UserId")
+table	Suppliers	CREATE TABLE Suppliers (
+    Id INTEGER NOT NULL CONSTRAINT PK_Suppliers PRIMARY KEY AUTOINCREMENT,
+    SupplierNumber INTEGER NULL, CompanyName TEXT NOT NULL, PhoneNumber TEXT NULL, TaxNumber TEXT NULL,
+    ContactPerson TEXT NULL, Email TEXT NULL, Address TEXT NULL, Notes TEXT NULL,
+    IsActive INTEGER NOT NULL, CreatedAt TEXT NOT NULL, CreatedByUserId INTEGER NOT NULL)
+index	IX_Suppliers_CompanyName	CREATE INDEX IX_Suppliers_CompanyName ON Suppliers (CompanyName)
+index	IX_Suppliers_SupplierNumber	CREATE UNIQUE INDEX IX_Suppliers_SupplierNumber ON Suppliers (SupplierNumber)
+index	IX_Suppliers_TaxNumber	CREATE INDEX IX_Suppliers_TaxNumber ON Suppliers (TaxNumber)
+table	Users	CREATE TABLE "Users" (
+    "Id" INTEGER NOT NULL CONSTRAINT "PK_Users" PRIMARY KEY AUTOINCREMENT,
+    "FullName" TEXT NOT NULL,
+    "Username" TEXT NOT NULL,
+    "NormalizedUsername" TEXT NOT NULL,
+    "PasswordHash" TEXT NOT NULL,
+    "IsAdmin" INTEGER NOT NULL,
+    "IsActive" INTEGER NOT NULL,
+    "MustChangePassword" INTEGER NOT NULL,
+    "Permissions" INTEGER NOT NULL,
+    "CreatedAt" TEXT NOT NULL,
+    "LastLoginAt" TEXT NULL
+)
+index	IX_Users_NormalizedUsername	CREATE UNIQUE INDEX "IX_Users_NormalizedUsername" ON "Users" ("NormalizedUsername")
+table	sqlite_sequence	CREATE TABLE sqlite_sequence(name,seq)

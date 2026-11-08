@@ -1,0 +1,437 @@
+﻿Test run for C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\bin\Debug\net8.0-windows\OnTech.Store.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.15)
+[xUnit.net 00:00:00.86]   Discovering: OnTech.Store.Tests
+[xUnit.net 00:00:00.93]   Discovered:  OnTech.Store.Tests
+[xUnit.net 00:00:00.93]   Starting:    OnTech.Store.Tests
+dotnet : [xUnit.net 00:00:02.70]     OnTech.Store.Tests.SchemaTests.User_id_columns_have_foreign_keys [FAIL]
+At line:1 char:418
++ ... lyContinue; dotnet test OnTech.Store.Tests\OnTech.Store.Tests.csproj  ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...ign_keys [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:02.70]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:02.70]       Collection: ["Customers.CreatedByUserId", "Suppliers.CreatedByUserId"]
+[xUnit.net 00:00:02.70]       Stack Trace:
+[xUnit.net 00:00:02.70]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\SchemaTests.cs(133,0): at OnTech.Store.Tests.SchemaTests.User_id_columns_have_foreign_keys()
+[xUnit.net 00:00:02.70]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:02.70]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed OnTech.Store.Tests.SchemaTests.Connects_with_the_apps_own_connection_logic [1 s]
+  Passed OnTech.Store.Tests.SchemaTests.Model_snapshot_matches_the_current_model [369 ms]
+  Passed OnTech.Store.Tests.SchemaTests.Live_sqlite_copy_has_every_model_column [24 ms]
+  Passed OnTech.Store.Tests.SchemaTests.SqlServer_columns_match_the_model [109 ms]
+  Passed OnTech.Store.Tests.SchemaTests.SqlServer_has_no_pending_migrations [27 ms]
+  Failed OnTech.Store.Tests.SchemaTests.User_id_columns_have_foreign_keys [27 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["Customers.CreatedByUserId", "Suppliers.CreatedByUserId"]
+  Stack Trace:
+     at OnTech.Store.Tests.SchemaTests.User_id_columns_have_foreign_keys() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\SchemaTests.cs:line 133
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:03.32]     OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_
+silently_lose_an_edit(server: "sqlite") [FAIL]
+[xUnit.net 00:00:03.32]       PC1's phone number was wiped by PC2's save without any warning
+[xUnit.net 00:00:03.32]       Stack Trace:
+[xUnit.net 00:00:03.32]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs(166,0): at OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_silently_lose_an_edit(String server)
+[xUnit.net 00:00:03.32]         --- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_silently_lose_an_edit(server: "sqlite") [2 s]
+  Error Message:
+   PC1's phone number was wiped by PC2's save without any warning
+  Stack Trace:
+     at OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_silently_lose_an_edit(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs:line 166
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Every_endpoint_the_app_calls_answers_and_matches_the_client_dto(server: "sqlite") [2 s]
+[xUnit.net 00:00:05.26]     OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_
+silently_lose_an_edit(server: "sqlserver") [FAIL]
+[xUnit.net 00:00:05.26]       PC1's phone number was wiped by PC2's save without any warning
+[xUnit.net 00:00:05.26]       Stack Trace:
+[xUnit.net 00:00:05.26]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs(166,0): at OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_silently_lose_an_edit(String server)
+[xUnit.net 00:00:05.26]         --- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_silently_lose_an_edit(server: "sqlserver") [1 s]
+  Error Message:
+   PC1's phone number was wiped by PC2's save without any warning
+  Stack Trace:
+     at OnTech.Store.Tests.TransactionAndConcurrencyTests.Two_PCs_editing_the_same_customer_do_not_silently_lose_an_edit(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs:line 166
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Failure_after_stock_was_taken_rolls_everything_back [836 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.New_items_from_five_PCs_get_different_codes(server: "sqlite") [730 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.New_items_from_five_PCs_get_different_codes(server: "sqlserver") [449 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Cancelling_a_stock_in_whose_stock_was_issued_changes_nothing(server: "sqlserver") [1 s]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Cancelling_a_stock_in_whose_stock_was_issued_changes_nothing(server: "sqlite") [74 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Same_voucher_number_from_five_PCs_is_saved_once(server: "sqlite") [896 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Same_voucher_number_from_five_PCs_is_saved_once(server: "sqlserver") [521 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Twenty_PCs_ordering_the_last_10_units_never_oversell(server: "sqlite") [870 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Twenty_PCs_ordering_the_last_10_units_never_oversell(server: "sqlserver") [590 ms]
+[xUnit.net 00:00:12.30]     OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: 
+"sqlserver", perm: AddStock, page: "Stock In") [FAIL]
+[xUnit.net 00:00:12.30]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:12.30]       Expected: null
+[xUnit.net 00:00:12.30]       Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+[xUnit.net 00:00:12.30]          at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+[xUnit.net 00:00:12.30]          at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+[xUnit.net 00:00:12.30]          at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+[xUnit.net 00:00:12.30]       Stack Trace:
+[xUnit.net 00:00:12.30]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(254,0): at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page)
+[xUnit.net 00:00:12.30]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:12.70]     OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: 
+"sqlserver", perm: ManageCatalog, page: "Items & Categories") [FAIL]
+[xUnit.net 00:00:12.70]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:12.70]       Expected: null
+[xUnit.net 00:00:12.70]       Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+[xUnit.net 00:00:12.70]          at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+[xUnit.net 00:00:12.70]          at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+[xUnit.net 00:00:12.70]          at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+[xUnit.net 00:00:12.70]       Stack Trace:
+[xUnit.net 00:00:12.70]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(254,0): at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page)
+[xUnit.net 00:00:12.70]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:13.02]     OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: 
+"sqlserver", perm: CreateOrders, page: "New Order") [FAIL]
+[xUnit.net 00:00:13.02]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:13.02]       Expected: null
+[xUnit.net 00:00:13.02]       Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+[xUnit.net 00:00:13.02]          at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+[xUnit.net 00:00:13.02]          at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+[xUnit.net 00:00:13.02]          at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+[xUnit.net 00:00:13.02]       Stack Trace:
+[xUnit.net 00:00:13.02]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(254,0): at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page)
+[xUnit.net 00:00:13.02]         --- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Every_endpoint_the_app_calls_answers_and_matches_the_client_dto(server: "sqlserver") [8 s]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Stock_in_and_orders_at_the_same_time_keep_the_balance_right(server: "sqlserver") [932 ms]
+  Failed OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: "sqlserver", perm: AddStock, page: "Stock In") [371 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+   at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+   at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+   at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 254
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: "sqlserver", perm: ManageCatalog, page: "Items & Categories") [378 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+   at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+   at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+   at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 254
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: "sqlserver", perm: CreateOrders, page: "New Order") [312 ms]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+   at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+   at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+   at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 254
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:14.05]     OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: "sqlite", 
+perm: CreateOrders, page: "New Order") [FAIL]
+[xUnit.net 00:00:14.05]       Assert.Null() Failure: Value is not null
+[xUnit.net 00:00:14.05]       Expected: null
+[xUnit.net 00:00:14.05]       Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+[xUnit.net 00:00:14.05]          at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+[xUnit.net 00:00:14.05]          at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+[xUnit.net 00:00:14.05]          at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+[xUnit.net 00:00:14.05]       Stack Trace:
+[xUnit.net 00:00:14.05]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(254,0): at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page)
+[xUnit.net 00:00:14.05]         --- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(server: "sqlite", perm: CreateOrders, page: "New Order") [1 s]
+  Error Message:
+   Assert.Null() Failure: Value is not null
+Expected: null
+Actual:   OnTech.Store.Client.ApiError: You don't have permission to do this. Ask an admin.
+   at OnTech.Store.Client.StoreApiClient.SendCoreAsync(HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 254
+   at OnTech.Store.Client.StoreApiClient.SendAsync[T](HttpMethod method, String url, Object body, CancellationToken ct) in C:\Users\PC\source\ontech-store\src\OnTech.Store.Client\StoreApiClient.cs:line 227
+   at Xunit.Record.ExceptionAsync(Func`1 testCode) in /_/src/xunit.core/Record.cs:line 76
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_page_shown_in_the_menu_can_load_its_data(String server, Permission perm, String page) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 254
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Stock_in_and_orders_at_the_same_time_keep_the_balance_right(server: "sqlite") [2 s]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Five_PCs_cancelling_the_same_order_return_the_stock_once(server: "sqlserver") [494 ms]
+[xUnit.net 00:00:17.20]     
+OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(server: 
+"sqlserver") [FAIL]
+[xUnit.net 00:00:17.20]       Assert.DoesNotContain() Failure: Item found in collection
+[xUnit.net 00:00:17.20]                          ↓ (pos 1)
+[xUnit.net 00:00:17.20]       Collection: ["ok", "500"]
+[xUnit.net 00:00:17.20]       Found:      "500"
+[xUnit.net 00:00:17.20]       Stack Trace:
+[xUnit.net 00:00:17.20]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs(188,0): at OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(String server)
+[xUnit.net 00:00:17.20]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:17.90]     
+OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(server: 
+"sqlite") [FAIL]
+[xUnit.net 00:00:17.90]       Assert.DoesNotContain() Failure: Item found in collection
+[xUnit.net 00:00:17.90]                    ↓ (pos 0)
+[xUnit.net 00:00:17.90]       Collection: ["500", "ok"]
+[xUnit.net 00:00:17.90]       Found:      "500"
+[xUnit.net 00:00:17.90]       Stack Trace:
+[xUnit.net 00:00:17.90]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs(188,0): at OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(String server)
+[xUnit.net 00:00:17.90]         --- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Five_PCs_cancelling_the_same_order_return_the_stock_once(server: "sqlite") [1 s]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Shortage_on_the_second_line_leaves_no_partial_order(server: "sqlite") [43 ms]
+  Passed OnTech.Store.Tests.TransactionAndConcurrencyTests.Shortage_on_the_second_line_leaves_no_partial_order(server: "sqlserver") [160 ms]
+  Failed OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(server: "sqlserver") [570 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Item found in collection
+                   ↓ (pos 1)
+Collection: ["ok", "500"]
+Found:      "500"
+  Stack Trace:
+     at OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs:line 188
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(server: "sqlite") [700 ms]
+  Error Message:
+   Assert.DoesNotContain() Failure: Item found in collection
+             ↓ (pos 0)
+Collection: ["500", "ok"]
+Found:      "500"
+  Stack Trace:
+     at OnTech.Store.Tests.TransactionAndConcurrencyTests.Parallel_customer_number_changes_end_in_409_not_500(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\TransactionAndConcurrencyTests.cs:line 188
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "O'Brien \"; DROP TABLE Customers;-- a4156d", valid: True) [9 s]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "شركة النور للتجارة - 5bdf60", valid: True) [10 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, valid: True) [382 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, valid: False) [13 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "Mixed عربي English 123 6a991f", valid: True) [425 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "شركة النور للتجارة - dcd5b6", valid: True) [428 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "Mixed عربي English 123 631e8d", valid: True) [8 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "", valid: False) [9 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, valid: True) [8 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"···, valid: False) [4 ms]
+[xUnit.net 00:00:25.37]     
+OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(server: "sqlserver") [FAIL]
+[xUnit.net 00:00:25.37]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:25.37]       Expected: Unauthorized
+[xUnit.net 00:00:25.37]       Actual:   OK
+[xUnit.net 00:00:25.37]       Stack Trace:
+[xUnit.net 00:00:25.37]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(213,0): at OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(String server)
+[xUnit.net 00:00:25.37]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:25.38]     
+OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(server: "sqlite") [FAIL]
+[xUnit.net 00:00:25.38]       Assert.Equal() Failure: Values differ
+[xUnit.net 00:00:25.38]       Expected: Unauthorized
+[xUnit.net 00:00:25.38]       Actual:   OK
+[xUnit.net 00:00:25.38]       Stack Trace:
+[xUnit.net 00:00:25.38]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(213,0): at OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(String server)
+[xUnit.net 00:00:25.38]         --- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "O'Brien \"; DROP TABLE Customers;-- 05ca08", valid: True) [13 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "", valid: False) [4 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlite", name: "    ", valid: False) [6 ms]
+  Passed OnTech.Store.Tests.ApiTests.Customer_names_round_trip_or_are_refused_with_a_message(server: "sqlserver", name: "    ", valid: False) [5 ms]
+  Failed OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(server: "sqlserver") [61 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   OK
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 213
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(server: "sqlite") [6 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: Unauthorized
+Actual:   OK
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_token_forged_from_the_repository_signing_key_is_refused(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 213
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:30.66]     OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(server: 
+"sqlite") [FAIL]
+[xUnit.net 00:00:30.66]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:30.66]       Collection: [401, 401, 401, 401, 401, ···]
+[xUnit.net 00:00:30.66]       Stack Trace:
+[xUnit.net 00:00:30.66]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(239,0): at OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(String server)
+[xUnit.net 00:00:30.66]         --- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(server: "sqlite") [5 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: [401, 401, 401, 401, 401, ···]
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 239
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.PerformanceTests.Screens_stay_fast_with_50k_customers_and_orders(server: "sqlserver") [32 s]
+[xUnit.net 00:00:35.83]     OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(server: 
+"sqlserver") [FAIL]
+[xUnit.net 00:00:35.83]       Assert.Contains() Failure: Filter not matched in collection
+[xUnit.net 00:00:35.83]       Collection: [401, 401, 401, 401, 401, ···]
+[xUnit.net 00:00:35.83]       Stack Trace:
+[xUnit.net 00:00:35.83]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(239,0): at OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(String server)
+[xUnit.net 00:00:35.83]         --- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(server: "sqlserver") [5 s]
+  Error Message:
+   Assert.Contains() Failure: Filter not matched in collection
+Collection: [401, 401, 401, 401, 401, ···]
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.Repeated_wrong_passwords_lock_or_slow_down_the_login(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 239
+--- End of stack trace from previous location ---
+[xUnit.net 00:00:36.57]     
+OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(server: "sqlite") [FAIL]
+[xUnit.net 00:00:36.57]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:36.57]       Stack Trace:
+[xUnit.net 00:00:36.57]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(265,0): at OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(String server)
+[xUnit.net 00:00:36.57]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:37.17]     
+OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(server: "sqlserver") [FAIL]
+[xUnit.net 00:00:37.17]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:37.17]       Stack Trace:
+[xUnit.net 00:00:37.17]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(265,0): at OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(String server)
+[xUnit.net 00:00:37.17]         --- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(server: "sqlite") [737 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 265
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(server: "sqlserver") [600 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.A_user_with_no_permissions_cannot_read_customers_or_suppliers(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 265
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Duplicate_and_too_long_voucher_numbers_are_refused(server: "sqlserver") [71 ms]
+  Passed OnTech.Store.Tests.ApiTests.Duplicate_and_too_long_voucher_numbers_are_refused(server: "sqlite") [42 ms]
+[xUnit.net 00:00:37.74]     
+OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(server: "sqlite") 
+[FAIL]
+[xUnit.net 00:00:37.74]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:37.74]       Stack Trace:
+[xUnit.net 00:00:37.74]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(224,0): at OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(String server)
+[xUnit.net 00:00:37.74]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:38.00]     
+OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(server: "sqlserver") 
+[FAIL]
+[xUnit.net 00:00:38.00]       Assert.NotNull() Failure: Value is null
+[xUnit.net 00:00:38.00]       Stack Trace:
+[xUnit.net 00:00:38.00]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(224,0): at OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(String server)
+[xUnit.net 00:00:38.00]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:38.13]     
+OnTech.Store.Tests.ApiTests.Voucher_uniqueness_ignores_letter_case_on_both_databases(server: "sqlite") [FAIL]
+[xUnit.net 00:00:38.13]       Assert.IsType() Failure: Value is null
+[xUnit.net 00:00:38.13]       Expected: typeof(OnTech.Store.Client.ApiError)
+[xUnit.net 00:00:38.13]       Actual:   null
+[xUnit.net 00:00:38.13]       Stack Trace:
+[xUnit.net 00:00:38.13]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(152,0): at OnTech.Store.Tests.ApiTests.Voucher_uniqueness_ignores_letter_case_on_both_databases(String server)
+[xUnit.net 00:00:38.13]         --- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Malformed_bodies_return_400_not_500(server: "sqlite") [134 ms]
+  Passed OnTech.Store.Tests.ApiTests.Malformed_bodies_return_400_not_500(server: "sqlserver") [119 ms]
+  Failed OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(server: "sqlite") [198 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 224
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(server: "sqlserver") [260 ms]
+  Error Message:
+   Assert.NotNull() Failure: Value is null
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.User_who_must_change_password_cannot_use_the_api_before_changing_it(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 224
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Voucher_uniqueness_ignores_letter_case_on_both_databases(server: "sqlserver") [60 ms]
+  Failed OnTech.Store.Tests.ApiTests.Voucher_uniqueness_ignores_letter_case_on_both_databases(server: "sqlite") [61 ms]
+  Error Message:
+   Assert.IsType() Failure: Value is null
+Expected: typeof(OnTech.Store.Client.ApiError)
+Actual:   null
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.Voucher_uniqueness_ignores_letter_case_on_both_databases(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 152
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ApiTests.Disabled_user_token_stops_working_immediately(server: "sqlserver") [218 ms]
+  Passed OnTech.Store.Tests.ApiTests.Disabled_user_token_stops_working_immediately(server: "sqlite") [249 ms]
+  Passed OnTech.Store.Tests.ApiTests.Dates_come_back_as_utc_offsets(server: "sqlserver") [177 ms]
+[xUnit.net 00:00:39.78]     OnTech.Store.Tests.ApiTests.Paging_and_search_limits_return_400_not_500(server: 
+"sqlserver") [FAIL]
+[xUnit.net 00:00:39.78]       Assert.Empty() Failure: Collection was not empty
+[xUnit.net 00:00:39.78]       Collection: ["500 api/orders?page=2147483647"]
+[xUnit.net 00:00:39.78]       Stack Trace:
+[xUnit.net 00:00:39.78]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs(176,0): at OnTech.Store.Tests.ApiTests.Paging_and_search_limits_return_400_not_500(String server)
+[xUnit.net 00:00:39.78]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:39.78]       Output:
+[xUnit.net 00:00:39.78]         500 api/orders?page=2147483647
+  Passed OnTech.Store.Tests.ApiTests.Dates_come_back_as_utc_offsets(server: "sqlite") [105 ms]
+  Passed OnTech.Store.Tests.ApiTests.Order_quantities_zero_negative_and_too_big_are_refused_and_take_nothing(server: "sqlserver") [78 ms]
+  Passed OnTech.Store.Tests.ApiTests.Order_quantities_zero_negative_and_too_big_are_refused_and_take_nothing(server: "sqlite") [61 ms]
+  Passed OnTech.Store.Tests.PerformanceTests.Screens_stay_fast_with_50k_customers_and_orders(server: "sqlite") [5 s]
+  Passed OnTech.Store.Tests.ApiTests.Swagger_is_reachable_without_signing_in(server: "sqlite") [204 ms]
+  Passed OnTech.Store.Tests.ApiTests.Swagger_is_reachable_without_signing_in(server: "sqlserver") [184 ms]
+  Passed OnTech.Store.Tests.ApiTests.Paging_and_search_limits_return_400_not_500(server: "sqlite") [131 ms]
+  Failed OnTech.Store.Tests.ApiTests.Paging_and_search_limits_return_400_not_500(server: "sqlserver") [239 ms]
+  Error Message:
+   Assert.Empty() Failure: Collection was not empty
+Collection: ["500 api/orders?page=2147483647"]
+  Stack Trace:
+     at OnTech.Store.Tests.ApiTests.Paging_and_search_limits_return_400_not_500(String server) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ApiTests.cs:line 176
+--- End of stack trace from previous location ---
+  Standard Output Messages:
+ 500 api/orders?page=2147483647
+
+
+  Passed OnTech.Store.Tests.ApiTests.Client_reports_a_readable_error_when_the_host_does_not_answer [4 s]
+  Passed OnTech.Store.Tests.ApiTests.Same_item_twice_in_one_order_becomes_one_line(server: "sqlite") [53 ms]
+  Passed OnTech.Store.Tests.ApiTests.Same_item_twice_in_one_order_becomes_one_line(server: "sqlserver") [47 ms]
+  Passed OnTech.Store.Tests.ApiTests.Client_reports_a_readable_error_when_the_server_is_down [2 s]
+  Passed OnTech.Store.Tests.ViewModelTests.New_order_blocks_more_than_available_before_calling_the_server [634 ms]
+[xUnit.net 00:00:48.01]     OnTech.Store.Tests.ViewModelTests.Customers_page_does_not_load_every_customer_at_once 
+[FAIL]
+[xUnit.net 00:00:48.01]       50525 customers loaded into one ObservableCollection
+[xUnit.net 00:00:48.01]       Stack Trace:
+[xUnit.net 00:00:48.01]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ViewModelTests.cs(153,0): at OnTech.Store.Tests.ViewModelTests.Customers_page_does_not_load_every_customer_at_once()
+[xUnit.net 00:00:48.01]         --- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ViewModelTests.New_order_saves_through_the_viewmodel_and_shows_success [746 ms]
+  Failed OnTech.Store.Tests.ViewModelTests.Customers_page_does_not_load_every_customer_at_once [695 ms]
+  Error Message:
+   50525 customers loaded into one ObservableCollection
+  Stack Trace:
+     at OnTech.Store.Tests.ViewModelTests.Customers_page_does_not_load_every_customer_at_once() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ViewModelTests.cs:line 153
+--- End of stack trace from previous location ---
+  Passed OnTech.Store.Tests.ViewModelTests.Expired_or_disabled_login_sends_the_user_back_to_sign_in [194 ms]
+  Passed OnTech.Store.Tests.ViewModelTests.Login_with_wrong_password_shows_a_message_and_no_session [102 ms]
+  Passed OnTech.Store.Tests.ViewModelTests.Server_down_message_is_readable [2 s]
+[xUnit.net 00:00:50.46]     OnTech.Store.Tests.ViewModelTests.Save_command_cannot_run_twice_at_the_same_time [FAIL]
+[xUnit.net 00:00:50.46]       Assert.False() Failure
+[xUnit.net 00:00:50.46]       Expected: False
+[xUnit.net 00:00:50.46]       Actual:   True
+[xUnit.net 00:00:50.46]       Stack Trace:
+[xUnit.net 00:00:50.46]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ViewModelTests.cs(124,0): at OnTech.Store.Tests.ViewModelTests.Save_command_cannot_run_twice_at_the_same_time()
+[xUnit.net 00:00:50.46]         --- End of stack trace from previous location ---
+[xUnit.net 00:00:50.47]     OnTech.Store.Tests.ViewModelTests.Arabic_Indic_digits_are_accepted_as_a_quantity [FAIL]
+[xUnit.net 00:00:50.47]       Assert.True() Failure
+[xUnit.net 00:00:50.47]       Expected: True
+[xUnit.net 00:00:50.47]       Actual:   False
+[xUnit.net 00:00:50.47]       Stack Trace:
+[xUnit.net 00:00:50.47]         C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ViewModelTests.cs(66,0): at OnTech.Store.Tests.ViewModelTests.Arabic_Indic_digits_are_accepted_as_a_quantity()
+[xUnit.net 00:00:50.47]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:50.47]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:50.58]   Finished:    OnTech.Store.Tests
+  Failed OnTech.Store.Tests.ViewModelTests.Save_command_cannot_run_twice_at_the_same_time [97 ms]
+  Error Message:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Stack Trace:
+     at OnTech.Store.Tests.ViewModelTests.Save_command_cannot_run_twice_at_the_same_time() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ViewModelTests.cs:line 124
+--- End of stack trace from previous location ---
+  Failed OnTech.Store.Tests.ViewModelTests.Arabic_Indic_digits_are_accepted_as_a_quantity [5 ms]
+  Error Message:
+   Assert.True() Failure
+Expected: True
+Actual:   False
+  Stack Trace:
+     at OnTech.Store.Tests.ViewModelTests.Arabic_Indic_digits_are_accepted_as_a_quantity() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.Tests\ViewModelTests.cs:line 66
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Passed OnTech.Store.Tests.ViewModelTests.Login_error_is_shown_in_Arabic_when_Arabic_is_on [106 ms]
+Results File: C:\Users\PC\source\ontech-store\audit\evidence\testresults\audit_tests.trx
+
+Test Run Failed.
+Total tests: 84
+     Passed: 62
+     Failed: 22
+ Total time: 51.5331 Seconds

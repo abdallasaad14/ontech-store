@@ -1,0 +1,77 @@
+﻿Test run for C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\bin\Debug\net8.0-windows\OnTech.Store.UITests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+dotnet : [xUnit.net 00:00:47.09]     OnTech.Store.UITests.UiTests.Item_card_opens_and_exports [FAIL]
+At line:1 char:532
++ ... emove-Item; dotnet test OnTech.Store.UITests\OnTech.Store.UITests.csp ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0..._exports [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Failed OnTech.Store.UITests.UiTests.Item_card_opens_and_exports [25 s]
+  Error Message:
+   System.TimeoutException : No window with title containing 'UI Item 1108123249'. Open: OnTech Store
+  Stack Trace:
+     at OnTech.Store.UITests.AppDriver.WaitWindow(String titleContains, Int32 seconds) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\AppDriver.cs:line 57
+   at OnTech.Store.UITests.UiTests.<Item_card_opens_and_exports>b__18_0(AppDriver d) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 290
+   at OnTech.Store.UITests.UiTests.Run(String name, Action`1 body, String serverUrl, String language) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 54
+   at OnTech.Store.UITests.UiTests.Item_card_opens_and_exports() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 281
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Standard Output Messages:
+ FAIL Item_card_opens_and_exports 25168 ms: TimeoutException: No window with title containing 'UI Item 1108123249'. Open: OnTech Store -> C:\Users\PC\source\ontech-store\audit\screenshots\Item_card_opens_and_exports.png
+
+
+[xUnit.net 00:01:09.99]     OnTech.Store.UITests.UiTests.Stock_in_saves_and_adds_stock [FAIL]
+  Failed OnTech.Store.UITests.UiTests.Stock_in_saves_and_adds_stock [22 s]
+  Error Message:
+   STORE | UT | UI Tester | Store user | Password | Sign out | العربية | Server 127.0.0.1:5081 |  | Home |  | New Order |  | Stock In |  | Customers |  | Suppliers |  | Orders Log |  | Stock In Log | ADMIN |  | Items & Categories |  | Users | Stock In | Record items received from a supplier. Stock is added when you save. New items are added by an admin under Items & Categories. |  | Choose the supplier. | Category | Item | Quantity received | + Add another item | + New supplier | Supplier (type number or name) | Receipt voucher number * | The number on the warehouse receipt voucher. Required, and each number is used once. | Supplier invoice number (optional) | Remove | × 7 | UI Item 1108123249 (UI Cat 1108123249) | Notes (optional) | Cancel | Save stock-in
+  Stack Trace:
+     at OnTech.Store.UITests.UiTests.<Stock_in_saves_and_adds_stock>b__16_0(AppDriver d) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 260
+   at OnTech.Store.UITests.UiTests.Run(String name, Action`1 body, String serverUrl, String language) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 54
+   at OnTech.Store.UITests.UiTests.Stock_in_saves_and_adds_stock() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 242
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Standard Output Messages:
+ FAIL Stock_in_saves_and_adds_stock 22847 ms: TrueException: STORE | UT | UI Tester | Store user | Password | Sign out | العربية | Server 127.0.0.1:5081 |  | Home |  | New Order |  | Stock In |  | Customers |  | Suppliers |  | Orders Log |  | Stock In Log | ADMIN |  | Items & Categories |  | Users | Stock In | Record items received from a supplier. Stock is added when you save. New items are added by an admin under Items & Categories. |  | Choose the supplier. | Category | Item | Quantity received | + Add another item | + New supplier | Supplier (type number or name) | Receipt voucher number * | The number on the warehouse receipt voucher. Required, and each number is used once. | Supplier invoice number (optional) | Remove | × 7 | UI Item 1108123249 (UI Cat 1108123249) | Notes (optional) | Cancel | Save stock-in -> C:\Users\PC\source\ontech-store\audit\screenshots\Stock_in_saves_and_adds_stock.png
+
+
+[xUnit.net 00:01:26.30]     OnTech.Store.UITests.UiTests.Customer_with_invalid_email_and_too_long_name_shows_messages 
+[FAIL]
+  Failed OnTech.Store.UITests.UiTests.Customer_with_invalid_email_and_too_long_name_shows_messages [13 s]
+  Error Message:
+   Assert.Contains() Failure: Sub-string not found
+String:    "STORE | UT | UI Tester | Store user | Pas"···
+Not found: "maximum length"
+  Stack Trace:
+     at OnTech.Store.UITests.UiTests.<Customer_with_invalid_email_and_too_long_name_shows_messages>b__11_0(AppDriver d) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 168
+   at OnTech.Store.UITests.UiTests.Run(String name, Action`1 body, String serverUrl, String language) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 54
+   at OnTech.Store.UITests.UiTests.Customer_with_invalid_email_and_too_long_name_shows_messages() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 150
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Standard Output Messages:
+      server validation shown to the user: STORE | UT | UI Tester | Store user | Password | Sign out | العربية | Server 127.0.0.1:5081 |  | Home |  | New Order |  | Stock In |  | Customers |  | Suppliers |  | Orders Log |  | Stock In Log | ADMIN |  | Items & Categories |  | Users | + Add customer | Import from Excel | Customers | Companies that take items from the store. |  | The Email field is not a valid e-mail address. | Show disabled | Search | NO. | COMPANY | PHONE | TAX NUMBER | CONTACT | ORDERS | 1 | Mohamed Attia - Alexandria | 0 | Edit | Disable | 2 | Star Medical Center | 0 | Edit | Disable | 3 | Egyptian Football Association - Giza area & -cairo Area | 0 | Edit | Disable | 4 | Egyptian Federation of Triathlon (triple) | 0 | Edit | Disable | 5 | El Yacht Club - Giza & Cairo | 0 | Edit | Disable | 6 | IP Expert Solutions | 0 | Edit | Disable | 7 | Dar Eldefa3 Algawi | 0 | Edit | Disable | 8 | ElGouna Services | 0 | Edit | Disable | 9 | Arab Contractors - Osman Ahmed Osman | 0 | Edit | Disable | 10 | Advanced Technology | 0 | Edit | Disable | 11 | Global Company For Modern systems | 0 | Edit | Disable | 12 | Takaful Fund Cairo International Airport officers | 0 | Edit | Disable | 13 | Police Printing | 0 | Edit | Disable | 14 | Police Hospital | 0 | Edit | Disable | Add customer | Customer number | Leave empty to use the next free number. | Company name * | Phone | Tax number | Contact person | Email | Address | Notes | Cancel | Save
+ FAIL Customer_with_invalid_email_and_too_long_name_shows_messages 13112 ms: ContainsException: Assert.Contains() Failure: Sub-string not found
+ -> C:\Users\PC\source\ontech-store\audit\screenshots\Customer_with_invalid_email_and_too_long_name_shows_messages.png
+
+
+[xUnit.net 00:01:26.30]     OnTech.Store.UITests.UiTests.New_order_and_customers_open_fast_with_50k_customers [SKIP]
+  Skipped OnTech.Store.UITests.UiTests.New_order_and_customers_open_fast_with_50k_customers [1 ms]
+[xUnit.net 00:01:34.32]     OnTech.Store.UITests.UiTests.New_order_saves_and_takes_stock [FAIL]
+  Failed OnTech.Store.UITests.UiTests.New_order_saves_and_takes_stock [8 s]
+  Error Message:
+   System.IndexOutOfRangeException : Index was outside the bounds of the array.
+  Stack Trace:
+     at OnTech.Store.UITests.UiTests.FillOrder(AppDriver d, Window main, String voucher, String qty) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 181
+   at OnTech.Store.UITests.UiTests.<New_order_saves_and_takes_stock>b__13_0(AppDriver d) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 197
+   at OnTech.Store.UITests.UiTests.Run(String name, Action`1 body, String serverUrl, String language) in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 54
+   at OnTech.Store.UITests.UiTests.New_order_saves_and_takes_stock() in C:\Users\PC\source\ontech-store\audit\OnTech.Store.UITests\UiTests.cs:line 192
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Standard Output Messages:
+ FAIL New_order_saves_and_takes_stock 7937 ms: IndexOutOfRangeException: Index was outside the bounds of the array. -> C:\Users\PC\source\ontech-store\audit\screenshots\New_order_saves_and_takes_stock.png
+
+
+WARNING: Overwriting results file: C:\Users\PC\source\ontech-store\audit\evidence\testresults\ui_tests.trx
+Results File: C:\Users\PC\source\ontech-store\audit\evidence\testresults\ui_tests.trx
+
+Failed!  - Failed:     4, Passed:     9, Skipped:     1, Total:    14, Duration: 2 m 30 s - OnTech.Store.UITests.dll (net8.0)

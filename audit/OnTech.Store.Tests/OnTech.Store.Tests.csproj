@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Audit integration tests. They run against REAL running servers, not an in-process host:
+      5081 = audit copy on SQL Server .\SQLEXPRESS\OnTechStore (Production config)
+      5082 = audit copy on a SQLite copy of the live database (Development config)
+    A test that FAILS here documents a defect (see audit/AUDIT_REPORT.md for the issue id in the test name).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1305;CA1307;CA1310;xUnit1031</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OnTech.Store.Api\OnTech.Store.Api.csproj" />
+    <ProjectReference Include="..\..\src\OnTech.Store.Client\OnTech.Store.Client.csproj" />
+    <ProjectReference Include="..\..\src\OnTech.Store.Desktop\OnTech.Store.Desktop.csproj" />
+  </ItemGroup>
+</Project>

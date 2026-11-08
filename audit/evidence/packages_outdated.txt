@@ -1,0 +1,37 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+   C:\Program Files (x86)\Gamanet\C4 SDK\
+
+Project `OnTech.Store.Api` has the following updates to its packages
+   [net8.0]: 
+   Top-level Package                                    Requested   Resolved   Latest 
+   > Microsoft.AspNetCore.Authentication.JwtBearer      8.0.11      8.0.11     10.0.14
+   > Microsoft.EntityFrameworkCore.Design               8.0.11      8.0.11     10.0.14
+   > Microsoft.EntityFrameworkCore.Sqlite               8.0.11      8.0.11     10.0.14
+   > Microsoft.EntityFrameworkCore.SqlServer            8.0.11      8.0.11     10.0.14
+   > Microsoft.Extensions.Hosting.WindowsServices       8.0.1       8.0.1      10.0.14
+   > Microsoft.Extensions.Identity.Core                 8.0.11      8.0.11     10.0.14
+   > Swashbuckle.AspNetCore                             6.6.2       6.6.2      10.3.1 
+
+The given project `OnTech.Store.Contracts` has no updates given the current sources.
+Project `OnTech.Store.Api.Tests` has the following updates to its packages
+   [net8.0]: 
+   Top-level Package                       Requested   Resolved   Latest 
+   > coverlet.collector                    6.0.0       6.0.0      10.1.0 
+   > Microsoft.AspNetCore.Mvc.Testing      8.0.11      8.0.11     10.0.14
+   > Microsoft.NET.Test.Sdk                17.6.0      17.6.0     18.11.0
+   > xunit                                 2.4.2       2.4.2      2.9.3  
+   > xunit.runner.visualstudio             2.4.5       2.4.5      4.0.1  
+
+The given project `OnTech.Store.Client` has no updates given the current sources.
+Project `OnTech.Store.Desktop` has the following updates to its packages
+   [net8.0-windows]: 
+   Top-level Package            Requested   Resolved   Latest
+   > CommunityToolkit.Mvvm      8.2.2       8.2.2      8.4.2 
+
+The given project `OnTech.Store.LoadTest` has no updates given the current sources.
+The given project `OnTech.Store.DemoData` has no updates given the current sources.

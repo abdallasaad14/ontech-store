@@ -1,0 +1,10 @@
+probe binding error captured: True
+Home: navigate + 3 s pump took 3023 ms (anything well above 3000 ms = UI thread blocked)
+NewOrder: navigate + 3 s pump took 3023 ms (anything well above 3000 ms = UI thread blocked)
+StockIn: navigate + 3 s pump took 3004 ms (anything well above 3000 ms = UI thread blocked)
+Customers: navigate + 3 s pump took 3014 ms (anything well above 3000 ms = UI thread blocked)
+Suppliers: navigate + 3 s pump took 2998 ms (anything well above 3000 ms = UI thread blocked)
+Orders: navigate + 3 s pump took 3001 ms (anything well above 3000 ms = UI thread blocked)
+StockIns: navigate + 3 s pump took 2995 ms (anything well above 3000 ms = UI thread blocked)
+Catalog: navigate + 3 s pump took 2997 ms (anything well above 3000 ms = UI thread blocked)
+Users: navigate + 3 s pump took 2994 ms (anything well above 3000 ms = UI thread blocked)
