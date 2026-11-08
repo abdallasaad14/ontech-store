@@ -49,7 +49,7 @@ public class CustomersController(StoreDbContext db) : ControllerBase
             Apply(c, req);
             c.CustomerNumber ??= await NextNumberAsync(ct);
             db.Customers.Add(c);
-            return await db.SaveChangesAsync(ct);
+            return await db.SaveOrConflictAsync(ct, () => $"Customer number {c.CustomerNumber} is already used.");
         }, ct);
         return CreatedAtAction(nameof(Get), new { id = c.Id }, await Project(db.Customers.Where(x => x.Id == c.Id)).FirstAsync(ct));
     }
@@ -58,14 +58,18 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     [HasPermission(Permission.ManageCustomers)]
     public async Task<ActionResult<CustomerDto>> Update(int id, SaveCustomerRequest req, CancellationToken ct)
     {
-        var c = await db.Customers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Customer");
-        ApiException.ThrowIfStale(req.Version, c.Version);
-        await EnsureUnique(req.CompanyName.Trim(), req.TaxNumber.Clean(), req.CustomerNumber, id, ct);
-        var oldNumber = c.CustomerNumber;
-        Apply(c, req);
-        c.CustomerNumber ??= oldNumber;
-        c.Version++;
-        await db.SaveOrConflictAsync(ct);
+        // Inside the gate, like Create and Import, so two PCs setting the same number can't both pass the check.
+        await NumberingGate.RunAsync(async () =>
+        {
+            var c = await db.Customers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Customer");
+            ApiException.ThrowIfStale(req.Version, c.Version);
+            await EnsureUnique(req.CompanyName.Trim(), req.TaxNumber.Clean(), req.CustomerNumber, id, ct);
+            var oldNumber = c.CustomerNumber;
+            Apply(c, req);
+            c.CustomerNumber ??= oldNumber;
+            c.Version++;
+            return await db.SaveOrConflictAsync(ct, () => $"Customer number {c.CustomerNumber} is already used.");
+        }, ct);
         return await Project(db.Customers.Where(x => x.Id == id)).FirstAsync(ct);
     }
 
@@ -152,12 +156,12 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     private async Task EnsureUnique(string name, string? taxNumber, int? number, int? exceptId, CancellationToken ct)
     {
         if (number is not null && await db.Customers.AnyAsync(c => c.CustomerNumber == number && c.Id != exceptId, ct))
-            throw ApiException.Conflict($"Customer number {number} is already used.");
+            throw ApiException.Duplicate($"Customer number {number} is already used.");
         var lower = name.ToLower();
         if (await db.Customers.AnyAsync(c => c.CompanyName.ToLower() == lower && c.Id != exceptId, ct))
-            throw ApiException.Conflict($"A customer named '{name}' already exists.");
+            throw ApiException.Duplicate($"A customer named '{name}' already exists.");
         if (taxNumber is not null && await db.Customers.AnyAsync(c => c.TaxNumber == taxNumber && c.Id != exceptId, ct))
-            throw ApiException.Conflict($"A customer with tax number '{taxNumber}' already exists.");
+            throw ApiException.Duplicate($"A customer with tax number '{taxNumber}' already exists.");
     }
 
     private async Task<int> NextNumberAsync(CancellationToken ct) => (await db.Customers.MaxAsync(c => c.CustomerNumber, ct) ?? 0) + 1;

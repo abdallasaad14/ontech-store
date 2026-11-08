@@ -43,7 +43,7 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         };
         user.PasswordHash = passwords.Hash(user, req.Password);
         db.Users.Add(user);
-        await db.SaveChangesAsync(ct);
+        await db.SaveOrConflictAsync(ct, () => $"The username '{username}' is already taken.");
         return CreatedAtAction(nameof(Get), new { id = user.Id }, user.ToDto());
     }
 
@@ -102,6 +102,6 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
     {
         var normalized = username.ToUpperInvariant();
         if (await db.Users.AnyAsync(u => u.NormalizedUsername == normalized && u.Id != exceptId, ct))
-            throw ApiException.Conflict($"The username '{username}' is already taken.");
+            throw ApiException.Duplicate($"The username '{username}' is already taken.");
     }
 }

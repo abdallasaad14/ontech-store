@@ -53,13 +53,17 @@ public static class DbErrors
     /// Saves, and turns a lost race into a readable 409: a concurrency-token mismatch becomes ConcurrencyConflict,
     /// a unique-index violation becomes Duplicate with <paramref name="duplicateMessage"/> (or a general message).
     /// </summary>
-    public static async Task<int> SaveOrConflictAsync(this DbContext db, CancellationToken ct, Func<string>? duplicateMessage = null)
+    public static Task<int> SaveOrConflictAsync(this DbContext db, CancellationToken ct, Func<string>? duplicateMessage = null) =>
+        db.SaveOrConflictAsync(ct, duplicateMessage is null ? null : () => Task.FromResult(duplicateMessage()));
+
+    /// <summary>As above; <paramref name="duplicateMessage"/> may query the database to tell which unique value was taken.</summary>
+    public static async Task<int> SaveOrConflictAsync(this DbContext db, CancellationToken ct, Func<Task<string>>? duplicateMessage)
     {
         try { return await db.SaveChangesAsync(ct); }
         catch (DbUpdateConcurrencyException) { throw ApiException.ConcurrencyConflict(); }
         catch (DbUpdateException ex) when (ex.IsUniqueViolation())
         {
-            throw ApiException.Duplicate(duplicateMessage?.Invoke() ?? ApiExceptionHandler.DuplicateMessage);
+            throw ApiException.Duplicate(duplicateMessage is null ? ApiExceptionHandler.DuplicateMessage : await duplicateMessage());
         }
     }
 }

@@ -34,7 +34,7 @@ public class CategoriesController(StoreDbContext db) : ControllerBase
             await EnsureCodeFree(code, null, ct);
             var created = new Category { Code = code, Name = name, Description = req.Description?.Trim(), IsActive = req.IsActive, CreatedAt = DateTime.UtcNow };
             db.Categories.Add(created);
-            await db.SaveChangesAsync(ct);
+            await db.SaveOrConflictAsync(ct, Taken(name, code, null, ct));
             return created;
         }, ct);
         return CreatedAtAction(nameof(Get), new { id = cat.Id }, await Project(db.Categories.Where(c => c.Id == cat.Id)).FirstAsync(ct));
@@ -55,7 +55,7 @@ public class CategoriesController(StoreDbContext db) : ControllerBase
         cat.Name = name;
         cat.Description = req.Description?.Trim();
         cat.IsActive = req.IsActive;
-        await db.SaveChangesAsync(ct);
+        await db.SaveOrConflictAsync(ct, Taken(name, cat.Code, id, ct));
         return await Project(db.Categories.Where(c => c.Id == id)).FirstAsync(ct);
     }
 
@@ -86,13 +86,19 @@ public class CategoriesController(StoreDbContext db) : ControllerBase
     {
         if (!CatalogCodes.IsValid(code)) throw ApiException.BadRequest("Codes can only contain digits.");
         if (await db.Categories.AnyAsync(c => c.Code == code && c.Id != exceptId, ct))
-            throw ApiException.Conflict($"Category code '{code}' is already used.");
+            throw ApiException.Duplicate($"Category code '{code}' is already used.");
     }
 
     private async Task EnsureNameFree(string name, int? exceptId, CancellationToken ct)
     {
         var lower = name.ToLower();
         if (await db.Categories.AnyAsync(c => c.Name.ToLower() == lower && c.Id != exceptId, ct))
-            throw ApiException.Conflict($"A category named '{name}' already exists.");
+            throw ApiException.Duplicate($"A category named '{name}' already exists.");
     }
+
+    // After a unique-index violation (another PC saved first): which value was taken.
+    private Func<Task<string>> Taken(string name, string? code, int? exceptId, CancellationToken ct) => async () =>
+        code is not null && await db.Categories.AnyAsync(c => c.Code == code && c.Id != exceptId, ct)
+            ? $"Category code '{code}' is already used."
+            : $"A category named '{name}' already exists.";
 }

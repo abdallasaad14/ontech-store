@@ -136,7 +136,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
                 LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
             };
             db.Items.Add(created); // starts at 0; stock comes in only through a stock-in voucher
-            await db.SaveChangesAsync(ct);
+            await db.SaveOrConflictAsync(ct, Taken(created.CategoryId, name, created.Code, null, ct));
             return created;
         }, ct);
         return CreatedAtAction(nameof(Get), new { id = item.Id }, item.ToDto());
@@ -162,7 +162,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         item.IsActive = req.IsActive;
         item.UpdatedAt = DateTime.UtcNow;
         item.Version++;
-        await db.SaveOrConflictAsync(ct);
+        await db.SaveOrConflictAsync(ct, Taken(item.CategoryId, name, item.Code, id, ct));
         return (await Load(id, ct)).ToDto();
     }
 
@@ -189,13 +189,19 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     {
         var lower = name.ToLower();
         if (await db.Items.AnyAsync(i => i.CategoryId == categoryId && i.Name.ToLower() == lower && i.Id != exceptId, ct))
-            throw ApiException.Conflict($"An item named '{name}' already exists in this category.");
+            throw ApiException.Duplicate($"An item named '{name}' already exists in this category.");
     }
 
     private async Task EnsureCodeFree(string code, int? exceptId, CancellationToken ct)
     {
         if (!CatalogCodes.IsValid(code)) throw ApiException.BadRequest("Codes can only contain digits.");
         if (await db.Items.AnyAsync(i => i.Code == code && i.Id != exceptId, ct))
-            throw ApiException.Conflict($"Item code '{code}' is already used.");
+            throw ApiException.Duplicate($"Item code '{code}' is already used.");
     }
+
+    // After a unique-index violation (another PC saved first): which value was taken.
+    private Func<Task<string>> Taken(int categoryId, string name, string? code, int? exceptId, CancellationToken ct) => async () =>
+        code is not null && await db.Items.AnyAsync(i => i.Code == code && i.Id != exceptId, ct)
+            ? $"Item code '{code}' is already used."
+            : $"An item named '{name}' already exists in this category.";
 }
