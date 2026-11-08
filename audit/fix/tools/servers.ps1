@@ -5,7 +5,7 @@
 #   .\servers.ps1 start            # start both from audit\build\api-*
 #   .\servers.ps1 stop             # stop only processes listening on 5081/5082
 #   .\servers.ps1 publish          # rebuild audit\build\api-* from THIS worktree's source (Debug), keeps the SQLite copy
-param([ValidateSet('start','stop','publish')][string]$Action = 'start', [string]$JwtKey = '')
+param([ValidateSet('start','stop','publish')][string]$Action = 'start', [string]$JwtKey = '', [ValidateSet('','sqlite','sqlserver')][string]$Only = '')
 
 $ErrorActionPreference = 'Stop'
 $audit = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -50,7 +50,7 @@ switch ($Action) {
     'start' {
         $extra = @{}
         if ($JwtKey) { $extra['Jwt__SigningKey'] = $JwtKey }
-        Start-Api 'sqlserver' 5081 'Production'  $extra
-        Start-Api 'sqlite'    5082 'Development' $extra
+        if ($Only -ne 'sqlite')    { Start-Api 'sqlserver' 5081 'Production'  $extra }
+        if ($Only -ne 'sqlserver') { Start-Api 'sqlite'    5082 'Development' $extra }
     }
 }
