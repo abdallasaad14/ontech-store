@@ -6,7 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- H-1: Microsoft.Data.SqlClient needs real cultures; invariant mode crashes it at startup ("en-us is an invalid culture identifier"). -->
+    <InvariantGlobalization>false</InvariantGlobalization>
     <!-- Workstation GC: a few PCs don't need a heap per CPU core. Under a 10-PC stress test this keeps the server near 350 MB instead of 900 MB. -->
     <ServerGarbageCollection>false</ServerGarbageCollection>
     <Version>1.0.0</Version>
@@ -18,15 +19,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.33" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.33">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.33" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.33" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.33" />
+    <!-- M-7: EF Core 8 pulls SQLitePCLRaw 2.1.6, whose native SQLite has GHSA-2m69-gcr7-jv3q (High). Lift it to a patched 2.1.x. -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
