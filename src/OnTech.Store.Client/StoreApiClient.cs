@@ -123,6 +123,9 @@ public sealed class StoreApiClient
     public Task<List<CustomerDto>> GetCustomersAsync(string? search = null, bool includeInactive = false, CancellationToken ct = default) =>
         SendAsync<List<CustomerDto>>(HttpMethod.Get, "api/customers" + Query(("search", search), ("includeInactive", includeInactive)), null, ct);
 
+    public Task<CustomerDto> GetCustomerAsync(int id, CancellationToken ct = default) =>
+        SendAsync<CustomerDto>(HttpMethod.Get, $"api/customers/{id}", null, ct);
+
     public Task<CustomerDto> CreateCustomerAsync(SaveCustomerRequest req, CancellationToken ct = default) =>
         SendAsync<CustomerDto>(HttpMethod.Post, "api/customers", req, ct);
 
@@ -139,6 +142,9 @@ public sealed class StoreApiClient
 
     public Task<List<SupplierDto>> GetSuppliersAsync(string? search = null, bool includeInactive = false, CancellationToken ct = default) =>
         SendAsync<List<SupplierDto>>(HttpMethod.Get, "api/suppliers" + Query(("search", search), ("includeInactive", includeInactive)), null, ct);
+
+    public Task<SupplierDto> GetSupplierAsync(int id, CancellationToken ct = default) =>
+        SendAsync<SupplierDto>(HttpMethod.Get, $"api/suppliers/{id}", null, ct);
 
     public Task<SupplierDto> CreateSupplierAsync(SaveSupplierRequest req, CancellationToken ct = default) =>
         SendAsync<SupplierDto>(HttpMethod.Post, "api/suppliers", req, ct);
@@ -187,6 +193,9 @@ public sealed class StoreApiClient
 
     public Task<List<UserDto>> GetUsersAsync(bool includeInactive = true, CancellationToken ct = default) =>
         SendAsync<List<UserDto>>(HttpMethod.Get, "api/users" + Query(("includeInactive", includeInactive)), null, ct);
+
+    public Task<UserDto> GetUserAsync(int id, CancellationToken ct = default) =>
+        SendAsync<UserDto>(HttpMethod.Get, $"api/users/{id}", null, ct);
 
     public Task<UserDto> CreateUserAsync(CreateUserRequest req, CancellationToken ct = default) =>
         SendAsync<UserDto>(HttpMethod.Post, "api/users", req, ct);
@@ -257,6 +266,7 @@ public sealed class StoreApiClient
     private static async Task<ApiError> ToErrorAsync(HttpResponseMessage res, CancellationToken ct)
     {
         string? title = null;
+        string? code = null;
         List<StockShortage>? shortages = null;
         try
         {
@@ -272,6 +282,7 @@ public sealed class StoreApiClient
                     title = string.Join(Environment.NewLine, messages);
                 }
                 if (string.IsNullOrWhiteSpace(title) && problem.TryGetProperty("title", out var t)) title = t.GetString();
+                if (problem.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String) code = c.GetString();
                 if (problem.TryGetProperty("shortages", out var s) && s.ValueKind == JsonValueKind.Array)
                     shortages = s.Deserialize<List<StockShortage>>(Json);
             }
@@ -286,7 +297,7 @@ public sealed class StoreApiClient
         if (shortages is { Count: > 0 })
             title += Environment.NewLine + string.Join(Environment.NewLine,
                 shortages.Select(x => $"• {x.ItemName}: asked for {x.Requested}, only {x.Available} available"));
-        return new ApiError(res.StatusCode, title, shortages);
+        return new ApiError(res.StatusCode, title, shortages, code: code);
     }
 
     private static string DefaultMessage(HttpStatusCode status) => status switch

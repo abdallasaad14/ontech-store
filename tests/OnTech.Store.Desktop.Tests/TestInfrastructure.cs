@@ -21,6 +21,12 @@ public sealed class FakeServer : HttpMessageHandler
     private readonly ConcurrentDictionary<string, Func<HttpRequestMessage, Task<HttpResponseMessage>>> _routes = new();
     public ConcurrentQueue<HttpRequestMessage> Requests { get; } = new();
     public ConcurrentQueue<string> Bodies { get; } = new();
+    /// <summary>Every call in order: method, path and JSON body (null when there was none).</summary>
+    public ConcurrentQueue<(string Method, string Path, string? Body)> Calls { get; } = new();
+
+    /// <summary>The JSON body of the last call with this method.</summary>
+    public JsonElement LastBody(string method) =>
+        JsonDocument.Parse(Calls.Last(c => c.Method == method && c.Body is not null).Body!).RootElement;
 
     public FakeServer On(string method, string path, Func<HttpRequestMessage, Task<HttpResponseMessage>> answer)
     {
@@ -48,7 +54,9 @@ public sealed class FakeServer : HttpMessageHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
     {
         Requests.Enqueue(request);
-        if (request.Content is not null) Bodies.Enqueue(await request.Content.ReadAsStringAsync(ct));
+        var body = request.Content is null ? null : await request.Content.ReadAsStringAsync(ct);
+        if (body is not null) Bodies.Enqueue(body);
+        Calls.Enqueue((request.Method.Method, request.RequestUri!.AbsolutePath.TrimStart('/'), body));
         var key = request.Method.Method + " " + request.RequestUri!.AbsolutePath.TrimStart('/');
         if (!_routes.TryGetValue(key, out var answer))
             return Problem(HttpStatusCode.NotFound, "Not Found");

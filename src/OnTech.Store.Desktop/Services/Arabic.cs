@@ -470,6 +470,10 @@ internal static class Arabic
         ["This stock-in is already cancelled."] = "إذن الإضافة هذا ملغى بالفعل.",
         ["Some of this stock has already been taken out, so the stock-in can't be cancelled."] =
             "تم صرف جزء من هذه الكمية بالفعل، لذا لا يمكن إلغاء إذن الإضافة.",
+
+        // ---- Server messages added by the audit fixes (CONTRACTS.md section 3) ----
+        ["This record was changed on another device. It has been reloaded; check it and save again."] =
+            "تم تعديل هذا السجل من جهاز آخر، وتمت إعادة تحميله. راجِع البيانات ثم احفظ مرة أخرى.",
     };
 
     /// <summary>Messages that carry a name or number: English pattern → Arabic, with $1, $2 for the captured parts.</summary>

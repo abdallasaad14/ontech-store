@@ -54,6 +54,8 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     [ObservableProperty] private string? _itemDescription;
     [ObservableProperty] private string _itemLowStock = "0";
     [ObservableProperty] private bool _itemActive = true;
+    /// <summary>The Version of the item the form was loaded from (M-1).</summary>
+    private int? _editingItemVersion;
 
     public override Task LoadAsync() => RunAsync(ReloadCategoriesAsync, clearMessages: false);
 
@@ -125,6 +127,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     private void NewItem()
     {
         EditingId = null;
+        _editingItemVersion = null;
         ItemCategory = SelectedCategory;
         ItemName = "";
         ItemCode = ItemDescription = null;
@@ -138,6 +141,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     {
         if (i is null) return;
         EditingId = i.Id;
+        _editingItemVersion = i.Version;
         ItemCategory = Categories.FirstOrDefault(c => c.Id == i.CategoryId);
         ItemName = i.Name;
         ItemCode = i.Code;
@@ -199,15 +203,31 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
         ItemDto saved;
         if (EditingId is { } id)
         {
-            saved = await Api.UpdateItemAsync(id, new UpdateItemRequest
+            try
             {
-                CategoryId = ItemCategory.Id,
-                Name = ItemName.Trim(),
-                Code = string.IsNullOrWhiteSpace(ItemCode) ? null : ItemCode.Trim(),
-                Description = string.IsNullOrWhiteSpace(ItemDescription) ? null : ItemDescription.Trim(),
-                LowStockThreshold = low,
-                IsActive = ItemActive,
-            });
+                saved = await Api.UpdateItemAsync(id, new UpdateItemRequest
+                {
+                    CategoryId = ItemCategory.Id,
+                    Name = ItemName.Trim(),
+                    Code = string.IsNullOrWhiteSpace(ItemCode) ? null : ItemCode.Trim(),
+                    Description = string.IsNullOrWhiteSpace(ItemDescription) ? null : ItemDescription.Trim(),
+                    LowStockThreshold = low,
+                    IsActive = ItemActive,
+                    Version = _editingItemVersion,
+                });
+            }
+            catch (ApiError ex) when (ex.Code == ErrorCodes.ConcurrencyConflict)
+            {
+                // Changed on another PC: show what is saved now and keep the form open.
+                try
+                {
+                    var fresh = await Api.GetItemAsync(id);
+                    EditItem(fresh);
+                    await ReloadItemsAsync();
+                }
+                catch (ApiError) { /* the conflict message is shown */ }
+                throw;
+            }
         }
         else
         {

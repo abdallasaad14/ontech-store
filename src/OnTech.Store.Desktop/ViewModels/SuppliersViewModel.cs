@@ -29,6 +29,8 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
     [ObservableProperty] private string? _address;
     [ObservableProperty] private string? _notes;
     [ObservableProperty] private bool _isActive = true;
+    /// <summary>The Version of the record the form was loaded from; sent back so the server can refuse a stale save (M-1).</summary>
+    private int? _editingVersion;
 
     public string FormTitle => L.T(EditingId is null ? "Add supplier" : "Edit supplier");
     partial void OnEditingIdChanged(int? value) => OnPropertyChanged(nameof(FormTitle));
@@ -50,6 +52,7 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
     {
         if (!CanEdit) return;
         EditingId = null;
+        _editingVersion = null;
         SupplierNumber = null;
         CompanyName = "";
         PhoneNumber = TaxNumber = ContactPerson = Email = Address = Notes = null;
@@ -62,6 +65,7 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
     {
         if (c is null || !CanEdit) return;
         EditingId = c.Id;
+        _editingVersion = c.Version;
         SupplierNumber = c.SupplierNumber?.ToString();
         CompanyName = c.CompanyName;
         PhoneNumber = c.PhoneNumber;
@@ -94,8 +98,19 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
             Address = Clean(Address),
             Notes = Clean(Notes),
             IsActive = IsActive,
+            Version = EditingId is null ? null : _editingVersion,
         };
-        var saved = EditingId is { } id ? await Api.UpdateSupplierAsync(id, req) : await Api.CreateSupplierAsync(req);
+        SupplierDto saved;
+        try
+        {
+            saved = EditingId is { } id ? await Api.UpdateSupplierAsync(id, req) : await Api.CreateSupplierAsync(req);
+        }
+        catch (ApiError ex) when (ex.Code == ErrorCodes.ConcurrencyConflict && EditingId is { } changedId)
+        {
+            // Changed on another PC: show what is saved now, keep the form open, and let the user check and save again.
+            await ReloadEditedAsync(changedId);
+            throw;
+        }
         IsEditing = false;
         await ReloadAsync();
         Selected = Suppliers.FirstOrDefault(c => c.Id == saved.Id);
@@ -113,6 +128,17 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
             await ReloadAsync();
             SuccessMessage = L.T("{0} was disabled.", c.CompanyName);
         });
+    }
+
+    private async Task ReloadEditedAsync(int id)
+    {
+        try
+        {
+            var fresh = await Api.GetSupplierAsync(id);
+            Edit(fresh);
+            await ReloadAsync();
+        }
+        catch (ApiError) { /* the conflict message is shown; the user can reopen the record */ }
     }
 
     private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();

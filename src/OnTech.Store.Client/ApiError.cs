@@ -3,9 +3,12 @@ using System.Net;
 namespace OnTech.Store.Client;
 
 /// <summary>A failed API call, with the server's readable message (ProblemDetails title) ready to show to the user.</summary>
-public sealed class ApiError(HttpStatusCode? status, string message, IReadOnlyList<StockShortage>? shortages = null, Exception? inner = null)
+public sealed class ApiError(HttpStatusCode? status, string message, IReadOnlyList<StockShortage>? shortages = null, Exception? inner = null,
+    string? code = null)
     : Exception(message, inner)
 {
+    /// <summary>The machine-readable "code" extension of the ProblemDetails body (see <c>OnTech.Store.Contracts.ErrorCodes</c>), or null.</summary>
+    public string? Code { get; } = code;
     /// <summary>Null when the server could not be reached at all.</summary>
     public HttpStatusCode? Status { get; } = status;
     public IReadOnlyList<StockShortage> Shortages { get; } = shortages ?? Array.Empty<StockShortage>();
