@@ -60,13 +60,19 @@ if (app.Services.GetRequiredService<JwtSigningKey>().Generated)
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// Swagger stays on in production: it is the API reference for the desktop app and only reachable on the office network.
-if (app.Configuration.GetValue("Swagger:Enabled", true))
+// Swagger only in Development. Swagger:Enabled (env Swagger__Enabled) can force it on or off in any mode.
+if (app.Configuration.GetValue<bool?>("Swagger:Enabled") ?? app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c => c.DocumentTitle = "OnTech Store API");
 }
 
+// No endpoint (an unknown URL, or /swagger while it is off): 404, not the fallback policy's 401.
+app.Use(async (ctx, next) =>
+{
+    if (ctx.GetEndpoint() is null) { ctx.Response.StatusCode = StatusCodes.Status404NotFound; return; }
+    await next(ctx);
+});
 app.UseAuthentication();
 app.UseMiddleware<MustChangePasswordMiddleware>();
 app.UseAuthorization();

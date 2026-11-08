@@ -45,6 +45,8 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
             ["Jwt:SigningKey"] = "test-signing-key-0123456789abcdefghijklmnop",
             ["Seed:AdminUsername"] = AdminUsername,
             ["Seed:AdminPassword"] = AdminPassword,
+            // Swagger is off outside Development; the existing Dashboard_and_swagger_respond test reads it, so tests turn it on.
+            ["Swagger:Enabled"] = "true",
         };
         if (_sqlServer is not null)
         {
