@@ -18,6 +18,8 @@ public sealed class SupplierDto
     /// <summary>Stock-in vouchers from this supplier (not counting cancelled ones).</summary>
     public int StockInCount { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
+    /// <summary>Concurrency token. Send it back in <see cref="SaveSupplierRequest.Version"/> when saving an edit.</summary>
+    public int Version { get; init; }
 
     /// <summary>"3 - Zebra Egypt", for pickers.</summary>
     [JsonIgnore] public string Display => SupplierNumber is { } n ? $"{n} - {CompanyName}" : CompanyName;
@@ -35,4 +37,6 @@ public sealed class SaveSupplierRequest
     [MaxLength(500)] public string? Address { get; set; }
     [MaxLength(1000)] public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
+    /// <summary>On edit: the <see cref="SupplierDto.Version"/> the form was loaded with. A different current value gives 409 ConcurrencyConflict. Null = no check.</summary>
+    public int? Version { get; set; }
 }

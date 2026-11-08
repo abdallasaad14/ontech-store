@@ -490,3 +490,6 @@ audit/build/
 audit/backups/
 *.db.*.bak
 
+
+audit/fix/scratch/
+audit/fix/results/*.trx

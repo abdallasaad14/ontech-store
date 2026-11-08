@@ -17,6 +17,8 @@ public sealed class CustomerDto
     public bool IsActive { get; init; }
     public int OrderCount { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
+    /// <summary>Concurrency token. Send it back in <see cref="SaveCustomerRequest.Version"/> when saving an edit.</summary>
+    public int Version { get; init; }
 
     /// <summary>"12 - Star Medical Center", for pickers.</summary>
     [JsonIgnore] public string Display => CustomerNumber is { } n ? $"{n} - {CompanyName}" : CompanyName;
@@ -34,6 +36,8 @@ public sealed class SaveCustomerRequest
     [MaxLength(500)] public string? Address { get; set; }
     [MaxLength(1000)] public string? Notes { get; set; }
     public bool IsActive { get; set; } = true;
+    /// <summary>On edit: the <see cref="CustomerDto.Version"/> the form was loaded with. A different current value gives 409 ConcurrencyConflict. Null = no check.</summary>
+    public int? Version { get; set; }
 }
 
 /// <summary>Bulk-adds customers, e.g. from the old Excel sheet. Rows whose number already exists are skipped, so the same file can be imported twice safely.</summary>

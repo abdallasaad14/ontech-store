@@ -35,6 +35,8 @@ public sealed class ItemDto
     public bool IsLowStock { get; init; }
     public bool IsActive { get; init; }
     public DateTimeOffset UpdatedAt { get; init; }
+    /// <summary>Concurrency token. Send it back in <see cref="UpdateItemRequest.Version"/> when saving an edit. Stock movements do not change it.</summary>
+    public int Version { get; init; }
 }
 
 public sealed class CreateItemRequest
@@ -56,6 +58,8 @@ public sealed class UpdateItemRequest
     [MaxLength(500)] public string? Description { get; set; }
     [Range(0, 1_000_000)] public int LowStockThreshold { get; set; }
     public bool IsActive { get; set; } = true;
+    /// <summary>The <see cref="ItemDto.Version"/> the form was loaded with. A different current value gives 409 ConcurrencyConflict. Null = no check.</summary>
+    public int? Version { get; set; }
 }
 
 public sealed class StockMovementDto
