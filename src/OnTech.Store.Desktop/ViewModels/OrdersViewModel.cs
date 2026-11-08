@@ -26,15 +26,20 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
 
     public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
 
+    private readonly LatestRequest _requests = new();
+
     private async Task ReloadAsync()
     {
+        // Changing the filter or the page quickly cancels the search still running and drops its late answer.
+        var ticket = _requests.Begin();
         var result = await Api.SearchOrdersAsync(new OrderQuery
         {
             Search = Search,
             WithReceipt = ReceiptFilterIndex switch { 1 => true, 2 => false, _ => null },
             Page = Page,
             PageSize = 50,
-        });
+        }, ticket.Token);
+        if (!ticket.IsCurrent) return;
         var keep = Selected?.Id;
         Orders.Clear();
         foreach (var o in result.Items) Orders.Add(o);

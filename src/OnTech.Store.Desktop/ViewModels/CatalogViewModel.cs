@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -13,6 +14,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
 
     public ObservableCollection<CategoryDto> Categories { get; } = new();
     public ObservableCollection<ItemDto> Items { get; } = new();
+    public bool CanOpenItemCard => ItemCards.CanOpen(Session);
 
     [ObservableProperty] private bool _showDisabled;
     [ObservableProperty] private CategoryDto? _selectedCategory;
@@ -53,13 +55,21 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     [ObservableProperty] private string? _itemDescription;
     [ObservableProperty] private string _itemLowStock = "0";
     [ObservableProperty] private bool _itemActive = true;
+    /// <summary>The Version of the item the form was loaded from (M-1).</summary>
+    private int? _editingItemVersion;
 
     public override Task LoadAsync() => RunAsync(ReloadCategoriesAsync, clearMessages: false);
+
+    private readonly LatestRequest _categoryRequests = new();
+    private readonly LatestRequest _itemRequests = new();
 
     private async Task ReloadCategoriesAsync()
     {
         var keep = SelectedCategory?.Id;
-        var list = await Api.GetCategoriesAsync(ShowDisabled);
+        // Ticking "show disabled" quickly: only the latest list is shown.
+        var ticket = _categoryRequests.Begin();
+        var list = await Api.GetCategoriesAsync(ShowDisabled, ticket.Token);
+        if (!ticket.IsCurrent) return;
         Categories.Clear();
         foreach (var c in list) Categories.Add(c);
         SelectedCategory = Categories.FirstOrDefault(c => c.Id == keep) ?? Categories.FirstOrDefault();
@@ -68,14 +78,12 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     partial void OnShowDisabledChanged(bool value) => _ = RunAsync(ReloadCategoriesAsync);
     partial void OnSelectedCategoryChanged(CategoryDto? value) => _ = RunAsync(ReloadItemsAsync, clearMessages: false);
 
-    private int _itemsVersion;
-
     private async Task ReloadItemsAsync()
     {
-        // Several reloads can overlap (category click + save); only the latest one fills the list.
-        var version = ++_itemsVersion;
-        var list = SelectedCategory is null ? [] : await Api.GetItemsAsync(SelectedCategory.Id, includeInactive: ShowDisabled);
-        if (version != _itemsVersion) return;
+        // Several reloads can overlap (category clicks, save): a new one cancels the old, and only the latest fills the list.
+        var ticket = _itemRequests.Begin();
+        var list = SelectedCategory is null ? [] : await Api.GetItemsAsync(SelectedCategory.Id, includeInactive: ShowDisabled, ct: ticket.Token);
+        if (!ticket.IsCurrent) return;
         Items.Clear();
         foreach (var i in list) Items.Add(i);
     }
@@ -124,6 +132,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     private void NewItem()
     {
         EditingId = null;
+        _editingItemVersion = null;
         ItemCategory = SelectedCategory;
         ItemName = "";
         ItemCode = ItemDescription = null;
@@ -137,6 +146,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     {
         if (i is null) return;
         EditingId = i.Id;
+        _editingItemVersion = i.Version;
         ItemCategory = Categories.FirstOrDefault(c => c.Id == i.CategoryId);
         ItemName = i.Name;
         ItemCode = i.Code;
@@ -194,19 +204,35 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     {
         if (ItemCategory is null) throw new ArgumentException(L.T("Choose the category."));
         if (string.IsNullOrWhiteSpace(ItemName)) throw new ArgumentException(L.T("Enter the item name."));
-        if (!int.TryParse(ItemLowStock?.Trim(), out var low) || low < 0) throw new ArgumentException(L.T("Low stock warning must be 0 or more."));
+        if (!Numbers.TryParseInt(ItemLowStock, out var low) || low < 0) throw new ArgumentException(L.T("Low stock warning must be 0 or more."));
         ItemDto saved;
         if (EditingId is { } id)
         {
-            saved = await Api.UpdateItemAsync(id, new UpdateItemRequest
+            try
             {
-                CategoryId = ItemCategory.Id,
-                Name = ItemName.Trim(),
-                Code = string.IsNullOrWhiteSpace(ItemCode) ? null : ItemCode.Trim(),
-                Description = string.IsNullOrWhiteSpace(ItemDescription) ? null : ItemDescription.Trim(),
-                LowStockThreshold = low,
-                IsActive = ItemActive,
-            });
+                saved = await Api.UpdateItemAsync(id, new UpdateItemRequest
+                {
+                    CategoryId = ItemCategory.Id,
+                    Name = ItemName.Trim(),
+                    Code = string.IsNullOrWhiteSpace(ItemCode) ? null : ItemCode.Trim(),
+                    Description = string.IsNullOrWhiteSpace(ItemDescription) ? null : ItemDescription.Trim(),
+                    LowStockThreshold = low,
+                    IsActive = ItemActive,
+                    Version = _editingItemVersion,
+                });
+            }
+            catch (ApiError ex) when (ex.Code == ErrorCodes.ConcurrencyConflict)
+            {
+                // Changed on another PC: show what is saved now and keep the form open.
+                try
+                {
+                    var fresh = await Api.GetItemAsync(id);
+                    EditItem(fresh);
+                    await ReloadItemsAsync();
+                }
+                catch (ApiError) { /* the conflict message is shown */ }
+                throw;
+            }
         }
         else
         {

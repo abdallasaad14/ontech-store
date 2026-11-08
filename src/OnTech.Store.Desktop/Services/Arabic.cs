@@ -470,6 +470,42 @@ internal static class Arabic
         ["This stock-in is already cancelled."] = "إذن الإضافة هذا ملغى بالفعل.",
         ["Some of this stock has already been taken out, so the stock-in can't be cancelled."] =
             "تم صرف جزء من هذه الكمية بالفعل، لذا لا يمكن إلغاء إذن الإضافة.",
+
+        // ---- Server messages added by the audit fixes (CONTRACTS.md section 3) ----
+        ["This record was changed on another device. It has been reloaded; check it and save again."] =
+            "تم تعديل هذا السجل من جهاز آخر، وتمت إعادة تحميله. راجِع البيانات ثم احفظ مرة أخرى.",
+        ["You must change your password before you continue."] = "يجب تغيير كلمة المرور قبل المتابعة.",
+        ["This number or code is already used. Reload and try again."] = "هذا الرقم أو الكود مستخدم من قبل. أعد تحميل البيانات وحاول مرة أخرى.",
+
+        // ---- Accessibility names (M-9) ----
+        ["Main menu"] = "القائمة الرئيسية",
+        ["Admin menu"] = "قائمة الإدارة",
+
+        // ---- Validation errors from the server, shown per field (M-3). {0} = the field's label below. ----
+        ["{0} is required."] = "{0}: هذا الحقل مطلوب.",
+        ["{0} can be at most {1} characters."] = "{0}: الحد الأقصى {1} حرفًا.",
+        ["{0} must be at least {1} characters."] = "{0}: الحد الأدنى {1} أحرف.",
+        ["{0} is not a valid email address."] = "{0}: عنوان البريد الإلكتروني غير صحيح.",
+        ["{0} must be between {1} and {2}."] = "{0}: يجب أن تكون القيمة بين {1} و{2}.",
+        ["{0} has a value that is not valid."] = "{0}: القيمة المدخلة غير صحيحة.",
+        ["Enter a valid email address, or leave it empty."] = "أدخل بريدًا إلكترونيًا صحيحًا، أو اترك الحقل فارغًا.",
+        // Field labels used in those messages (the others already exist above)
+        ["Name"] = "الاسم",
+        ["Low stock warning"] = "حد التنبيه للرصيد المنخفض",
+        ["Customer"] = "العميل",
+        ["Supplier"] = "المورد",
+        ["Items"] = "الأصناف",
+        ["Issue voucher number"] = "رقم إذن الصرف",
+        ["Receipt voucher number"] = "رقم إذن الإضافة",
+        ["Supplier invoice number"] = "رقم فاتورة المورد",
+        ["Order number"] = "رقم الطلب",
+        ["Reason"] = "السبب",
+        ["Full name"] = "الاسم بالكامل",
+        ["Permissions"] = "الصلاحيات",
+        ["Page"] = "الصفحة",
+        ["Page size"] = "عدد الصفوف في الصفحة",
+        ["Rows"] = "الصفوف",
+        ["Time zone"] = "المنطقة الزمنية",
     };
 
     /// <summary>Messages that carry a name or number: English pattern → Arabic, with $1, $2 for the captured parts.</summary>
@@ -495,6 +531,7 @@ internal static class Arabic
         (P(@"Supplier number (\d+) is already used\."), "رقم المورد $1 مستخدم من قبل."),
         (P(@"'(.+)' is disabled\."), "'$1' موقوف."),
         (P(@"The username '(.+)' is already taken\."), "اسم المستخدم '$1' مستخدم من قبل."),
+        (P(@"Too many wrong passwords\. Wait (\d+) seconds and try again\."), "تم إدخال كلمة مرور خاطئة عدة مرات. انتظر $1 ثانية ثم حاول مرة أخرى."),
         // Customer import, per row
         (P(@"Row (\d+): no company name"), "الصف $1: لا يوجد اسم شركة"),
         (P(@"Row (\d+): company name is longer than 200 characters"), "الصف $1: اسم الشركة أطول من 200 حرف"),

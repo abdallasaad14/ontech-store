@@ -11,10 +11,10 @@ public static class Dialogs
         MessageBox.Show(Owner!, message, title ?? L.T("OnTech Store"), MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No, L.MessageBoxOptions)
         == MessageBoxResult.Yes;
 
-    /// <summary>Asks for one line of text. Returns null if cancelled.</summary>
-    public static string? Prompt(string title, string label, string? initial = null, bool isPassword = false, string? okText = null)
+    /// <summary>Asks for one line of text. Returns null if cancelled. <paramref name="maxLength"/> is the server's limit for that text.</summary>
+    public static string? Prompt(string title, string label, string? initial = null, bool isPassword = false, string? okText = null, int maxLength = 500)
     {
-        var dlg = new PromptWindow(title, label, initial, isPassword, okText ?? L.T("OK")) { Owner = Owner };
+        var dlg = new PromptWindow(title, label, initial, isPassword, okText ?? L.T("OK"), maxLength) { Owner = Owner };
         return dlg.ShowDialog() == true ? dlg.Value : null;
     }
 }

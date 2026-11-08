@@ -14,7 +14,7 @@ namespace OnTech.Store.UITests;
 
 /// <summary>
 /// Starts the real OnTechStore.exe (Debug build) against the audit server on port 5081 and drives it like a user.
-/// AutomationId first (the app has none, see report), then Name / ControlType.
+/// Controls are found by their AutomationId (<Screen>_<Control>, M-9); Name / ControlType only for texts.
 /// </summary>
 public sealed class AppDriver : IDisposable
 {
@@ -77,6 +77,17 @@ public sealed class AppDriver : IDisposable
         return Retry.WhileNull(() => root.FindFirstDescendant(cond), TimeSpan.FromSeconds(seconds), TimeSpan.FromMilliseconds(200)).Result;
     }
 
+    /// <summary>A control by its AutomationId, e.g. "NewOrder_SaveButton".</summary>
+    public AutomationElement ById(AutomationElement root, string id, int seconds = 10)
+    {
+        var e = Retry.WhileNull(() => root.FindFirstDescendant(Cf.ByAutomationId(id)), TimeSpan.FromSeconds(seconds), TimeSpan.FromMilliseconds(200)).Result;
+        return e ?? throw new InvalidOperationException($"'{id}' not found in '{root.Name}'");
+    }
+
+    public TextBox Box(AutomationElement root, string id) => ById(root, id).AsTextBox();
+    public ComboBox Combo(AutomationElement root, string id) => ById(root, id).AsComboBox();
+    public Button ButtonById(AutomationElement root, string id) => ById(root, id).AsButton();
+
     public Button Button(AutomationElement root, string name) => Find(root, name, ControlType.Button).AsButton();
     public TextBox[] Edits(AutomationElement root) => root.FindAllDescendants(Cf.ByControlType(ControlType.Edit)).Select(e => e.AsTextBox()).ToArray();
     public ComboBox[] Combos(AutomationElement root) => root.FindAllDescendants(Cf.ByControlType(ControlType.ComboBox)).Select(e => e.AsComboBox()).ToArray();
@@ -100,19 +111,26 @@ public sealed class AppDriver : IDisposable
     public Window SignIn(string user, string password)
     {
         var login = WaitWindow("Sign in");
-        var edits = Edits(login);
-        // [0] username, PasswordBox is not an Edit in UIA, server box only when editing
-        Type(edits[0], user);
-        var pwd = login.FindFirstDescendant(Cf.ByAutomationId("PasswordBox")).AsTextBox();
+        Type(Box(login, "Login_UsernameBox"), user);
+        var pwd = ById(login, "Login_PasswordBox");
         pwd.Focus(); Keyboard.Type(password);
-        Button(login, "Sign in").Invoke();
+        ButtonById(login, "Login_SignInButton").Invoke();
         return WaitMain();
     }
 
+    /// <summary>Opens a page from the menu. <paramref name="page"/> is the English title; the item is found by its id Shell_Nav_&lt;Page&gt;.</summary>
     public void Menu(Window main, string page)
     {
-        // Menu ListItems have no name of their own (UIA name = the record's ToString); click the visible title text.
-        Find(main, page, ControlType.Text).Click();
+        var id = "Shell_Nav_" + page switch
+        {
+            "New Order" => "NewOrder",
+            "Stock In" => "StockIn",
+            "Orders Log" => "Orders",
+            "Stock In Log" => "StockIns",
+            "Items & Categories" => "Catalog",
+            _ => page,
+        };
+        ById(main, id).AsListBoxItem().Select();
         Wait.UntilInputIsProcessed();
     }
 
