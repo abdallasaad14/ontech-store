@@ -60,10 +60,16 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
 
     public override Task LoadAsync() => RunAsync(ReloadCategoriesAsync, clearMessages: false);
 
+    private readonly LatestRequest _categoryRequests = new();
+    private readonly LatestRequest _itemRequests = new();
+
     private async Task ReloadCategoriesAsync()
     {
         var keep = SelectedCategory?.Id;
-        var list = await Api.GetCategoriesAsync(ShowDisabled);
+        // Ticking "show disabled" quickly: only the latest list is shown.
+        var ticket = _categoryRequests.Begin();
+        var list = await Api.GetCategoriesAsync(ShowDisabled, ticket.Token);
+        if (!ticket.IsCurrent) return;
         Categories.Clear();
         foreach (var c in list) Categories.Add(c);
         SelectedCategory = Categories.FirstOrDefault(c => c.Id == keep) ?? Categories.FirstOrDefault();
@@ -72,14 +78,12 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     partial void OnShowDisabledChanged(bool value) => _ = RunAsync(ReloadCategoriesAsync);
     partial void OnSelectedCategoryChanged(CategoryDto? value) => _ = RunAsync(ReloadItemsAsync, clearMessages: false);
 
-    private int _itemsVersion;
-
     private async Task ReloadItemsAsync()
     {
-        // Several reloads can overlap (category click + save); only the latest one fills the list.
-        var version = ++_itemsVersion;
-        var list = SelectedCategory is null ? [] : await Api.GetItemsAsync(SelectedCategory.Id, includeInactive: ShowDisabled);
-        if (version != _itemsVersion) return;
+        // Several reloads can overlap (category clicks, save): a new one cancels the old, and only the latest fills the list.
+        var ticket = _itemRequests.Begin();
+        var list = SelectedCategory is null ? [] : await Api.GetItemsAsync(SelectedCategory.Id, includeInactive: ShowDisabled, ct: ticket.Token);
+        if (!ticket.IsCurrent) return;
         Items.Clear();
         foreach (var i in list) Items.Add(i);
     }

@@ -10,6 +10,7 @@ public abstract partial class ViewModelBase : ObservableObject
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string? _errorMessage;
     [ObservableProperty] private string? _successMessage;
+    private int _busyCount;
 
     /// <summary>Runs a server call: shows the busy state, and turns failures into <see cref="ErrorMessage"/>.</summary>
     protected async Task<bool> RunAsync(Func<Task> work, bool clearMessages = true)
@@ -19,11 +20,17 @@ public abstract partial class ViewModelBase : ObservableObject
             ErrorMessage = null;
             SuccessMessage = null;
         }
+        _busyCount++;
         IsBusy = true;
         try
         {
             await work();
             return true;
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer load replaced this one (L-8): nothing to tell the user.
+            return false;
         }
         catch (ApiError ex)
         {
@@ -44,7 +51,8 @@ public abstract partial class ViewModelBase : ObservableObject
         }
         finally
         {
-            IsBusy = false;
+            // Overlapping loads: busy until the last one ends.
+            if (--_busyCount == 0) IsBusy = false;
         }
     }
 

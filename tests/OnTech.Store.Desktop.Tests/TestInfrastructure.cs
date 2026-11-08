@@ -28,6 +28,12 @@ public sealed class FakeServer : HttpMessageHandler
     public JsonElement LastBody(string method) =>
         JsonDocument.Parse(Calls.Last(c => c.Method == method && c.Body is not null).Body!).RootElement;
 
+    private int _cancelled;
+    /// <summary>Requests whose caller had cancelled by the time the answer was ready.</summary>
+    public int Cancelled => _cancelled;
+    /// <summary>Deliver a late answer even when the caller cancelled (a server that answers anyway).</summary>
+    public bool IgnoreCancellation { get; set; }
+
     /// <summary>Answers requests no route matches (default: 404).</summary>
     public Func<HttpRequestMessage, Task<HttpResponseMessage>>? Fallback { get; set; }
 
@@ -64,7 +70,8 @@ public sealed class FakeServer : HttpMessageHandler
         if (!_routes.TryGetValue(key, out var answer))
             return Fallback is { } fallback ? await fallback(request) : Problem(HttpStatusCode.NotFound, "Not Found");
         var response = await answer(request);
-        ct.ThrowIfCancellationRequested();
+        if (ct.IsCancellationRequested) Interlocked.Increment(ref _cancelled);
+        if (!IgnoreCancellation) ct.ThrowIfCancellationRequested();
         return response;
     }
 }
