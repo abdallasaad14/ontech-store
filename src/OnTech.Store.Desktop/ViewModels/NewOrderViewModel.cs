@@ -28,6 +28,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
 
     public int? PreselectItemId { get; set; }
     public bool CanAddCustomer => Session.Can(Permission.ManageCustomers);
+    public bool CanOpenItemCard => ItemCards.CanOpen(Session);
 
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(AvailableHint), nameof(Summary), nameof(HasSummary))]
     private CategoryDto? _selectedCategory;

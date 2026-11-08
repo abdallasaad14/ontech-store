@@ -18,22 +18,39 @@ public sealed partial class ShellViewModel : ObservableObject
     public ShellViewModel(Session session, Page startPage = Page.Home)
     {
         _session = session;
-        Add(MainMenu, Page.Home, "Home", "\uE80F", null);
-        Add(MainMenu, Page.NewOrder, "New Order", "\uE7BF", Permission.CreateOrders);
-        Add(MainMenu, Page.StockIn, "Stock In", "\uE896", Permission.AddStock);
-        Add(MainMenu, Page.Customers, "Customers", "\uE716", null);
-        Add(MainMenu, Page.Suppliers, "Suppliers", "\uE7B8", null);
-        Add(MainMenu, Page.Orders, "Orders Log", "\uE8A5", Permission.ViewOrders);
-        Add(MainMenu, Page.StockIns, "Stock In Log", "\uE81C", Permission.ViewOrders);
-        Add(AdminMenu, Page.Catalog, "Items & Categories", "\uE8F1", Permission.ManageCatalog);
-        Add(AdminMenu, Page.Users, "Users", "\uE77B", Permission.ManageUsers);
+        Add(MainMenu, Page.Home, "Home", "\uE80F");
+        Add(MainMenu, Page.NewOrder, "New Order", "\uE7BF");
+        Add(MainMenu, Page.StockIn, "Stock In", "\uE896");
+        Add(MainMenu, Page.Customers, "Customers", "\uE716");
+        Add(MainMenu, Page.Suppliers, "Suppliers", "\uE7B8");
+        Add(MainMenu, Page.Orders, "Orders Log", "\uE8A5");
+        Add(MainMenu, Page.StockIns, "Stock In Log", "\uE81C");
+        Add(AdminMenu, Page.Catalog, "Items & Categories", "\uE8F1");
+        Add(AdminMenu, Page.Users, "Users", "\uE77B");
         Navigate(MainMenu.Concat(AdminMenu).Any(i => i.Page == startPage) ? startPage : Page.Home);
     }
 
-    private void Add(ObservableCollection<NavItem> menu, Page page, string title, string glyph, Permission? needs)
+    private void Add(ObservableCollection<NavItem> menu, Page page, string title, string glyph)
     {
-        if (needs is null || _session.Can(needs.Value)) menu.Add(new NavItem(page, L.T(title), glyph));
+        if (CanOpen(_session, page)) menu.Add(new NavItem(page, L.T(title), glyph));
     }
+
+    /// <summary>
+    /// A page is in the menu only when the user may read everything it loads (CONTRACTS.md section 5, <see cref="ReadAccess"/>),
+    /// so no page opens and then fails with "You don't have permission".
+    /// </summary>
+    public static bool CanOpen(Session session, Page page) => page switch
+    {
+        Page.Home => true, // without ViewStock it shows only the actions the user may do
+        Page.NewOrder => session.Can(Permission.CreateOrders),   // catalog + customers: both readable with CreateOrders
+        Page.StockIn => session.Can(Permission.AddStock),        // catalog + suppliers: both readable with AddStock
+        Page.Customers => session.CanAny(ReadAccess.Customers),
+        Page.Suppliers => session.CanAny(ReadAccess.Suppliers),
+        Page.Orders or Page.StockIns => session.Can(Permission.ViewOrders),
+        Page.Catalog => session.Can(Permission.ManageCatalog),
+        Page.Users => session.Can(Permission.ManageUsers),
+        _ => false,
+    };
 
     public ObservableCollection<NavItem> MainMenu { get; } = new();
     public ObservableCollection<NavItem> AdminMenu { get; } = new();

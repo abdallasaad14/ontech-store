@@ -14,6 +14,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
 
     public ObservableCollection<CategoryDto> Categories { get; } = new();
     public ObservableCollection<ItemDto> Items { get; } = new();
+    public bool CanOpenItemCard => ItemCards.CanOpen(Session);
 
     [ObservableProperty] private bool _showDisabled;
     [ObservableProperty] private CategoryDto? _selectedCategory;

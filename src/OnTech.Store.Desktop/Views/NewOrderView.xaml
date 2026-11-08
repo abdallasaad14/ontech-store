@@ -43,7 +43,8 @@
                             </ComboBox>
                             <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource HasValueToVisibility}}">
                                 <Button DockPanel.Dock="Right" Content="{l:T 'Item card'}" Style="{StaticResource LinkButton}" FontSize="12" Margin="10,0,0,0"
-                                        Command="{Binding OpenCardCommand}" ToolTip="{l:T 'Every movement of this item in and out'}"/>
+                                        Command="{Binding OpenCardCommand}" ToolTip="{l:T 'Every movement of this item in and out'}"
+                                        Visibility="{Binding CanOpenItemCard, Converter={StaticResource BoolToVisibility}}"/>
                                 <TextBlock Style="{StaticResource Hint}" Text="{Binding AvailableHint}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                             </DockPanel>
                         </StackPanel>

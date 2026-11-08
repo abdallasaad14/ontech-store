@@ -28,6 +28,9 @@ public sealed class FakeServer : HttpMessageHandler
     public JsonElement LastBody(string method) =>
         JsonDocument.Parse(Calls.Last(c => c.Method == method && c.Body is not null).Body!).RootElement;
 
+    /// <summary>Answers requests no route matches (default: 404).</summary>
+    public Func<HttpRequestMessage, Task<HttpResponseMessage>>? Fallback { get; set; }
+
     public FakeServer On(string method, string path, Func<HttpRequestMessage, Task<HttpResponseMessage>> answer)
     {
         _routes[method.ToUpperInvariant() + " " + path.TrimStart('/')] = answer;
@@ -59,7 +62,7 @@ public sealed class FakeServer : HttpMessageHandler
         Calls.Enqueue((request.Method.Method, request.RequestUri!.AbsolutePath.TrimStart('/'), body));
         var key = request.Method.Method + " " + request.RequestUri!.AbsolutePath.TrimStart('/');
         if (!_routes.TryGetValue(key, out var answer))
-            return Problem(HttpStatusCode.NotFound, "Not Found");
+            return Fallback is { } fallback ? await fallback(request) : Problem(HttpStatusCode.NotFound, "Not Found");
         var response = await answer(request);
         ct.ThrowIfCancellationRequested();
         return response;

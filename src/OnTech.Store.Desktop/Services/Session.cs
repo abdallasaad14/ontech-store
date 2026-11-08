@@ -14,6 +14,9 @@ public sealed class Session(StoreApiClient api, UserDto user)
 
     public bool Can(Permission permission) => User.IsAdmin || (User.Permissions & permission) == permission;
 
+    /// <summary>True when the user holds at least one of the bits, e.g. a <see cref="ReadAccess"/> set (admins hold all).</summary>
+    public bool CanAny(Permission anyOf) => User.IsAdmin || User.Permissions.HasAny(anyOf);
+
     public void Update(UserDto user) => User = user;
 
     public void NotifyExpired() => Expired?.Invoke(this, EventArgs.Empty);

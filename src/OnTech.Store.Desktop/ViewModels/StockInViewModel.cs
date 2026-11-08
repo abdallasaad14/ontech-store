@@ -19,6 +19,7 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
     public ObservableCollection<OrderLineViewModel> Lines { get; } = new();
 
     public bool CanAddSupplier => Session.Can(Permission.ManageSuppliers);
+    public bool CanOpenItemCard => ItemCards.CanOpen(Session);
 
     [ObservableProperty] private CategoryDto? _selectedCategory;
 

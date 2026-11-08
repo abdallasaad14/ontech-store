@@ -85,6 +85,7 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
                                             <Button Content="{l:T 'Item card'}" Style="{StaticResource RowLink}"
+                                                    Visibility="{Binding DataContext.CanOpenItemCard, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
                                                     Command="{Binding DataContext.OpenCardCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                             <Button Content="{l:T 'Edit'}" Style="{StaticResource RowLink}"
                                                     Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
