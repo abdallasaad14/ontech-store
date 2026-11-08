@@ -79,7 +79,7 @@ Note: machine-wide `ASPNETCORE_ENVIRONMENT=Production` also applies to `dotnet r
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\install-service.ps1
 ```
-The script publishes to `C:\OnTechStore\Server`, sets `Jwt__SigningKey` (a new random key, unless one is already set on the machine) and `ASPNETCORE_ENVIRONMENT=Production` on the service only, and starts it. To use the key from step 3 instead, run it after step 3; it keeps an existing machine key. Stop/start later with `Stop-Service OnTechStoreServer` / `Start-Service OnTechStoreServer`. Do not run the service and the hidden `dotnet run` at the same time: both use port 5080.
+The script publishes to `C:\OnTechStore\Server`, sets `Jwt__SigningKey` (a new random key, unless one is already set on the machine) and `ASPNETCORE_ENVIRONMENT=Production` on the service only, and starts it. To use the key from step 3 instead, run it after step 3; it uses an existing machine key, and on a re-run it keeps the service's key. For a brand-new database with no admin, add `-FirstAdminPassword '<temporary password>'` once, then re-run without it after the first sign-in. The service's variables live in `HKLM:\SYSTEM\CurrentControlSet\Services\OnTechStoreServer\Environment`. Stop/start later with `Stop-Service OnTechStoreServer` / `Start-Service OnTechStoreServer`. Do not run the service and the hidden `dotnet run` at the same time: both use port 5080.
 
 ## 5. Check
 
