@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using OnTech.Store.Api.Data;
 using OnTech.Store.Contracts;
 
@@ -57,12 +58,35 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
             if (v is not null) builder.UseSetting(k, v);
     }
 
+    /// <summary>
+    /// The seeded admin always has MustChangePassword (L-5), and the server refuses a flagged user (M-2).
+    /// The tests' admin counts as one who already changed the password, so clear the flag once the database exists.
+    /// </summary>
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var host = base.CreateHost(builder);
+        using var scope = host.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
+        var normalized = AdminUsername.ToUpperInvariant();
+        db.Users.Where(u => u.NormalizedUsername == normalized && u.MustChangePassword)
+            .ExecuteUpdate(u => u.SetProperty(x => x.MustChangePassword, false));
+        return host;
+    }
+
+    /// <summary>
+    /// A client signed in and ready to use the API. A user created with MustChangePassword counts as one who already changed it
+    /// (the flag is cleared in the database), like the desktop app does before it opens the main window.
+    /// To test the flag itself, sign in by hand with CreateClient() and POST api/auth/login.
+    /// </summary>
     public async Task<HttpClient> LoginAsync(string username = AdminUsername, string password = AdminPassword)
     {
         var client = CreateClient();
         var res = await client.PostAsJsonAsync("/api/auth/login", new LoginRequest { Username = username, Password = password }, Json);
         res.EnsureSuccessStatusCode();
         var login = (await res.Content.ReadFromJsonAsync<LoginResponse>(Json))!;
+        if (login.User.MustChangePassword)
+            WithDb(db => db.Users.Where(u => u.Id == login.User.Id)
+                .ExecuteUpdate(u => u.SetProperty(x => x.MustChangePassword, false)));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);
         return client;
     }

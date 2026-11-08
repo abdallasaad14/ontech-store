@@ -68,6 +68,7 @@ if (app.Configuration.GetValue("Swagger:Enabled", true))
 }
 
 app.UseAuthentication();
+app.UseMiddleware<MustChangePasswordMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 

@@ -53,7 +53,8 @@ public static class AuthSetup
                             new Claim("name", user.FullName),
                             new Claim(StoreClaims.IsAdmin, user.IsAdmin ? "true" : "false"),
                             new Claim(StoreClaims.Permissions, ((int)user.EffectivePermissions).ToString()),
-                        }, JwtBearerDefaults.AuthenticationScheme, "name", ClaimTypes.Role);
+                            new Claim(StoreClaims.MustChangePassword, user.MustChangePassword ? "true" : "false"),
+                        },JwtBearerDefaults.AuthenticationScheme, "name", ClaimTypes.Role);
                         ctx.Principal = new ClaimsPrincipal(identity);
                     }
                 };

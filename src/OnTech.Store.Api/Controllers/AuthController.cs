@@ -34,6 +34,7 @@ public class AuthController(StoreDbContext db, PasswordService passwords, TokenS
     }
 
     /// <summary>The signed-in user, with their current permissions.</summary>
+    [AllowWhileMustChangePassword]
     [HttpGet("me")]
     public async Task<ActionResult<UserDto>> Me(CancellationToken ct)
     {
@@ -41,6 +42,8 @@ public class AuthController(StoreDbContext db, PasswordService passwords, TokenS
         return user.ToDto();
     }
 
+    /// <summary>Changes the signed-in user's password and clears the must-change flag.</summary>
+    [AllowWhileMustChangePassword]
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword(ChangePasswordRequest req, CancellationToken ct)
     {
