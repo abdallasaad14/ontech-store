@@ -6,7 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- H-1: Microsoft.Data.SqlClient needs real cultures; invariant mode crashes it at startup ("en-us is an invalid culture identifier"). -->
+    <InvariantGlobalization>false</InvariantGlobalization>
     <!-- Workstation GC: a few PCs don't need a heap per CPU core. Under a 10-PC stress test this keeps the server near 350 MB instead of 900 MB. -->
     <ServerGarbageCollection>false</ServerGarbageCollection>
     <Version>1.0.0</Version>
