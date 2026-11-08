@@ -36,6 +36,7 @@ public abstract partial class ViewModelBase : ObservableObject
         {
             // MustChangePassword opens the change-password window instead of showing a "no permission" message.
             ErrorMessage = ex.Code == ErrorCodes.MustChangePassword ? null : L.Error(ex);
+            Log.Warn($"{GetType().Name}: API error {(int?)ex.Status} {ex.Code}: {ex.Message}", ex.IsConnectionError ? ex.InnerException : null);
             OnApiError(ex);
             return false;
         }
@@ -46,6 +47,7 @@ public abstract partial class ViewModelBase : ObservableObject
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {
+            Log.Error($"{GetType().Name}: unexpected error", ex);
             ErrorMessage = L.T("Unexpected error:") + " " + ex.Message;
             return false;
         }

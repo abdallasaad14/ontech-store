@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OnTech.Store.Client;
+using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
@@ -59,7 +60,18 @@ public sealed partial class LoginViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
             throw new ArgumentException(L.T("Enter your username and password."));
         var api = StoreApiClient.Create(ServerUrl);
-        var user = await api.LoginAsync(Username, Password);
+        UserDto user;
+        try
+        {
+            user = await api.LoginAsync(Username, Password);
+        }
+        catch (ApiError ex)
+        {
+            // Never the password: only who, where and why.
+            Log.Warn($"Sign-in failed for '{Username.Trim()}' at {api.ServerUrl}: {(int?)ex.Status} {ex.Code} {ex.Message}");
+            throw;
+        }
+        Log.Info($"Signed in: {user.Username} at {api.ServerUrl}");
         ServerUrl = api.ServerUrl!.ToString().TrimEnd('/');
         _settings.ServerUrl = ServerUrl;
         _settings.LastUsername = user.Username;
