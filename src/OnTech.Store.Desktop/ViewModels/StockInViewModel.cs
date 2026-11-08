@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -54,7 +55,7 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
         }
     }
 
-    private bool TryQuantity(out int qty) => int.TryParse(QuantityText?.Trim(), out qty) && qty > 0;
+    private bool TryQuantity(out int qty) => Numbers.TryParseInt(QuantityText, out qty) && qty > 0;
 
     public override Task LoadAsync() => RunAsync(async () =>
     {
@@ -119,10 +120,11 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
     private void FilterSuppliers()
     {
         var text = SupplierSearch?.Trim() ?? "";
+        var number = Numbers.NormalizeDigits(text);
         var keep = SelectedSupplier;
         var matches = text.Length == 0
             ? _allSuppliers
-            : _allSuppliers.Where(s => s.SupplierNumber?.ToString() == text || s.CompanyName.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
+            : _allSuppliers.Where(s => s.SupplierNumber?.ToString() == number || s.CompanyName.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
         Suppliers.Clear();
         foreach (var s in matches) Suppliers.Add(s);
         if (matches.Count == 1) SelectedSupplier = matches[0];
@@ -162,8 +164,8 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
         var saved = await Api.CreateStockInAsync(new CreateStockInRequest
         {
             SupplierId = SelectedSupplier.Id,
-            VoucherNumber = VoucherNumber.Trim(),
-            SupplierInvoiceNumber = string.IsNullOrWhiteSpace(SupplierInvoiceNumber) ? null : SupplierInvoiceNumber.Trim(),
+            VoucherNumber = Numbers.NormalizeDigits(VoucherNumber).Trim(),
+            SupplierInvoiceNumber = string.IsNullOrWhiteSpace(SupplierInvoiceNumber) ? null : Numbers.NormalizeDigits(SupplierInvoiceNumber).Trim(),
             Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(),
             Lines = Lines.Select(l => new OrderLineRequest { ItemId = l.Item.Id, Quantity = l.Quantity }).ToList(),
         });

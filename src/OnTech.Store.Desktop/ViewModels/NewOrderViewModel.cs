@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -79,7 +80,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         return item.Quantity - inLines - current;
     }
 
-    private bool TryQuantity(out int qty) => int.TryParse(QuantityText?.Trim(), out qty) && qty > 0;
+    private bool TryQuantity(out int qty) => Numbers.TryParseInt(QuantityText, out qty) && qty > 0;
 
     public override async Task LoadAsync()
     {
@@ -169,10 +170,11 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     private void FilterCustomers()
     {
         var text = CustomerSearch?.Trim() ?? "";
+        var number = Numbers.NormalizeDigits(text);
         var keep = SelectedCustomer;
         var matches = text.Length == 0
             ? _allCustomers
-            : _allCustomers.Where(c => c.CustomerNumber?.ToString() == text || c.CompanyName.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
+            : _allCustomers.Where(c => c.CustomerNumber?.ToString() == number || c.CompanyName.Contains(text, StringComparison.OrdinalIgnoreCase)).ToList();
         Customers.Clear();
         foreach (var c in matches) Customers.Add(c);
         if (matches.Count == 1) SelectedCustomer = matches[0];
@@ -213,9 +215,9 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         var order = await Api.CreateOrderAsync(new CreateOrderRequest
         {
             CustomerId = SelectedCustomer.Id,
-            IssueVoucherNumber = IssueVoucherNumber.Trim(),
+            IssueVoucherNumber = Numbers.NormalizeDigits(IssueVoucherNumber).Trim(),
             WithReceipt = WithReceipt,
-            ReceiptNumber = WithReceipt ? ReceiptNumber!.Trim() : null,
+            ReceiptNumber = WithReceipt ? Numbers.NormalizeDigits(ReceiptNumber).Trim() : null,
             Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(),
             Lines = Lines.Select(l => new OrderLineRequest { ItemId = l.Item.Id, Quantity = l.Quantity }).ToList(),
         });

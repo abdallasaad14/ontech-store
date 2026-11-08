@@ -82,7 +82,7 @@ public sealed partial class CustomersViewModel(Session session) : PageViewModel(
         if (string.IsNullOrWhiteSpace(CompanyName)) throw new ArgumentException(L.T("Company name is required."));
         int? number = null;
         if (Clean(CustomerNumber) is { } numberText)
-            number = int.TryParse(numberText, out var n) && n > 0 ? n : throw new ArgumentException(L.T("Customer number must be a whole number, 1 or more."));
+            number = Numbers.TryParseInt(numberText, out var n) && n > 0 ? n : throw new ArgumentException(L.T("Customer number must be a whole number, 1 or more."));
         var req = new SaveCustomerRequest
         {
             CustomerNumber = number,

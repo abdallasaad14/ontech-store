@@ -31,7 +31,7 @@ public sealed class StoreApiClient
     /// <summary>Accepts "192.168.1.10", "pc-name:5080" or a full URL, and fills in http:// and the default port 5080.</summary>
     public static Uri NormalizeServerUrl(string serverUrl)
     {
-        var text = serverUrl.Trim();
+        var text = Numbers.NormalizeDigits(serverUrl).Trim();
         if (text.Length == 0) throw new ArgumentException("Enter the server address.");
         var hasScheme = text.Contains("://", StringComparison.Ordinal);
         if (!hasScheme) text = "http://" + text;
@@ -44,8 +44,8 @@ public sealed class StoreApiClient
 
     private static bool HasExplicitPort(string text)
     {
-        var host = text.Trim().Split('/')[0];
-        return host.Contains(':') && int.TryParse(host[(host.LastIndexOf(':') + 1)..], out _);
+        var host = Numbers.NormalizeDigits(text).Trim().Split('/')[0];
+        return host.Contains(':') && Numbers.TryParseInt(host[(host.LastIndexOf(':') + 1)..], out _);
     }
 
     public Uri? ServerUrl => _http.BaseAddress;

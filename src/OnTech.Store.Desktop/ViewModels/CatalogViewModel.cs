@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -194,7 +195,7 @@ public sealed partial class CatalogViewModel(Session session) : PageViewModel(se
     {
         if (ItemCategory is null) throw new ArgumentException(L.T("Choose the category."));
         if (string.IsNullOrWhiteSpace(ItemName)) throw new ArgumentException(L.T("Enter the item name."));
-        if (!int.TryParse(ItemLowStock?.Trim(), out var low) || low < 0) throw new ArgumentException(L.T("Low stock warning must be 0 or more."));
+        if (!Numbers.TryParseInt(ItemLowStock, out var low) || low < 0) throw new ArgumentException(L.T("Low stock warning must be 0 or more."));
         ItemDto saved;
         if (EditingId is { } id)
         {

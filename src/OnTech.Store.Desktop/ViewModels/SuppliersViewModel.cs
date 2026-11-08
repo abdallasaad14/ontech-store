@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -81,7 +82,7 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
         if (string.IsNullOrWhiteSpace(CompanyName)) throw new ArgumentException(L.T("Company name is required."));
         int? number = null;
         if (Clean(SupplierNumber) is { } numberText)
-            number = int.TryParse(numberText, out var n) && n > 0 ? n : throw new ArgumentException(L.T("Supplier number must be a whole number, 1 or more."));
+            number = Numbers.TryParseInt(numberText, out var n) && n > 0 ? n : throw new ArgumentException(L.T("Supplier number must be a whole number, 1 or more."));
         var req = new SaveSupplierRequest
         {
             SupplierNumber = number,
