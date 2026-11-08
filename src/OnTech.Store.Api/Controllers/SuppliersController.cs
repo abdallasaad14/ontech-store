@@ -15,6 +15,7 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Suppliers for pickers and the suppliers list. Search matches supplier number, company name, phone, tax number or contact.</summary>
     [HttpGet]
+    [HasAnyPermission(ReadAccess.Suppliers)]
     public async Task<IReadOnlyList<SupplierDto>> List([FromQuery] string? search, [FromQuery] bool includeInactive = false, CancellationToken ct = default)
     {
         var q = db.Suppliers.AsNoTracking().Where(s => includeInactive || s.IsActive);
@@ -30,6 +31,7 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [HasAnyPermission(ReadAccess.Suppliers)]
     public async Task<ActionResult<SupplierDto>> Get(int id, CancellationToken ct) =>
         await Project(db.Suppliers.Where(s => s.Id == id)).FirstOrDefaultAsync(ct) ?? throw ApiException.NotFound("Supplier");
 
@@ -46,7 +48,7 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
             Apply(s, req);
             s.SupplierNumber ??= (await db.Suppliers.MaxAsync(x => x.SupplierNumber, ct) ?? 0) + 1;
             db.Suppliers.Add(s);
-            return await db.SaveChangesAsync(ct);
+            return await db.SaveOrConflictAsync(ct, () => $"Supplier number {s.SupplierNumber} is already used.");
         }, ct);
         return CreatedAtAction(nameof(Get), new { id = s.Id }, await Project(db.Suppliers.Where(x => x.Id == s.Id)).FirstAsync(ct));
     }
@@ -55,12 +57,18 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     [HasPermission(Permission.ManageSuppliers)]
     public async Task<ActionResult<SupplierDto>> Update(int id, SaveSupplierRequest req, CancellationToken ct)
     {
-        var s = await db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Supplier");
-        await EnsureUnique(req.CompanyName.Trim(), req.TaxNumber.Clean(), req.SupplierNumber, id, ct);
-        var oldNumber = s.SupplierNumber;
-        Apply(s, req);
-        s.SupplierNumber ??= oldNumber;
-        await db.SaveChangesAsync(ct);
+        // Inside the gate, like Create, so two PCs setting the same number can't both pass the check.
+        await NumberingGate.RunAsync(async () =>
+        {
+            var s = await db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Supplier");
+            ApiException.ThrowIfStale(req.Version, s.Version);
+            await EnsureUnique(req.CompanyName.Trim(), req.TaxNumber.Clean(), req.SupplierNumber, id, ct);
+            var oldNumber = s.SupplierNumber;
+            Apply(s, req);
+            s.SupplierNumber ??= oldNumber;
+            s.Version++;
+            return await db.SaveOrConflictAsync(ct, () => $"Supplier number {s.SupplierNumber} is already used.");
+        }, ct);
         return await Project(db.Suppliers.Where(x => x.Id == id)).FirstAsync(ct);
     }
 
@@ -71,7 +79,8 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     {
         var s = await db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Supplier");
         s.IsActive = false;
-        await db.SaveChangesAsync(ct);
+        s.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 
@@ -92,12 +101,12 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     private async Task EnsureUnique(string name, string? taxNumber, int? number, int? exceptId, CancellationToken ct)
     {
         if (number is not null && await db.Suppliers.AnyAsync(s => s.SupplierNumber == number && s.Id != exceptId, ct))
-            throw ApiException.Conflict($"Supplier number {number} is already used.");
+            throw ApiException.Duplicate($"Supplier number {number} is already used.");
         var lower = name.ToLower();
         if (await db.Suppliers.AnyAsync(s => s.CompanyName.ToLower() == lower && s.Id != exceptId, ct))
-            throw ApiException.Conflict($"A supplier named '{name}' already exists.");
+            throw ApiException.Duplicate($"A supplier named '{name}' already exists.");
         if (taxNumber is not null && await db.Suppliers.AnyAsync(s => s.TaxNumber == taxNumber && s.Id != exceptId, ct))
-            throw ApiException.Conflict($"A supplier with tax number '{taxNumber}' already exists.");
+            throw ApiException.Duplicate($"A supplier with tax number '{taxNumber}' already exists.");
     }
 
     private static IQueryable<SupplierDto> Project(IQueryable<Supplier> q) => q.Select(s => new SupplierDto
@@ -114,5 +123,6 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
         IsActive = s.IsActive,
         StockInCount = s.StockIns.Count(x => x.Status == OrderStatus.Completed),
         CreatedAt = new DateTimeOffset(s.CreatedAt, TimeSpan.Zero),
+        Version = s.Version,
     });
 }

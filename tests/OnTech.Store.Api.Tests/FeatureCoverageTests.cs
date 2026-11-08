@@ -39,8 +39,8 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
 
     public static TheoryData<Permission, string, string> GuardedEndpoints => new()
     {
-        { Permission.ViewStock, "GET", "/api/items" },
-        { Permission.ViewStock, "GET", "/api/categories" },
+        { ReadAccess.Catalog, "GET", "/api/items" },
+        { ReadAccess.Catalog, "GET", "/api/categories" },
         { Permission.ViewStock, "GET", "/api/dashboard/summary" },
         { Permission.ViewStock, "GET", "/api/stock-movements" },
         { Permission.ViewStock, "GET", "/api/items/{item}/card" },

@@ -14,7 +14,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Items with their available quantities. Filter by category for the New Order screen.</summary>
     [HttpGet]
-    [HasPermission(Permission.ViewStock)]
+    [HasAnyPermission(ReadAccess.Catalog)]
     public async Task<IReadOnlyList<ItemDto>> List(
         [FromQuery] int? categoryId, [FromQuery] string? search,
         [FromQuery] bool includeInactive = false, [FromQuery] bool lowStockOnly = false, [FromQuery] bool inStockOnly = false,
@@ -33,7 +33,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [HasPermission(Permission.ViewStock)]
+    [HasAnyPermission(ReadAccess.Catalog)]
     public async Task<ActionResult<ItemDto>> Get(int id, CancellationToken ct) => (await Load(id, ct)).ToDto();
 
     /// <summary>
@@ -136,7 +136,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
                 LowStockThreshold = req.LowStockThreshold, CreatedAt = now, UpdatedAt = now,
             };
             db.Items.Add(created); // starts at 0; stock comes in only through a stock-in voucher
-            await db.SaveChangesAsync(ct);
+            await db.SaveOrConflictAsync(ct, Taken(created.CategoryId, name, created.Code, null, ct));
             return created;
         }, ct);
         return CreatedAtAction(nameof(Get), new { id = item.Id }, item.ToDto());
@@ -148,6 +148,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     public async Task<ActionResult<ItemDto>> Update(int id, UpdateItemRequest req, CancellationToken ct)
     {
         var item = await Load(id, ct, tracking: true);
+        ApiException.ThrowIfStale(req.Version, item.Version);
         if (item.CategoryId != req.CategoryId && !await db.Categories.AnyAsync(c => c.Id == req.CategoryId, ct))
             throw ApiException.NotFound("Category");
         var name = req.Name.Trim();
@@ -160,7 +161,8 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         item.LowStockThreshold = req.LowStockThreshold;
         item.IsActive = req.IsActive;
         item.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        item.Version++;
+        await db.SaveOrConflictAsync(ct, Taken(item.CategoryId, name, item.Code, id, ct));
         return (await Load(id, ct)).ToDto();
     }
 
@@ -172,7 +174,8 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         var item = await Load(id, ct, tracking: true);
         item.IsActive = false;
         item.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        item.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 
@@ -186,13 +189,19 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     {
         var lower = name.ToLower();
         if (await db.Items.AnyAsync(i => i.CategoryId == categoryId && i.Name.ToLower() == lower && i.Id != exceptId, ct))
-            throw ApiException.Conflict($"An item named '{name}' already exists in this category.");
+            throw ApiException.Duplicate($"An item named '{name}' already exists in this category.");
     }
 
     private async Task EnsureCodeFree(string code, int? exceptId, CancellationToken ct)
     {
         if (!CatalogCodes.IsValid(code)) throw ApiException.BadRequest("Codes can only contain digits.");
         if (await db.Items.AnyAsync(i => i.Code == code && i.Id != exceptId, ct))
-            throw ApiException.Conflict($"Item code '{code}' is already used.");
+            throw ApiException.Duplicate($"Item code '{code}' is already used.");
     }
+
+    // After a unique-index violation (another PC saved first): which value was taken.
+    private Func<Task<string>> Taken(int categoryId, string name, string? code, int? exceptId, CancellationToken ct) => async () =>
+        code is not null && await db.Items.AnyAsync(i => i.Code == code && i.Id != exceptId, ct)
+            ? $"Item code '{code}' is already used."
+            : $"An item named '{name}' already exists in this category.";
 }

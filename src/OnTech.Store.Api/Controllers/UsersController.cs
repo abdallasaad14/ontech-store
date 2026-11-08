@@ -43,7 +43,7 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         };
         user.PasswordHash = passwords.Hash(user, req.Password);
         db.Users.Add(user);
-        await db.SaveChangesAsync(ct);
+        await db.SaveOrConflictAsync(ct, () => $"The username '{username}' is already taken.");
         return CreatedAtAction(nameof(Get), new { id = user.Id }, user.ToDto());
     }
 
@@ -51,6 +51,7 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
     public async Task<ActionResult<UserDto>> Update(int id, UpdateUserRequest req, CancellationToken ct)
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct) ?? throw ApiException.NotFound("User");
+        ApiException.ThrowIfStale(req.Version, user.Version);
         var username = req.Username.Trim();
         await EnsureUsernameFree(username, id, ct);
 
@@ -67,7 +68,8 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         user.IsAdmin = req.IsAdmin;
         user.IsActive = req.IsActive;
         user.Permissions = req.Permissions & Permission.All;
-        await db.SaveChangesAsync(ct);
+        user.Version++;
+        await db.SaveOrConflictAsync(ct, () => $"The username '{username}' is already taken.");
         return user.ToDto();
     }
 
@@ -77,7 +79,8 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id, ct) ?? throw ApiException.NotFound("User");
         user.PasswordHash = passwords.Hash(user, req.NewPassword);
         user.MustChangePassword = req.MustChangePassword;
-        await db.SaveChangesAsync(ct);
+        user.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 
@@ -90,7 +93,8 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
         if (user.IsAdmin && !await db.Users.AnyAsync(u => u.Id != id && u.IsAdmin && u.IsActive, ct))
             throw ApiException.Conflict("You can't disable the last active admin.");
         user.IsActive = false;
-        await db.SaveChangesAsync(ct);
+        user.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 
@@ -98,6 +102,6 @@ public class UsersController(StoreDbContext db, PasswordService passwords) : Con
     {
         var normalized = username.ToUpperInvariant();
         if (await db.Users.AnyAsync(u => u.NormalizedUsername == normalized && u.Id != exceptId, ct))
-            throw ApiException.Conflict($"The username '{username}' is already taken.");
+            throw ApiException.Duplicate($"The username '{username}' is already taken.");
     }
 }

@@ -270,7 +270,7 @@ public class StoreApiTests : IClassFixture<StoreApiFactory>
         Assert.Equal(HttpStatusCode.BadRequest, missing.StatusCode);
 
         var order = await (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = $"  {voucher} ", CustomerId = customer.Id, Lines = { new() { ItemId = fargo.Id, Quantity = 1 } } })).Read<OrderDto>();
-        Assert.Equal(voucher, order.IssueVoucherNumber);
+        Assert.Equal(voucher.ToUpperInvariant(), order.IssueVoucherNumber); // stored upper-case (M-4, CONTRACTS.md §6)
         var dup = await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = voucher, CustomerId = customer.Id, Lines = { new() { ItemId = fargo.Id, Quantity = 1 } } });
         Assert.Equal(HttpStatusCode.Conflict, dup.StatusCode);
         Assert.Equal(9, (await admin.GetAs<ItemDto>($"/api/items/{fargo.Id}")).Quantity);

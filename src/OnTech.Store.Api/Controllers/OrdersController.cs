@@ -44,7 +44,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         };
 
         var page = await q
-            .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
+            .Skip(Paging.Skip(query.Page, query.PageSize)).Take(query.PageSize)
             .Include(o => o.Customer).Include(o => o.CreatedByUser).Include(o => o.CancelledByUser).Include(o => o.Lines)
             .AsSplitQuery()
             .ToListAsync(ct);
@@ -62,12 +62,13 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
     [HasPermission(Permission.ViewOrders)]
     public async Task<ActionResult<OrderDto>> Get(int id, CancellationToken ct) => await LoadDto(id, ct);
 
-    /// <summary>Looks up an order by its receipt number (exact match).</summary>
+    /// <summary>Looks up an order by its receipt number (exact match, ignoring letter case and spaces around it).</summary>
     [HttpGet("by-receipt/{receiptNumber}")]
     [HasPermission(Permission.ViewOrders)]
     public async Task<ActionResult<OrderDto>> GetByReceipt(string receiptNumber, CancellationToken ct)
     {
-        var id = await db.Orders.Where(o => o.ReceiptNumber == receiptNumber.Trim()).Select(o => (int?)o.Id).FirstOrDefaultAsync(ct)
+        var receipt = receiptNumber.CleanDocNumber();
+        var id = await db.Orders.Where(o => o.ReceiptNumber == receipt).Select(o => (int?)o.Id).FirstOrDefaultAsync(ct)
                  ?? throw ApiException.NotFound("Order with that receipt number");
         return await LoadDto(id, ct);
     }
@@ -99,9 +100,9 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (f.CategoryId is { } catId) q = q.Where(o => o.Lines.Any(l => l.CategoryId == catId));
         if (f.WithReceipt is { } wr) q = q.Where(o => o.WithReceipt == wr);
         if (f.Status is { } st) q = q.Where(o => o.Status == st);
-        if (f.ReceiptNumber.Clean() is { } rn) q = q.Where(o => o.ReceiptNumber != null && o.ReceiptNumber.Contains(rn));
-        if (f.OrderNumber.Clean() is { } on) q = q.Where(o => o.OrderNumber.Contains(on));
-        if (f.IssueVoucherNumber.Clean() is { } iv) q = q.Where(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.Contains(iv));
+        if (f.ReceiptNumber.CleanDocNumber() is { } rn) q = q.Where(o => o.ReceiptNumber != null && o.ReceiptNumber.ToUpper().Contains(rn));
+        if (f.OrderNumber.CleanDocNumber() is { } on) q = q.Where(o => o.OrderNumber.ToUpper().Contains(on));
+        if (f.IssueVoucherNumber.CleanDocNumber() is { } iv) q = q.Where(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.ToUpper().Contains(iv));
         if (f.Search.Clean()?.ToLower() is { } s) // ToLower: SQLite compares case-sensitively; SQL Server doesn't.
             q = q.Where(o => o.OrderNumber.ToLower().Contains(s)
                              || (o.IssueVoucherNumber != null && o.IssueVoucherNumber.ToLower().Contains(s))

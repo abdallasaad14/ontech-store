@@ -15,8 +15,8 @@ public sealed class StockService(StoreDbContext db)
 {
     public async Task<Order> CreateOrderAsync(CreateOrderRequest req, int userId, CancellationToken ct)
     {
-        var voucher = req.IssueVoucherNumber.Clean() ?? throw ApiException.BadRequest("Issue voucher number is required.");
-        var receipt = req.ReceiptNumber.Clean();
+        var voucher = req.IssueVoucherNumber.CleanDocNumber() ?? throw ApiException.BadRequest("Issue voucher number is required.");
+        var receipt = req.ReceiptNumber.CleanDocNumber();
         if (req.WithReceipt && receipt is null)
             throw ApiException.BadRequest("Receipt number is required when the order is made with a receipt.");
         if (!req.WithReceipt) receipt = null;
@@ -29,9 +29,9 @@ public sealed class StockService(StoreDbContext db)
         if (!customer.IsActive) throw ApiException.BadRequest("This customer is disabled.");
 
         if (await db.Orders.AnyAsync(o => o.IssueVoucherNumber == voucher, ct))
-            throw ApiException.Conflict($"Issue voucher number '{voucher}' is already used by another order.");
+            throw ApiException.Duplicate($"Issue voucher number '{voucher}' is already used by another order.");
         if (receipt is not null && await db.Orders.AnyAsync(o => o.ReceiptNumber == receipt, ct))
-            throw ApiException.Conflict($"Receipt number '{receipt}' is already used by another order.");
+            throw ApiException.Duplicate($"Receipt number '{receipt}' is already used by another order.");
 
         var items = await LoadItemsAsync(wanted.Select(w => w.ItemId), "'{0}' is disabled and cannot be ordered.", ct);
 
@@ -71,7 +71,7 @@ public sealed class StockService(StoreDbContext db)
         catch (DbUpdateException)
         {
             // Another PC saved the same number between our check and now (unique index).
-            throw ApiException.Conflict(receipt is not null && await db.Orders.AnyAsync(o => o.ReceiptNumber == receipt, ct)
+            throw ApiException.Duplicate(receipt is not null && await db.Orders.AnyAsync(o => o.ReceiptNumber == receipt, ct)
                 ? $"Receipt number '{receipt}' is already used by another order."
                 : $"Issue voucher number '{voucher}' is already used by another order.");
         }
@@ -141,14 +141,14 @@ public sealed class StockService(StoreDbContext db)
 
     public async Task<StockIn> CreateStockInAsync(CreateStockInRequest req, int userId, CancellationToken ct)
     {
-        var voucher = req.VoucherNumber.Clean() ?? throw ApiException.BadRequest("Voucher number is required.");
+        var voucher = req.VoucherNumber.CleanDocNumber() ?? throw ApiException.BadRequest("Voucher number is required.");
         var wanted = Combine(req.Lines);
         if (wanted.Count == 0) throw ApiException.BadRequest("A stock-in voucher needs at least one item.");
 
         var supplier = await db.Suppliers.FirstOrDefaultAsync(s => s.Id == req.SupplierId, ct) ?? throw ApiException.NotFound("Supplier");
         if (!supplier.IsActive) throw ApiException.BadRequest("This supplier is disabled.");
         if (await db.StockIns.AnyAsync(s => s.VoucherNumber == voucher, ct))
-            throw ApiException.Conflict($"Voucher number '{voucher}' is already used by another stock-in.");
+            throw ApiException.Duplicate($"Voucher number '{voucher}' is already used by another stock-in.");
 
         var items = await LoadItemsAsync(wanted.Select(w => w.ItemId), "'{0}' is disabled.", ct);
 
@@ -158,7 +158,7 @@ public sealed class StockService(StoreDbContext db)
         {
             SupplierId = supplier.Id,
             VoucherNumber = voucher,
-            SupplierInvoiceNumber = req.SupplierInvoiceNumber.Clean(),
+            SupplierInvoiceNumber = req.SupplierInvoiceNumber.CleanDocNumber(),
             Notes = req.Notes.Clean(),
             Status = OrderStatus.Completed,
             CreatedByUserId = userId,
@@ -181,7 +181,7 @@ public sealed class StockService(StoreDbContext db)
         }
         catch (DbUpdateException)
         {
-            throw ApiException.Conflict($"Voucher number '{voucher}' is already used by another stock-in.");
+            throw ApiException.Duplicate($"Voucher number '{voucher}' is already used by another stock-in.");
         }
         stockIn.StockInNumber = FormatStockInNumber(stockIn.Id);
 

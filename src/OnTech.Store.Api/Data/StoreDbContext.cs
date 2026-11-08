@@ -32,6 +32,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.PasswordHash).HasMaxLength(512).IsRequired();
             e.HasIndex(x => x.NormalizedUsername).IsUnique();
             e.Ignore(x => x.EffectivePermissions);
+            e.Property(x => x.Version).IsConcurrencyToken();
         });
 
         b.Entity<Category>(e =>
@@ -50,6 +51,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasIndex(x => new { x.CategoryId, x.Name }).IsUnique();
             e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.Version).IsConcurrencyToken();
             e.HasOne(x => x.Category).WithMany(c => c.Items).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
             e.ToTable(t =>
             {
@@ -70,6 +72,9 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
             e.HasIndex(x => x.CustomerNumber).IsUnique();
+            // L-6: who created it. No navigation property; on SQLite only new files get the FK (see UpgradeSqliteAuditFixesAsync).
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+            e.Property(x => x.Version).IsConcurrencyToken();
         });
 
         b.Entity<Order>(e =>
@@ -114,6 +119,8 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
             e.HasIndex(x => x.SupplierNumber).IsUnique();
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict); // L-6
+            e.Property(x => x.Version).IsConcurrencyToken();
         });
 
         b.Entity<StockIn>(e =>
@@ -153,5 +160,20 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasOne(x => x.StockIn).WithMany().HasForeignKey(x => x.StockInId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        // Document numbers compare without letter case (M-4). SQL Server's CI_AS collation already does this;
+        // SQLite compares case-sensitively, so new SQLite files get COLLATE NOCASE on these columns (and their unique indexes).
+        // Existing SQLite files get NOCASE unique indexes from DatabaseSetup.UpgradeSqliteAsync. Not applied on SQL Server,
+        // so the migrations never touch SQL Server collations.
+        if (Database.IsSqlite())
+        {
+            b.Entity<Order>().Property(x => x.OrderNumber).UseCollation(SqliteNoCase);
+            b.Entity<Order>().Property(x => x.IssueVoucherNumber).UseCollation(SqliteNoCase);
+            b.Entity<Order>().Property(x => x.ReceiptNumber).UseCollation(SqliteNoCase);
+            b.Entity<StockIn>().Property(x => x.VoucherNumber).UseCollation(SqliteNoCase);
+            b.Entity<StockIn>().Property(x => x.SupplierInvoiceNumber).UseCollation(SqliteNoCase);
+        }
     }
+
+    public const string SqliteNoCase = "NOCASE";
 }

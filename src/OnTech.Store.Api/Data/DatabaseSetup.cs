@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 using OnTech.Store.Api.Services;
 using OnTech.Store.Contracts;
@@ -62,6 +63,75 @@ public static class DatabaseSetup
             await tx.CommitAsync();
             log.LogWarning("Database upgraded: suppliers, stock-in vouchers and issue voucher numbers added.");
         }
+
+        await UpgradeSqliteAuditFixesAsync(db, log);
+    }
+
+    private static async Task<long> ScalarAsync(StoreDbContext db, string sql)
+    {
+        await using var cmd = db.Database.GetDbConnection().CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Transaction = db.Database.CurrentTransaction?.GetDbTransaction();
+        return Convert.ToInt64(await cmd.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Tables that carry the <c>Version</c> concurrency token (M-1). Same column as the AuditFixes migration.</summary>
+    private static readonly string[] VersionedTables = ["Users", "Items", "Customers", "Suppliers"];
+
+    /// <summary>
+    /// Unique document-number indexes that must ignore letter case (M-4), with the columns upper-cased alongside.
+    /// <c>Also</c> is a column that holds the same value and is upper-cased with it (the order number is the issue voucher).
+    /// </summary>
+    private static readonly (string Table, string Column, string Index, string Filter, string? Also)[] DocNumberIndexes =
+    [
+        ("Orders", "IssueVoucherNumber", "IX_Orders_IssueVoucherNumber", "WHERE [IssueVoucherNumber] IS NOT NULL", "OrderNumber"),
+        ("Orders", "ReceiptNumber", "IX_Orders_ReceiptNumber", "WHERE [ReceiptNumber] IS NOT NULL", null),
+        ("StockIns", "VoucherNumber", "IX_StockIns_VoucherNumber", "", "SupplierInvoiceNumber"),
+    ];
+
+    /// <summary>
+    /// The audit fixes (AuditFixes migration on SQL Server): Version columns (M-1), case-insensitive document-number
+    /// indexes (M-4) and the CreatedByUserId indexes (L-6; the FK itself only on new files). Each step checks first, so it runs once; the file is backed up before the first change and all steps
+    /// run in one transaction.
+    /// </summary>
+    private static async Task UpgradeSqliteAuditFixesAsync(StoreDbContext db, ILogger log)
+    {
+        var steps = new List<string>();
+        foreach (var table in VersionedTables)
+            if (await ScalarAsync(db, $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = 'Version'") == 0)
+                steps.Add($"ALTER TABLE {table} ADD COLUMN Version INTEGER NOT NULL DEFAULT 0");
+
+        foreach (var (table, column, index, filter, also) in DocNumberIndexes)
+        {
+            // New files already have NOCASE columns, so their indexes report NOCASE too.
+            if (await ScalarAsync(db, $"SELECT COUNT(*) FROM pragma_index_xinfo('{index}') WHERE cid >= 0 AND coll = 'NOCASE'") > 0) continue;
+            var collisions = await ScalarAsync(db,
+                $"SELECT COUNT(*) FROM (SELECT UPPER({column}) FROM {table} WHERE {column} IS NOT NULL GROUP BY UPPER({column}) HAVING COUNT(*) > 1)");
+            if (collisions > 0)
+            {
+                // Two vouchers that differ only in letter case: leave the data and the old index alone and let the owner decide.
+                log.LogWarning("{Table}.{Column} has {Count} values that differ only in letter case; its index stays case-sensitive.", table, column, collisions);
+                continue;
+            }
+            steps.Add($"UPDATE {table} SET {column} = UPPER({column}) WHERE {column} <> UPPER({column}) COLLATE BINARY");
+            if (also is not null) steps.Add($"UPDATE {table} SET {also} = UPPER({also}) WHERE {also} <> UPPER({also}) COLLATE BINARY");
+            steps.Add($"DROP INDEX IF EXISTS {index}");
+            steps.Add($"CREATE UNIQUE INDEX {index} ON {table} ({column} COLLATE NOCASE) {filter}");
+        }
+
+        // L-6: SQLite cannot add a foreign key to an existing table without rebuilding it, and live tables are never rebuilt,
+        // so on existing files Customers/Suppliers.CreatedByUserId stay without the FK (new files have it). The index that
+        // comes with the FK is added so the schema matches otherwise.
+        foreach (var table in new[] { "Customers", "Suppliers" })
+            if (await ScalarAsync(db, $"SELECT COUNT(*) FROM pragma_index_list('{table}') WHERE name = 'IX_{table}_CreatedByUserId'") == 0)
+                steps.Add($"CREATE INDEX IX_{table}_CreatedByUserId ON {table} (CreatedByUserId)");
+
+        if (steps.Count == 0) return;
+        await BackupSqliteAsync(db, db.Database.GetDbConnection().DataSource, "before-audit-fixes", log);
+        await using var tx = await db.Database.BeginTransactionAsync();
+        foreach (var sql in steps) await db.Database.ExecuteSqlRawAsync(sql);
+        await tx.CommitAsync();
+        log.LogWarning("Database upgraded for the audit fixes ({Count} steps).", steps.Count);
     }
 
     // Suppliers, stock-in vouchers, the order's issue voucher number. Same tables and indexes as the 20261028124843_SuppliersAndStockIn migration.
