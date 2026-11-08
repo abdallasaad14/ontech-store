@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using OnTech.Store.Api.Data;
 
@@ -19,6 +20,8 @@ public static class AuthSetup
         services.PostConfigure<JwtOptions>(o => o.SigningKey = key.Value);
         services.AddSingleton(key);
         services.AddSingleton<TokenService>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<LoginThrottle>();
         services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 

@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,9 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
     /// <summary>Settings that replace the defaults below. A null value leaves that setting out entirely.</summary>
     public Dictionary<string, string?> Settings { get; init; } = new();
 
+    /// <summary>Replaces services after the app registered its own (for example a fake TimeProvider).</summary>
+    public Action<IServiceCollection>? TestServices { get; init; }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(EnvironmentName);
@@ -56,6 +60,7 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
         foreach (var (k, v) in Settings) settings[k] = v;
         foreach (var (k, v) in settings)
             if (v is not null) builder.UseSetting(k, v);
+        if (TestServices is not null) builder.ConfigureTestServices(TestServices);
     }
 
     /// <summary>
