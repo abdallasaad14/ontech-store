@@ -148,6 +148,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
     public async Task<ActionResult<ItemDto>> Update(int id, UpdateItemRequest req, CancellationToken ct)
     {
         var item = await Load(id, ct, tracking: true);
+        ApiException.ThrowIfStale(req.Version, item.Version);
         if (item.CategoryId != req.CategoryId && !await db.Categories.AnyAsync(c => c.Id == req.CategoryId, ct))
             throw ApiException.NotFound("Category");
         var name = req.Name.Trim();
@@ -160,7 +161,8 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         item.LowStockThreshold = req.LowStockThreshold;
         item.IsActive = req.IsActive;
         item.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        item.Version++;
+        await db.SaveOrConflictAsync(ct);
         return (await Load(id, ct)).ToDto();
     }
 
@@ -172,7 +174,8 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         var item = await Load(id, ct, tracking: true);
         item.IsActive = false;
         item.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        item.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 

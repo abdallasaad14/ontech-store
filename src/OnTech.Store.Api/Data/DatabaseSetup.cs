@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 using OnTech.Store.Api.Services;
 using OnTech.Store.Contracts;
@@ -62,6 +63,38 @@ public static class DatabaseSetup
             await tx.CommitAsync();
             log.LogWarning("Database upgraded: suppliers, stock-in vouchers and issue voucher numbers added.");
         }
+
+        await UpgradeSqliteAuditFixesAsync(db, log);
+    }
+
+    private static async Task<long> ScalarAsync(StoreDbContext db, string sql)
+    {
+        await using var cmd = db.Database.GetDbConnection().CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Transaction = db.Database.CurrentTransaction?.GetDbTransaction();
+        return Convert.ToInt64(await cmd.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Tables that carry the <c>Version</c> concurrency token (M-1). Same column as the AuditFixes migration.</summary>
+    private static readonly string[] VersionedTables = ["Users", "Items", "Customers", "Suppliers"];
+
+    /// <summary>
+    /// The audit fixes (AuditFixes migration on SQL Server): Version columns. Each step checks first, so it runs once;
+    /// the file is backed up before the first change and all steps run in one transaction.
+    /// </summary>
+    private static async Task UpgradeSqliteAuditFixesAsync(StoreDbContext db, ILogger log)
+    {
+        var steps = new List<string>();
+        foreach (var table in VersionedTables)
+            if (await ScalarAsync(db, $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name = 'Version'") == 0)
+                steps.Add($"ALTER TABLE {table} ADD COLUMN Version INTEGER NOT NULL DEFAULT 0");
+
+        if (steps.Count == 0) return;
+        await BackupSqliteAsync(db, db.Database.GetDbConnection().DataSource, "before-audit-fixes", log);
+        await using var tx = await db.Database.BeginTransactionAsync();
+        foreach (var sql in steps) await db.Database.ExecuteSqlRawAsync(sql);
+        await tx.CommitAsync();
+        log.LogWarning("Database upgraded for the audit fixes ({Count} steps).", steps.Count);
     }
 
     // Suppliers, stock-in vouchers, the order's issue voucher number. Same tables and indexes as the 20261028124843_SuppliersAndStockIn migration.

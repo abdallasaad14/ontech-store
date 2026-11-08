@@ -58,11 +58,13 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     public async Task<ActionResult<SupplierDto>> Update(int id, SaveSupplierRequest req, CancellationToken ct)
     {
         var s = await db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Supplier");
+        ApiException.ThrowIfStale(req.Version, s.Version);
         await EnsureUnique(req.CompanyName.Trim(), req.TaxNumber.Clean(), req.SupplierNumber, id, ct);
         var oldNumber = s.SupplierNumber;
         Apply(s, req);
         s.SupplierNumber ??= oldNumber;
-        await db.SaveChangesAsync(ct);
+        s.Version++;
+        await db.SaveOrConflictAsync(ct);
         return await Project(db.Suppliers.Where(x => x.Id == id)).FirstAsync(ct);
     }
 
@@ -73,7 +75,8 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
     {
         var s = await db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Supplier");
         s.IsActive = false;
-        await db.SaveChangesAsync(ct);
+        s.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 
@@ -116,5 +119,6 @@ public class SuppliersController(StoreDbContext db) : ControllerBase
         IsActive = s.IsActive,
         StockInCount = s.StockIns.Count(x => x.Status == OrderStatus.Completed),
         CreatedAt = new DateTimeOffset(s.CreatedAt, TimeSpan.Zero),
+        Version = s.Version,
     });
 }

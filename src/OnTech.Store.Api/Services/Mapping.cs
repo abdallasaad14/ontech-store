@@ -17,6 +17,7 @@ public static class Mapping
         Permissions = u.EffectivePermissions,
         CreatedAt = u.CreatedAt.ToUtcOffset(),
         LastLoginAt = u.LastLoginAt.ToUtcOffset(),
+        Version = u.Version,
     };
 
     public static ItemDto ToDto(this Item i) => new()
@@ -32,6 +33,7 @@ public static class Mapping
         IsLowStock = i.LowStockThreshold > 0 && i.Quantity <= i.LowStockThreshold,
         IsActive = i.IsActive,
         UpdatedAt = i.UpdatedAt.ToUtcOffset(),
+        Version = i.Version,
     };
 
     public static OrderDto ToDto(this Order o) => new()

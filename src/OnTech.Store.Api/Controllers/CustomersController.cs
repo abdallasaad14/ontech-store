@@ -59,11 +59,13 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     public async Task<ActionResult<CustomerDto>> Update(int id, SaveCustomerRequest req, CancellationToken ct)
     {
         var c = await db.Customers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Customer");
+        ApiException.ThrowIfStale(req.Version, c.Version);
         await EnsureUnique(req.CompanyName.Trim(), req.TaxNumber.Clean(), req.CustomerNumber, id, ct);
         var oldNumber = c.CustomerNumber;
         Apply(c, req);
         c.CustomerNumber ??= oldNumber;
-        await db.SaveChangesAsync(ct);
+        c.Version++;
+        await db.SaveOrConflictAsync(ct);
         return await Project(db.Customers.Where(x => x.Id == id)).FirstAsync(ct);
     }
 
@@ -128,7 +130,8 @@ public class CustomersController(StoreDbContext db) : ControllerBase
     {
         var c = await db.Customers.FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Customer");
         c.IsActive = false;
-        await db.SaveChangesAsync(ct);
+        c.Version++;
+        await db.SaveOrConflictAsync(ct);
         return NoContent();
     }
 
@@ -175,5 +178,6 @@ public class CustomersController(StoreDbContext db) : ControllerBase
         IsActive = c.IsActive,
         OrderCount = c.Orders.Count(o => o.Status == OrderStatus.Completed),
         CreatedAt = new DateTimeOffset(c.CreatedAt, TimeSpan.Zero),
+        Version = c.Version,
     });
 }

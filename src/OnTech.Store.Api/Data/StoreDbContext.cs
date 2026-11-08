@@ -32,6 +32,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.PasswordHash).HasMaxLength(512).IsRequired();
             e.HasIndex(x => x.NormalizedUsername).IsUnique();
             e.Ignore(x => x.EffectivePermissions);
+            e.Property(x => x.Version).IsConcurrencyToken();
         });
 
         b.Entity<Category>(e =>
@@ -50,6 +51,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.Property(x => x.Description).HasMaxLength(500);
             e.HasIndex(x => new { x.CategoryId, x.Name }).IsUnique();
             e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.Version).IsConcurrencyToken();
             e.HasOne(x => x.Category).WithMany(c => c.Items).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
             e.ToTable(t =>
             {
@@ -70,6 +72,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
             e.HasIndex(x => x.CustomerNumber).IsUnique();
+            e.Property(x => x.Version).IsConcurrencyToken();
         });
 
         b.Entity<Order>(e =>
@@ -114,6 +117,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
             e.HasIndex(x => x.SupplierNumber).IsUnique();
+            e.Property(x => x.Version).IsConcurrencyToken();
         });
 
         b.Entity<StockIn>(e =>
