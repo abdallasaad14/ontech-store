@@ -135,7 +135,7 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
     [RelayCommand]
     private Task QuickAddSupplierAsync()
     {
-        var name = Dialogs.Prompt(L.T("New supplier"), L.T("Company name"), okText: L.T("Add supplier"));
+        var name = Dialogs.Prompt(L.T("New supplier"), L.T("Company name"), okText: L.T("Add supplier"), maxLength: 200);
         if (string.IsNullOrWhiteSpace(name)) return Task.CompletedTask;
         return RunAsync(async () =>
         {

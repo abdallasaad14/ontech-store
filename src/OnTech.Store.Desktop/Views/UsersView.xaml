@@ -84,13 +84,13 @@
                     <StackPanel>
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
                         <TextBlock Text="{l:T 'Full name *'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="150" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Username * (used to sign in)'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
+                        <TextBox MaxLength="64" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
                         <TextBlock Style="{StaticResource Hint}" Text="{l:T 'For example ahmed or ahmed.ali. No spaces.'}" Margin="0,0,0,12"/>
                         <StackPanel Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{l:T 'First password * (at least 8 characters)'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
+                            <TextBox MaxLength="128" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>
                             <CheckBox Content="{l:T 'Ask them to choose their own password at first sign-in'}" IsChecked="{Binding MustChangePassword}" Margin="0,0,0,12"/>
                         </StackPanel>
 

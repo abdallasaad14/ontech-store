@@ -21,7 +21,7 @@
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <ComboBox DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding ReceiptFilters}" SelectedIndex="{Binding ReceiptFilterIndex}"/>
                         <Button DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>

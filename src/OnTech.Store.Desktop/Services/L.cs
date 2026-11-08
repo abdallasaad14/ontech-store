@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Markup;
+using OnTech.Store.Client;
 
 namespace OnTech.Store.Desktop.Services;
 
@@ -49,6 +50,20 @@ public static class L
 
     /// <summary>Translates <paramref name="englishFormat"/>, then fills in {0}, {1}, ...</summary>
     public static string T(string englishFormat, params object?[] args) => string.Format(Culture, T(englishFormat), args);
+
+    /// <summary>
+    /// The text to show for a failed server call. Validation errors are shown per field with the field's label
+    /// ("Company name can be at most 200 characters."), in Arabic when Arabic is on; anything else goes through <see cref="Message"/>.
+    /// </summary>
+    public static string Error(ApiError error) =>
+        error.FieldErrors.Count == 0
+            ? Message(error.Message)
+            : string.Join(Environment.NewLine, error.FieldErrors.Select(FieldText).Distinct());
+
+    public static string FieldText(FieldError e) =>
+        e.Kind == FieldErrorKind.Other || e.Label.Length == 0
+            ? Message(e.Raw)
+            : T(FieldError.Template(e.Kind), T(e.Label), e.Limit, e.Limit2);
 
     /// <summary>Translates a message from the server or the API client, line by line (some carry names or numbers).</summary>
     public static string Message(string message)

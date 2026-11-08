@@ -20,7 +20,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <Button DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>

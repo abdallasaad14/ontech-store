@@ -84,6 +84,7 @@ public sealed partial class SuppliersViewModel(Session session) : PageViewModel(
     private Task SaveAsync() => RunAsync(async () =>
     {
         if (string.IsNullOrWhiteSpace(CompanyName)) throw new ArgumentException(L.T("Company name is required."));
+        if (!Validation.IsEmail(Email)) throw new ArgumentException(L.T("Enter a valid email address, or leave it empty."));
         int? number = null;
         if (Clean(SupplierNumber) is { } numberText)
             number = Numbers.TryParseInt(numberText, out var n) && n > 0 ? n : throw new ArgumentException(L.T("Supplier number must be a whole number, 1 or more."));

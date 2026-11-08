@@ -185,7 +185,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [RelayCommand]
     private Task QuickAddCustomerAsync()
     {
-        var name = Dialogs.Prompt(L.T("New customer"), L.T("Company name"), okText: L.T("Add customer"));
+        var name = Dialogs.Prompt(L.T("New customer"), L.T("Company name"), okText: L.T("Add customer"), maxLength: 200);
         if (string.IsNullOrWhiteSpace(name)) return Task.CompletedTask;
         return RunAsync(async () =>
         {

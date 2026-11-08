@@ -35,7 +35,7 @@ public abstract partial class ViewModelBase : ObservableObject
         catch (ApiError ex)
         {
             // MustChangePassword opens the change-password window instead of showing a "no permission" message.
-            ErrorMessage = ex.Code == ErrorCodes.MustChangePassword ? null : L.Message(ex.Message);
+            ErrorMessage = ex.Code == ErrorCodes.MustChangePassword ? null : L.Error(ex);
             OnApiError(ex);
             return false;
         }

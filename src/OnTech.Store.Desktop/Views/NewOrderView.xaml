@@ -54,7 +54,7 @@
                             <DockPanel>
                                 <Button DockPanel.Dock="Right" Content="{l:T '+ Add another item'}" Style="{StaticResource LinkButton}" Margin="10,0,0,0"
                                         Command="{Binding AddLineCommand}" ToolTip="{l:T 'Keep this item in the order and pick another one'}"/>
-                                <TextBox Text="{Binding QuantityText, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox MaxLength="9" Text="{Binding QuantityText, UpdateSourceTrigger=PropertyChanged}"/>
                             </DockPanel>
                         </StackPanel>
 
@@ -65,7 +65,7 @@
                                         Visibility="{Binding CanAddCustomer, Converter={StaticResource BoolToVisibility}}"/>
                                 <TextBlock Text="{l:T 'Customer (type number or name)'}" Style="{StaticResource FieldLabel}"/>
                             </DockPanel>
-                            <TextBox Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged, Delay=200}" Margin="0,0,0,6"
+                            <TextBox MaxLength="200" Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged, Delay=200}" Margin="0,0,0,6"
                                      ToolTip="{l:T 'Type the customer number or part of the name'}"/>
                             <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Display"
                                       IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="Display"/>
@@ -73,7 +73,7 @@
 
                         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,16">
                             <TextBlock Text="{l:T 'Issue voucher number *'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}" MaxLength="30"/>
+                            <TextBox MaxLength="30" Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The number on the warehouse issue voucher. Required, and each number is used once.'}"/>
                         </StackPanel>
 
@@ -81,7 +81,7 @@
                             <CheckBox Content="{l:T 'Add a receipt'}" IsChecked="{Binding WithReceipt}" Margin="0,0,0,8"/>
                             <StackPanel Visibility="{Binding WithReceipt, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock Text="{l:T 'Receipt number'}" Style="{StaticResource FieldLabel}"/>
-                                <TextBox Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox MaxLength="50" Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}"/>
                                 <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Each receipt number can be used once. You can search orders by it later.'}"/>
                             </StackPanel>
                         </StackPanel>
@@ -106,7 +106,7 @@
                     </Border>
 
                     <TextBlock Text="{l:T 'Notes (optional)'}" Style="{StaticResource FieldLabel}"/>
-                    <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,18"/>
+                    <TextBox MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,18"/>
 
                     <Border Style="{StaticResource SoftStrip}" Margin="0,0,0,18" Visibility="{Binding HasSummary, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>

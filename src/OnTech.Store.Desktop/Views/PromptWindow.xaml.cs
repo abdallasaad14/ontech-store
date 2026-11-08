@@ -8,9 +8,10 @@ public partial class PromptWindow : Window
 {
     private readonly bool _isPassword;
 
-    public PromptWindow(string title, string label, string? initial, bool isPassword, string okText)
+    public PromptWindow(string title, string label, string? initial, bool isPassword, string okText, int maxLength = 500)
     {
         InitializeComponent();
+        InputBox.MaxLength = PasswordInput.MaxLength = maxLength;
         L.Apply(this);
         Title = title;
         LabelText.Text = label;

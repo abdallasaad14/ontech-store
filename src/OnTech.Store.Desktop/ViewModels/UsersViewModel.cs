@@ -160,7 +160,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     {
         if (u is null) return Task.CompletedTask;
         var pwd = Dialogs.Prompt(L.T("Reset password: {0}", u.FullName),
-            L.T("New password (at least 8 characters). They will be asked to choose their own at next sign-in."), isPassword: true, okText: L.T("Reset password"));
+            L.T("New password (at least 8 characters). They will be asked to choose their own at next sign-in."), isPassword: true, okText: L.T("Reset password"), maxLength: 128);
         if (pwd is null) return Task.CompletedTask;
         return RunAsync(async () =>
         {

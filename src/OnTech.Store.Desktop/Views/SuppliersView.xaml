@@ -25,7 +25,7 @@
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <CheckBox DockPanel.Dock="Right" Content="{l:T 'Show disabled'}" IsChecked="{Binding ShowDisabled}" Margin="12,0,0,0"/>
                         <Button DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Supplier number or company name (also phone, tax number, contact)'}">
+                        <TextBox MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Supplier number or company name (also phone, tax number, contact)'}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>
@@ -66,22 +66,22 @@
                     <StackPanel>
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
                         <TextBlock Text="{l:T 'Supplier number'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding SupplierNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                        <TextBox MaxLength="9" Text="{Binding SupplierNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
                         <TextBlock Text="{l:T 'Leave empty to use the next free number.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Company name *'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="200" Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Phone'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="50" Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Tax number'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="50" Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Contact person'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="150" Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Email'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="256" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Address'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="500" Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock Text="{l:T 'Notes'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBox MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <CheckBox Content="{l:T 'Active'}" IsChecked="{Binding IsActive}" Margin="0,0,0,18"
                                   Visibility="{Binding EditingId, Converter={StaticResource HasValueToVisibility}}"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

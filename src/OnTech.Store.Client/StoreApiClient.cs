@@ -268,6 +268,7 @@ public sealed class StoreApiClient
         string? title = null;
         string? code = null;
         List<StockShortage>? shortages = null;
+        List<FieldError>? fieldErrors = null;
         try
         {
             var problem = await res.Content.ReadFromJsonAsync<JsonElement>(Json, ct);
@@ -275,11 +276,13 @@ public sealed class StoreApiClient
             {
                 if (problem.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Object)
                 {
-                    // Validation errors: show the individual messages, not "One or more validation errors occurred."
-                    var messages = errors.EnumerateObject()
-                        .SelectMany(p => p.Value.ValueKind == JsonValueKind.Array ? p.Value.EnumerateArray().Select(m => m.GetString()) : [])
-                        .Where(m => !string.IsNullOrWhiteSpace(m));
-                    title = string.Join(Environment.NewLine, messages);
+                    // Validation errors: show each message with the field's label, not "One or more validation errors occurred."
+                    fieldErrors = errors.EnumerateObject()
+                        .SelectMany(p => p.Value.ValueKind == JsonValueKind.Array
+                            ? p.Value.EnumerateArray().Select(m => m.GetString()).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => FieldError.Parse(p.Name, m!))
+                            : [])
+                        .ToList();
+                    title = string.Join(Environment.NewLine, fieldErrors.Select(e => e.English).Distinct());
                 }
                 if (string.IsNullOrWhiteSpace(title) && problem.TryGetProperty("title", out var t)) title = t.GetString();
                 if (problem.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String) code = c.GetString();
@@ -297,7 +300,7 @@ public sealed class StoreApiClient
         if (shortages is { Count: > 0 })
             title += Environment.NewLine + string.Join(Environment.NewLine,
                 shortages.Select(x => $"• {x.ItemName}: asked for {x.Requested}, only {x.Available} available"));
-        return new ApiError(res.StatusCode, title, shortages, code: code);
+        return new ApiError(res.StatusCode, title, shortages, code: code, fieldErrors: fieldErrors);
     }
 
     private static string DefaultMessage(HttpStatusCode status) => status switch
