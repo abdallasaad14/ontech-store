@@ -14,6 +14,7 @@ public class DashboardController(StoreDbContext db) : ControllerBase
 {
     /// <summary>Numbers for the home page: stock totals, low-stock warnings and today's activity.</summary>
     /// <param name="utcOffsetMinutes">The PC's offset from UTC, so "today" means the local day (e.g. 180 for UTC+3). -840 to 840; anything else is a 400.</param>
+    /// <param name="ct">Cancelled when the caller goes away.</param>
     [HttpGet("summary")]
     public async Task<DashboardSummaryDto> Summary([FromQuery, System.ComponentModel.DataAnnotations.Range(-840, 840)] int utcOffsetMinutes = 0, CancellationToken ct = default)
     {
