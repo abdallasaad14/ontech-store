@@ -157,5 +157,20 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasOne(x => x.StockIn).WithMany().HasForeignKey(x => x.StockInId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        // Document numbers compare without letter case (M-4). SQL Server's CI_AS collation already does this;
+        // SQLite compares case-sensitively, so new SQLite files get COLLATE NOCASE on these columns (and their unique indexes).
+        // Existing SQLite files get NOCASE unique indexes from DatabaseSetup.UpgradeSqliteAsync. Not applied on SQL Server,
+        // so the migrations never touch SQL Server collations.
+        if (Database.IsSqlite())
+        {
+            b.Entity<Order>().Property(x => x.OrderNumber).UseCollation(SqliteNoCase);
+            b.Entity<Order>().Property(x => x.IssueVoucherNumber).UseCollation(SqliteNoCase);
+            b.Entity<Order>().Property(x => x.ReceiptNumber).UseCollation(SqliteNoCase);
+            b.Entity<StockIn>().Property(x => x.VoucherNumber).UseCollation(SqliteNoCase);
+            b.Entity<StockIn>().Property(x => x.SupplierInvoiceNumber).UseCollation(SqliteNoCase);
+        }
     }
+
+    public const string SqliteNoCase = "NOCASE";
 }

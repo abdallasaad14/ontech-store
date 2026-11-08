@@ -99,4 +99,10 @@ public static class Mapping
     };
 
     public static string? Clean(this string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
+
+    /// <summary>
+    /// A document number as stored: trimmed and upper-case (invariant), so "ab-1" and "AB-1" are the same voucher on every database.
+    /// Used for issue vouchers (= order numbers), receipt numbers, stock-in vouchers and supplier invoice numbers.
+    /// </summary>
+    public static string? CleanDocNumber(this string? s) => s.Clean()?.ToUpperInvariant();
 }
