@@ -249,6 +249,9 @@ internal sealed class SqliteFileFactory(string connectionString) : WebApplicatio
             new LoginRequest { Username = StoreApiFactory.AdminUsername, Password = StoreApiFactory.AdminPassword }, StoreApiFactory.Json);
         res.EnsureSuccessStatusCode();
         var login = (await res.Content.ReadFromJsonAsync<LoginResponse>(StoreApiFactory.Json))!;
+        // The seeded admin must change its password (L-5) and the server enforces it (M-2): treat it as already changed, like StoreApiFactory does.
+        if (login.User.MustChangePassword)
+            SqliteUpgrade.Exec(connectionString, "UPDATE Users SET MustChangePassword = 0 WHERE IsAdmin = 1");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.Token);
         return client;
     }
