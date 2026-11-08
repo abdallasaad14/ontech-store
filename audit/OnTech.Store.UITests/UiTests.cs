@@ -76,10 +76,10 @@ public class UiTests(UiData data, ITestOutputHelper output)
     public void Login_wrong_password_shows_message() => Run(nameof(Login_wrong_password_shows_message), d =>
     {
         var login = d.WaitWindow("Sign in");
-        d.Type(d.Edits(login)[0], data.User);
-        var pwd = login.FindFirstDescendant(d.Cf.ByAutomationId("PasswordBox"));
+        d.Type(d.Box(login, "Login_UsernameBox"), data.User);
+        var pwd = d.ById(login, "Login_PasswordBox");
         pwd.Focus(); Keyboard.Type("wrong-password");
-        d.Button(login, "Sign in").Invoke();
+        d.ButtonById(login, "Login_SignInButton").Invoke();
         Assert.True(d.WaitText(login, "Username or password is incorrect."), d.AllText(login));
     });
 
@@ -87,7 +87,7 @@ public class UiTests(UiData data, ITestOutputHelper output)
     public void Login_with_empty_fields_shows_message() => Run(nameof(Login_with_empty_fields_shows_message), d =>
     {
         var login = d.WaitWindow("Sign in");
-        d.Button(login, "Sign in").Invoke();
+        d.ButtonById(login, "Login_SignInButton").Invoke();
         Assert.True(d.WaitText(login, "Enter your username and password."), d.AllText(login));
     });
 
@@ -113,11 +113,11 @@ public class UiTests(UiData data, ITestOutputHelper output)
     public void Server_down_on_sign_in_shows_a_clear_message() => Run(nameof(Server_down_on_sign_in_shows_a_clear_message), d =>
     {
         var login = d.WaitWindow("Sign in");
-        d.Type(d.Edits(login)[0], data.User);
-        var pwd = login.FindFirstDescendant(d.Cf.ByAutomationId("PasswordBox"));
+        d.Type(d.Box(login, "Login_UsernameBox"), data.User);
+        var pwd = d.ById(login, "Login_PasswordBox");
         pwd.Focus(); Keyboard.Type(UiData.Password);
         var sw = Stopwatch.StartNew();
-        d.Button(login, "Sign in").Invoke();
+        d.ButtonById(login, "Login_SignInButton").Invoke();
         Assert.True(d.WaitText(login, "Cannot reach the server", 40), d.AllText(login));
         Log($"     server-down message after {sw.ElapsedMilliseconds} ms");
     }, serverUrl: "http://127.0.0.1:5999");
@@ -130,19 +130,16 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var name = "UI Added Customer " + data.Run;
         var main = d.SignIn(data.User, UiData.Password);
         d.Menu(main, "Customers");
-        d.Button(main, "+ Add customer").Invoke();
-        var save = d.Button(main, "Save");
-        // Form fields have no AutomationId and no label link; they are found by position (number, company name, ...).
-        var edits = d.Edits(main);
-        var form = edits.Skip(edits.Length - 8).ToArray();
-        d.Type(form[1], name);
-        d.Type(form[2], "01001234567");
+        d.ButtonById(main, "Customers_StartNewButton").Invoke();
+        var save = d.ButtonById(main, "Customers_SaveButton");
+        d.Type(d.Box(main, "Customers_CompanyNameBox"), name);
+        d.Type(d.Box(main, "Customers_PhoneNumberBox"), "01001234567");
         save.Invoke();
         Assert.True(d.WaitText(main, $"Customer \"{name}\" added."), d.AllText(main));
         Assert.Equal(1, Convert.ToInt32(AppDriver.Sql("SELECT COUNT(*) FROM Customers WHERE CompanyName=@n", ("@n", name))));
 
-        d.Type(d.Edits(main)[0], name);
-        d.Button(main, "Search").Invoke();
+        d.Type(d.Box(main, "Customers_SearchBox"), name);
+        d.ButtonById(main, "Customers_SearchButton").Invoke();
         Assert.True(d.WaitText(main, name));
     });
 
@@ -151,21 +148,19 @@ public class UiTests(UiData data, ITestOutputHelper output)
     {
         var main = d.SignIn(data.User, UiData.Password);
         d.Menu(main, "Customers");
-        d.Button(main, "+ Add customer").Invoke();
-        var save = d.Button(main, "Save");
-        var edits = d.Edits(main);
-        var form = edits.Skip(edits.Length - 8).ToArray();
-        d.Type(form[1], new string('x', 205));
-        d.Type(form[5], "not-an-email");
-        d.Type(form[0], "abc");
+        d.ButtonById(main, "Customers_StartNewButton").Invoke();
+        var save = d.ButtonById(main, "Customers_SaveButton");
+        var company = d.Box(main, "Customers_CompanyNameBox");
+        d.Type(company, new string('x', 205));
+        Assert.Equal(200, company.Text.Length); // MaxLength = the server's limit (M-3)
+        d.Type(d.Box(main, "Customers_EmailBox"), "not-an-email");
+        d.Type(d.Box(main, "Customers_CustomerNumberBox"), "abc");
         save.Invoke();
         Assert.True(d.WaitText(main, "Customer number must be a whole number"), d.AllText(main));
-        d.Type(form[0], "");
+        d.Type(d.Box(main, "Customers_CustomerNumberBox"), "");
         save.Invoke();
-        Thread.Sleep(1500);
-        var text = d.AllText(main);
-        Log($"     server validation shown to the user: {text}");
-        Assert.Contains("maximum length", text);
+        Assert.True(d.WaitText(main, "Enter a valid email address, or leave it empty."), d.AllText(main));
+        Log($"     validation shown to the user: {d.AllText(main)}");
     });
 
     // ---------------- new order ----------------
@@ -175,17 +170,13 @@ public class UiTests(UiData data, ITestOutputHelper output)
         d.Menu(main, "New Order");
         Assert.True(d.WaitText(main, "Choose what is leaving the store", 30));
         Wait.UntilResponsive(main, TimeSpan.FromSeconds(60));
-        var combos = d.Combos(main);
-        combos[0].Select(data.Category.Name); // category
-        Retry.WhileFalse(() => d.Combos(main)[1].Items.Length > 0, TimeSpan.FromSeconds(15));
-        d.Combos(main)[1].Select(0);          // item
-        var edits = d.Edits(main);
-        // order of edits: quantity, customer search, (customer combo text), issue voucher, notes
-        d.Type(edits[0], qty);
-        d.Type(edits[1], data.Customer.CompanyName);
+        d.Combo(main, "NewOrder_CategoryCombo").Select(data.Category.Name);
+        Retry.WhileFalse(() => d.Combo(main, "NewOrder_ItemCombo").Items.Length > 0, TimeSpan.FromSeconds(15));
+        d.Combo(main, "NewOrder_ItemCombo").Select(0);
+        d.Type(d.Box(main, "NewOrder_QuantityBox"), qty);
+        d.Type(d.Box(main, "NewOrder_CustomerSearchBox"), data.Customer.CompanyName);
         Thread.Sleep(600); // Delay=200 on the search box
-        var voucherBox = d.Edits(main).First(e => e.Patterns.Value.IsSupported && e.Patterns.Value.Pattern.Value.Value == "" && e.IsEnabled && e.BoundingRectangle.Top > edits[1].BoundingRectangle.Top + 40);
-        d.Type(voucherBox, voucher);
+        d.Type(d.Box(main, "NewOrder_IssueVoucherNumberBox"), voucher);
     }
 
     [Fact]
@@ -195,7 +186,7 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var voucher = "UIV-" + data.Run;
         var main = d.SignIn(data.User, UiData.Password);
         FillOrder(d, main, voucher, "3");
-        d.Button(main, "Save order").Invoke();
+        d.ButtonById(main, "NewOrder_SaveButton").Invoke();
         Assert.True(d.WaitText(main, $"Issue voucher {voucher} saved"), d.AllText(main));
         Assert.Equal(before - 3, Qty(data.Item.Id));
     });
@@ -206,14 +197,15 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var before = Qty(data.Item.Id);
         var main = d.SignIn(data.User, UiData.Password);
         FillOrder(d, main, "", "abc");
-        d.Button(main, "Save order").Invoke();
+        d.ButtonById(main, "NewOrder_SaveButton").Invoke();
         Assert.True(d.WaitText(main, "Enter a quantity of 1 or more."), d.AllText(main));
-        d.Type(d.Edits(main)[0], "٥"); // Arabic-Indic five, as typed on an Arabic keyboard
-        d.Button(main, "Save order").Invoke();
+        d.Type(d.Box(main, "NewOrder_QuantityBox"), "٥"); // Arabic-Indic five, as typed on an Arabic keyboard (H-3: accepted)
+        d.ButtonById(main, "NewOrder_SaveButton").Invoke();
         Thread.Sleep(800);
         Log($"     quantity '٥' -> {d.AllText(main)}");
-        d.Type(d.Edits(main)[0], "99999");
-        d.Button(main, "Save order").Invoke();
+        Assert.DoesNotContain("Enter a quantity of 1 or more.", d.AllText(main));
+        d.Type(d.Box(main, "NewOrder_QuantityBox"), "99999");
+        d.ButtonById(main, "NewOrder_SaveButton").Invoke();
         Assert.True(d.WaitText(main, "available"), d.AllText(main));
         Assert.Equal(before, Qty(data.Item.Id));
     });
@@ -225,7 +217,7 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var voucher = "UIDBL-" + data.Run;
         var main = d.SignIn(data.User, UiData.Password);
         FillOrder(d, main, voucher, "1");
-        var save = d.Button(main, "Save order");
+        var save = d.ButtonById(main, "NewOrder_SaveButton");
         var p = save.GetClickablePoint();
         Mouse.DoubleClick(p);
         Mouse.Click(p);
@@ -246,17 +238,14 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var main = d.SignIn(data.User, UiData.Password);
         d.Menu(main, "Stock In");
         Wait.UntilResponsive(main, TimeSpan.FromSeconds(60));
-        d.Combos(main)[0].Select(data.Category.Name);
-        Retry.WhileFalse(() => d.Combos(main)[1].Items.Length > 0, TimeSpan.FromSeconds(15));
-        d.Combos(main)[1].Select(0);
-        var edits = d.Edits(main);
-        d.Type(edits[0], "7");
-        d.Type(edits[1], data.Supplier.CompanyName);
+        d.Combo(main, "StockIn_CategoryCombo").Select(data.Category.Name);
+        Retry.WhileFalse(() => d.Combo(main, "StockIn_ItemCombo").Items.Length > 0, TimeSpan.FromSeconds(15));
+        d.Combo(main, "StockIn_ItemCombo").Select(0);
+        d.Type(d.Box(main, "StockIn_QuantityBox"), "7");
+        d.Type(d.Box(main, "StockIn_SupplierSearchBox"), data.Supplier.CompanyName);
         Thread.Sleep(600);
-        edits = d.Edits(main);
-        var voucherBox = edits.Where(e => e.BoundingRectangle.Top > edits[1].BoundingRectangle.Top + 40).First();
-        d.Type(voucherBox, voucher);
-        d.Button(main, "Save stock-in").Invoke();
+        d.Type(d.Box(main, "StockIn_VoucherNumberBox"), voucher);
+        d.ButtonById(main, "StockIn_SaveButton").Invoke();
         Assert.True(d.WaitText(main, "saved from"), d.AllText(main));
         Assert.Equal(before + 7, Qty(data.Item.Id));
     });
@@ -272,8 +261,8 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var main = d.SignIn(data.User, UiData.Password);
         d.Menu(main, "Orders Log");
         Wait.UntilResponsive(main, TimeSpan.FromSeconds(60));
-        d.Type(d.Edits(main)[0], order.IssueVoucherNumber!);
-        d.Button(main, "Search").Invoke();
+        d.Type(d.Box(main, "Orders_SearchBox"), order.IssueVoucherNumber!);
+        d.ButtonById(main, "Orders_SearchButton").Invoke();
         Assert.True(d.WaitText(main, "Page 1 of 1 · 1 orders"), d.AllText(main));
     });
 
@@ -286,7 +275,7 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var cat = d.Find(main, data.Category.Name, ControlType.Text, 15);
         cat.Click();
         Thread.Sleep(1500);
-        d.Find(main, "Item card", ControlType.Button, 15).AsButton().Invoke();
+        d.ById(main, "Catalog_OpenCardButton", 15).AsButton().Invoke();
         var card = d.WaitWindow(data.Item.Name, 20);
         Assert.True(d.WaitText(card, "100"), d.AllText(card));
         d.Screenshot("_card");
@@ -299,8 +288,8 @@ public class UiTests(UiData data, ITestOutputHelper output)
     public void Arabic_ui_signs_in_and_shows_arabic_menu() => Run(nameof(Arabic_ui_signs_in_and_shows_arabic_menu), d =>
     {
         var login = d.WaitWindow("تسجيل", 20);
-        d.Type(d.Edits(login)[0], data.User);
-        var pwd = login.FindFirstDescendant(d.Cf.ByAutomationId("PasswordBox"));
+        d.Type(d.Box(login, "Login_UsernameBox"), data.User);
+        var pwd = d.ById(login, "Login_PasswordBox");
         pwd.Focus(); Keyboard.Type(UiData.Password);
         Keyboard.Press(VirtualKeyShort.ENTER);
         var main = d.WaitMain();
