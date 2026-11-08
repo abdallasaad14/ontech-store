@@ -44,7 +44,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         };
 
         var page = await q
-            .Skip((query.Page - 1) * query.PageSize).Take(query.PageSize)
+            .Skip(Paging.Skip(query.Page, query.PageSize)).Take(query.PageSize)
             .Include(o => o.Customer).Include(o => o.CreatedByUser).Include(o => o.CancelledByUser).Include(o => o.Lines)
             .AsSplitQuery()
             .ToListAsync(ct);
