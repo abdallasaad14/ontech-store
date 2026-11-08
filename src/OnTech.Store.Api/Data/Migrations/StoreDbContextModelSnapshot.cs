@@ -124,9 +124,15 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyName");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("CustomerNumber")
                         .IsUnique()
@@ -175,6 +181,10 @@ namespace OnTech.Store.Api.Data.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -526,9 +536,15 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyName");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("SupplierNumber")
                         .IsUnique()
@@ -585,12 +601,25 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedUsername")
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.Customer", b =>
+                {
+                    b.HasOne("OnTech.Store.Api.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OnTech.Store.Api.Data.Item", b =>
@@ -725,6 +754,15 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Navigation("StockIn");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("OnTech.Store.Api.Data.Supplier", b =>
+                {
+                    b.HasOne("OnTech.Store.Api.Data.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OnTech.Store.Api.Data.Category", b =>
