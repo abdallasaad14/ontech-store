@@ -11,6 +11,7 @@ public partial class App : Application
     private readonly AppSettings _settings = AppSettings.Load();
     private Session? _session;
     private MainWindow? _main;
+    private PasswordChangeGate? _passwordGate;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -50,6 +51,14 @@ public partial class App : Application
         }
 
         _session = session;
+        _passwordGate = new PasswordChangeGate(
+            askForNewPassword: () => new ChangePasswordWindow(new ChangePasswordViewModel(session, isRequired: true)) { Owner = _main }.ShowDialog() == true,
+            onChanged: () => { if (_main?.DataContext is ShellViewModel shell) shell.Navigate(shell.CurrentPageKind); },
+            onRefused: () => BackToLogin(null));
+        session.PasswordChangeRequired += (_, _) => Dispatcher.BeginInvoke(() =>
+        {
+            if (_session == session) _passwordGate?.Request();
+        });
         session.Expired += (_, _) => Dispatcher.BeginInvoke(() =>
         {
             if (_session == session)

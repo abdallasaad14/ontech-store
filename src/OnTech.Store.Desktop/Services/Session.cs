@@ -17,4 +17,9 @@ public sealed class Session(StoreApiClient api, UserDto user)
     public void Update(UserDto user) => User = user;
 
     public void NotifyExpired() => Expired?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Raised when the server refuses a call until the user changes their password (403 MustChangePassword).</summary>
+    public event EventHandler? PasswordChangeRequired;
+
+    public void NotifyPasswordChangeRequired() => PasswordChangeRequired?.Invoke(this, EventArgs.Empty);
 }

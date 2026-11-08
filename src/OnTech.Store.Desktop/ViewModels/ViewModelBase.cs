@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using OnTech.Store.Client;
+using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
@@ -26,7 +27,8 @@ public abstract partial class ViewModelBase : ObservableObject
         }
         catch (ApiError ex)
         {
-            ErrorMessage = L.Message(ex.Message);
+            // MustChangePassword opens the change-password window instead of showing a "no permission" message.
+            ErrorMessage = ex.Code == ErrorCodes.MustChangePassword ? null : L.Message(ex.Message);
             OnApiError(ex);
             return false;
         }
@@ -61,5 +63,6 @@ public abstract class PageViewModel(Session session) : ViewModelBase
     protected override void OnApiError(ApiError error)
     {
         if (error.IsUnauthorized) Session.NotifyExpired();
+        else if (error.Code == ErrorCodes.MustChangePassword) Session.NotifyPasswordChangeRequired();
     }
 }

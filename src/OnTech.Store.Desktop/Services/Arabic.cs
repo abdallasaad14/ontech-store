@@ -474,6 +474,7 @@ internal static class Arabic
         // ---- Server messages added by the audit fixes (CONTRACTS.md section 3) ----
         ["This record was changed on another device. It has been reloaded; check it and save again."] =
             "تم تعديل هذا السجل من جهاز آخر، وتمت إعادة تحميله. راجِع البيانات ثم احفظ مرة أخرى.",
+        ["You must change your password before you continue."] = "يجب تغيير كلمة المرور قبل المتابعة.",
     };
 
     /// <summary>Messages that carry a name or number: English pattern → Arabic, with $1, $2 for the captured parts.</summary>
