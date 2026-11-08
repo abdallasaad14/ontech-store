@@ -8,7 +8,11 @@ namespace OnTech.Store.Desktop.ViewModels;
 
 public enum Page { Home, NewOrder, StockIn, Customers, Suppliers, Orders, StockIns, Catalog, Users }
 
-public sealed record NavItem(Page Page, string Title, string Glyph);
+public sealed record NavItem(Page Page, string Title, string Glyph)
+{
+    /// <summary>What screen readers and UI tests read for a menu item (a record's default ToString is "NavItem { ... }").</summary>
+    public override string ToString() => Title;
+}
 
 /// <summary>The main window: sidebar menu (filtered by the user's permissions) and the open page.</summary>
 public sealed partial class ShellViewModel : ObservableObject

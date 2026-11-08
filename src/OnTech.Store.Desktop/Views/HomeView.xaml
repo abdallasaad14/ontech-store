@@ -11,7 +11,7 @@
 
             <!-- The three home actions -->
             <UniformGrid Rows="1" Margin="-6,0,-6,20">
-                <Button Style="{StaticResource PrimaryActionCard}" Margin="6,0" Command="{Binding NewOrderCommand}"
+                <Button AutomationProperties.AutomationId="Home_NewOrderButton" Style="{StaticResource PrimaryActionCard}" Margin="6,0" Command="{Binding NewOrderCommand}"
                         Visibility="{Binding CanCreateOrders, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <TextBlock Style="{StaticResource Icon}" Text="&#xE7BF;" FontSize="22" HorizontalAlignment="Left"/>
@@ -19,7 +19,7 @@
                         <TextBlock Text="{l:T 'Take items out for a customer'}" FontSize="12" Opacity="0.85"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding StockInCommand}"
+                <Button AutomationProperties.AutomationId="Home_StockInButton" Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding StockInCommand}"
                         Visibility="{Binding CanAddStock, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" HorizontalAlignment="Left">
@@ -29,7 +29,7 @@
                         <TextBlock Text="{l:T 'Items received from a supplier'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
                     </StackPanel>
                 </Button>
-                <Button Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddCustomerCommand}"
+                <Button AutomationProperties.AutomationId="Home_AddCustomerButton" Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddCustomerCommand}"
                         Visibility="{Binding CanManageCustomers, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>
                         <Border Width="36" Height="36" CornerRadius="8" Background="{StaticResource AccentSoftBrush}" HorizontalAlignment="Left">
@@ -67,7 +67,7 @@
                 </Border>
                 <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
                     <StackPanel>
-                        <TextBlock Text="{l:T 'Customers'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock x:Name="CategoryLabel" Text="{l:T 'Customers'}" Style="{StaticResource FieldLabel}"/>
                         <TextBlock Text="{Binding Summary.CustomerCount}" FontSize="22" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
@@ -79,13 +79,13 @@
             <DockPanel>
                 <DockPanel DockPanel.Dock="Top" Margin="20,16,20,10">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                        <ComboBox Width="180" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" Margin="0,0,8,0"/>
-                        <TextBox MaxLength="100" Width="200" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Search by item name or code'}">
+                        <ComboBox AutomationProperties.AutomationId="Home_CategoryCombo" AutomationProperties.LabeledBy="{Binding ElementName=CategoryLabel}" Width="180" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" Margin="0,0,8,0"/>
+                        <TextBox AutomationProperties.AutomationId="Home_SearchBox" MaxLength="100" Width="200" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Search by item name or code'}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding RefreshCommand}"/>
                             </TextBox.InputBindings>
                         </TextBox>
-                        <Button Content="&#xE72C;" FontFamily="{StaticResource IconFont}" Margin="8,0,0,0" Padding="11,8"
+                        <Button AutomationProperties.AutomationId="Home_RefreshButton" Content="&#xE72C;" FontFamily="{StaticResource IconFont}" Margin="8,0,0,0" Padding="11,8"
                                 ToolTip="{l:T 'Refresh'}" Command="{Binding RefreshCommand}"/>
                     </StackPanel>
                     <StackPanel VerticalAlignment="Center">
@@ -93,7 +93,7 @@
                         <TextBlock Text="{l:T 'Double-click an item to start an order with it.'}" Style="{StaticResource Hint}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </DockPanel>
-                <DataGrid x:Name="StockGrid" ItemsSource="{Binding Items}" Margin="10,0,10,10" MouseDoubleClick="OnStockDoubleClick">
+                <DataGrid AutomationProperties.AutomationId="Home_StockGrid" x:Name="StockGrid" ItemsSource="{Binding Items}" Margin="10,0,10,10" MouseDoubleClick="OnStockDoubleClick">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="{l:T 'ITEM'}" Binding="{Binding Name}" Width="2*" FontWeight="SemiBold"/>
                         <DataGridTextColumn Header="{l:T 'CODE'}" Binding="{Binding Code}" Width="*"/>
@@ -107,7 +107,7 @@
                         <DataGridTemplateColumn Width="Auto">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button Content="{l:T 'Item card'}" Style="{StaticResource LinkButton}" FontSize="12"
+                                    <Button AutomationProperties.AutomationId="Home_OpenCardButton" Content="{l:T 'Item card'}" Style="{StaticResource LinkButton}" FontSize="12"
                                             Command="{Binding DataContext.OpenCardCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

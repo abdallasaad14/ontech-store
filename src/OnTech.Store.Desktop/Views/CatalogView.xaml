@@ -11,9 +11,9 @@
     <DockPanel Margin="32,28,32,24">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
-                <CheckBox Content="{l:T 'Show disabled'}" IsChecked="{Binding ShowDisabled}" Margin="0,0,16,0"/>
-                <Button Content="{l:T '+ Category'}" Margin="0,0,8,0" Command="{Binding NewCategoryCommand}"/>
-                <Button Content="{l:T '+ Item'}" Style="{StaticResource PrimaryButton}" Command="{Binding NewItemCommand}"/>
+                <CheckBox AutomationProperties.AutomationId="Catalog_ShowDisabledCheck" Content="{l:T 'Show disabled'}" IsChecked="{Binding ShowDisabled}" Margin="0,0,16,0"/>
+                <Button AutomationProperties.AutomationId="Catalog_NewCategoryButton" Content="{l:T '+ Category'}" Margin="0,0,8,0" Command="{Binding NewCategoryCommand}"/>
+                <Button AutomationProperties.AutomationId="Catalog_NewItemButton" Content="{l:T '+ Item'}" Style="{StaticResource PrimaryButton}" Command="{Binding NewItemCommand}"/>
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="{l:T 'Items &amp; Categories'}" Style="{StaticResource PageTitle}"/>
@@ -33,7 +33,7 @@
             <Border Style="{StaticResource Card}" Padding="8">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{l:T 'CATEGORIES'}" Style="{StaticResource FieldLabel}" Margin="10,6,0,8"/>
-                    <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" BorderThickness="0"
+                    <ListBox AutomationProperties.AutomationId="Catalog_CategoriesList" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" BorderThickness="0"
                              ItemContainerStyle="{StaticResource NavItem}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -63,13 +63,13 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="18,14,14,8">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="{l:T 'Edit category'}" Style="{StaticResource RowLink}" Command="{Binding EditCategoryCommand}" CommandParameter="{Binding SelectedCategory}"/>
-                            <Button Content="{l:T 'Remove'}" Style="{StaticResource RowLink}" Foreground="{StaticResource DangerBrush}"
+                            <Button AutomationProperties.AutomationId="Catalog_EditCategoryButton" Content="{l:T 'Edit category'}" Style="{StaticResource RowLink}" Command="{Binding EditCategoryCommand}" CommandParameter="{Binding SelectedCategory}"/>
+                            <Button AutomationProperties.AutomationId="Catalog_DeleteCategoryButton" Content="{l:T 'Remove'}" Style="{StaticResource RowLink}" Foreground="{StaticResource DangerBrush}"
                                     Command="{Binding DeleteCategoryCommand}" CommandParameter="{Binding SelectedCategory}"/>
                         </StackPanel>
                         <TextBlock Text="{Binding SelectedCategory.Name}" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
                     </DockPanel>
-                    <DataGrid x:Name="ItemsGrid" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" Margin="6,0,6,6" MouseDoubleClick="OnItemDoubleClick">
+                    <DataGrid AutomationProperties.AutomationId="Catalog_ItemsGrid" x:Name="ItemsGrid" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" Margin="6,0,6,6" MouseDoubleClick="OnItemDoubleClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'ITEM'}" Binding="{Binding Name}" Width="2*" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="{l:T 'CODE'}" Binding="{Binding Code}" Width="*"/>
@@ -84,12 +84,12 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <Button Content="{l:T 'Item card'}" Style="{StaticResource RowLink}"
+                                            <Button AutomationProperties.AutomationId="Catalog_OpenCardButton" Content="{l:T 'Item card'}" Style="{StaticResource RowLink}"
                                                     Visibility="{Binding DataContext.CanOpenItemCard, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}"
                                                     Command="{Binding DataContext.OpenCardCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
-                                            <Button Content="{l:T 'Edit'}" Style="{StaticResource RowLink}"
+                                            <Button AutomationProperties.AutomationId="Catalog_EditItemButton" Content="{l:T 'Edit'}" Style="{StaticResource RowLink}"
                                                     Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
-                                            <Button Content="{l:T 'Disable'}" Style="{StaticResource RowLink}" Foreground="{StaticResource DangerBrush}"
+                                            <Button AutomationProperties.AutomationId="Catalog_DisableItemButton" Content="{l:T 'Disable'}" Style="{StaticResource RowLink}" Foreground="{StaticResource DangerBrush}"
                                                     Command="{Binding DataContext.DisableItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"
                                                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}"/>
                                         </StackPanel>
@@ -109,38 +109,38 @@
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
 
                         <StackPanel Visibility="{Binding IsCategoryForm, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="{l:T 'Name *'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="100" Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            <TextBlock Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="10" Text="{Binding CategoryCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                            <TextBlock x:Name="CategoryNameLabel" Text="{l:T 'Name *'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_CategoryNameBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryNameLabel}" MaxLength="100" Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="CategoryCodeLabel" Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_CategoryCodeBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryCodeLabel}" MaxLength="10" Text="{Binding CategoryCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
                             <TextBlock Text="{l:T 'Digits only. Leave empty for the next code (01, 02, ...).'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
-                            <TextBlock Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="500" Style="{StaticResource MultiLineTextBox}" Text="{Binding CategoryDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            <CheckBox Content="{l:T 'Active'}" IsChecked="{Binding CategoryActive}" Margin="0,0,0,18"/>
+                            <TextBlock x:Name="CategoryDescriptionLabel" Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_CategoryDescriptionBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryDescriptionLabel}" MaxLength="500" Style="{StaticResource MultiLineTextBox}" Text="{Binding CategoryDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                            <CheckBox AutomationProperties.AutomationId="Catalog_CategoryActiveCheck" Content="{l:T 'Active'}" IsChecked="{Binding CategoryActive}" Margin="0,0,0,18"/>
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding IsItemForm, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="{l:T 'Category *'}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding ItemCategory}" DisplayMemberPath="Name" Margin="0,0,0,12"/>
-                            <TextBlock Text="{l:T 'Item name *'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="150" Text="{Binding ItemName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            <TextBlock Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="64" Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                            <TextBlock x:Name="ItemCategoryLabel" Text="{l:T 'Category *'}" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox AutomationProperties.AutomationId="Catalog_ItemCategoryCombo" AutomationProperties.LabeledBy="{Binding ElementName=ItemCategoryLabel}" ItemsSource="{Binding Categories}" SelectedItem="{Binding ItemCategory}" DisplayMemberPath="Name" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="ItemNameLabel" Text="{l:T 'Item name *'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_ItemNameBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemNameLabel}" MaxLength="150" Text="{Binding ItemName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="ItemCodeLabel" Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_ItemCodeBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemCodeLabel}" MaxLength="64" Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
                             <TextBlock Text="{l:T 'Digits only. Leave empty to get the category code plus a number, e.g. 01004.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
-                            <TextBlock Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="500" Style="{StaticResource MultiLineTextBox}" Text="{Binding ItemDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="ItemDescriptionLabel" Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_ItemDescriptionBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemDescriptionLabel}" MaxLength="500" Style="{StaticResource MultiLineTextBox}" Text="{Binding ItemDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock Text="{l:T 'New items start at 0. Add their stock with Stock In, from a supplier.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"
                                        Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}}"/>
-                            <TextBlock Text="{l:T 'Low stock warning at'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="9" Text="{Binding ItemLowStock, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock x:Name="ItemLowStockLabel" Text="{l:T 'Low stock warning at'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_ItemLowStockBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemLowStockLabel}" MaxLength="9" Text="{Binding ItemLowStock, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Shows &quot;Low&quot; when the quantity falls to this number. 0 turns the warning off.'}" Margin="0,5,0,12"/>
-                            <CheckBox Content="{l:T 'Active'}" IsChecked="{Binding ItemActive}" Margin="0,0,0,18"
+                            <CheckBox AutomationProperties.AutomationId="Catalog_ItemActiveCheck" Content="{l:T 'Active'}" IsChecked="{Binding ItemActive}" Margin="0,0,0,18"
                                       Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="{l:T 'Cancel'}" Margin="0,0,8,0" Command="{Binding CancelFormCommand}"/>
-                            <Button Content="{l:T 'Save'}" Style="{StaticResource PrimaryButton}" MinWidth="90" Command="{Binding SaveFormCommand}"/>
+                            <Button AutomationProperties.AutomationId="Catalog_CancelFormButton" Content="{l:T 'Cancel'}" Margin="0,0,8,0" Command="{Binding CancelFormCommand}"/>
+                            <Button AutomationProperties.AutomationId="Catalog_SaveFormButton" Content="{l:T 'Save'}" Style="{StaticResource PrimaryButton}" MinWidth="90" Command="{Binding SaveFormCommand}"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

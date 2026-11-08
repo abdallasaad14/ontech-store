@@ -5,7 +5,7 @@
              xmlns:views="clr-namespace:OnTech.Store.Desktop.Views">
     <DockPanel Margin="32,28,32,24">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-            <Button DockPanel.Dock="Right" Content="{l:T '+ Add supplier'}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Top"
+            <Button AutomationProperties.AutomationId="Suppliers_StartNewButton" DockPanel.Dock="Right" Content="{l:T '+ Add supplier'}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Top"
                     Command="{Binding StartNewCommand}" Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}"/>
             <StackPanel>
                 <TextBlock Text="{l:T 'Suppliers'}" Style="{StaticResource PageTitle}"/>
@@ -23,15 +23,15 @@
             <Border Style="{StaticResource Card}" Padding="0">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
-                        <CheckBox DockPanel.Dock="Right" Content="{l:T 'Show disabled'}" IsChecked="{Binding ShowDisabled}" Margin="12,0,0,0"/>
-                        <Button DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Supplier number or company name (also phone, tax number, contact)'}">
+                        <CheckBox AutomationProperties.AutomationId="Suppliers_ShowDisabledCheck" DockPanel.Dock="Right" Content="{l:T 'Show disabled'}" IsChecked="{Binding ShowDisabled}" Margin="12,0,0,0"/>
+                        <Button AutomationProperties.AutomationId="Suppliers_SearchButton" DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_SearchBox" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Supplier number or company name (also phone, tax number, contact)'}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>
                         </TextBox>
                     </DockPanel>
-                    <DataGrid x:Name="SuppliersGrid" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding Selected}" Margin="6,0,6,6"
+                    <DataGrid AutomationProperties.AutomationId="Suppliers_SuppliersGrid" x:Name="SuppliersGrid" ItemsSource="{Binding Suppliers}" SelectedItem="{Binding Selected}" Margin="6,0,6,6"
                               MouseDoubleClick="OnDoubleClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'NO.'}" Binding="{Binding SupplierNumber}" Width="70"/>
@@ -45,9 +45,9 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal"
                                                     Visibility="{Binding DataContext.CanEdit, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}">
-                                            <Button Content="{l:T 'Edit'}" Style="{StaticResource LinkButton}" FontSize="12"
+                                            <Button AutomationProperties.AutomationId="Suppliers_EditButton" Content="{l:T 'Edit'}" Style="{StaticResource LinkButton}" FontSize="12"
                                                     Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
-                                            <Button Content="{l:T 'Disable'}" Style="{StaticResource LinkButton}" FontSize="12" Foreground="{StaticResource DangerBrush}"
+                                            <Button AutomationProperties.AutomationId="Suppliers_DisableButton" Content="{l:T 'Disable'}" Style="{StaticResource LinkButton}" FontSize="12" Foreground="{StaticResource DangerBrush}"
                                                     Command="{Binding DataContext.DisableCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"
                                                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVisibility}}"/>
                                         </StackPanel>
@@ -65,28 +65,28 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
-                        <TextBlock Text="{l:T 'Supplier number'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="9" Text="{Binding SupplierNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
+                        <TextBlock x:Name="SupplierNumberLabel" Text="{l:T 'Supplier number'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_SupplierNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=SupplierNumberLabel}" MaxLength="9" Text="{Binding SupplierNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
                         <TextBlock Text="{l:T 'Leave empty to use the next free number.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Company name *'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="200" Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Phone'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="50" Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Tax number'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="50" Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Contact person'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="150" Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Email'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="256" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Address'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="500" Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <TextBlock Text="{l:T 'Notes'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                        <CheckBox Content="{l:T 'Active'}" IsChecked="{Binding IsActive}" Margin="0,0,0,18"
+                        <TextBlock x:Name="CompanyNameLabel" Text="{l:T 'Company name *'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_CompanyNameBox" AutomationProperties.LabeledBy="{Binding ElementName=CompanyNameLabel}" MaxLength="200" Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="PhoneNumberLabel" Text="{l:T 'Phone'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_PhoneNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=PhoneNumberLabel}" MaxLength="50" Text="{Binding PhoneNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="TaxNumberLabel" Text="{l:T 'Tax number'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_TaxNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=TaxNumberLabel}" MaxLength="50" Text="{Binding TaxNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="ContactPersonLabel" Text="{l:T 'Contact person'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_ContactPersonBox" AutomationProperties.LabeledBy="{Binding ElementName=ContactPersonLabel}" MaxLength="150" Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="EmailLabel" Text="{l:T 'Email'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_EmailBox" AutomationProperties.LabeledBy="{Binding ElementName=EmailLabel}" MaxLength="256" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="AddressLabel" Text="{l:T 'Address'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_AddressBox" AutomationProperties.LabeledBy="{Binding ElementName=AddressLabel}" MaxLength="500" Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="NotesLabel" Text="{l:T 'Notes'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBox AutomationProperties.AutomationId="Suppliers_NotesBox" AutomationProperties.LabeledBy="{Binding ElementName=NotesLabel}" MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
+                        <CheckBox AutomationProperties.AutomationId="Suppliers_IsActiveCheck" Content="{l:T 'Active'}" IsChecked="{Binding IsActive}" Margin="0,0,0,18"
                                   Visibility="{Binding EditingId, Converter={StaticResource HasValueToVisibility}}"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Content="{l:T 'Cancel'}" Margin="0,0,8,0" Command="{Binding CancelEditCommand}"/>
-                            <Button Content="{l:T 'Save'}" Style="{StaticResource PrimaryButton}" MinWidth="90" Command="{Binding SaveCommand}"/>
+                            <Button AutomationProperties.AutomationId="Suppliers_CancelEditButton" Content="{l:T 'Cancel'}" Margin="0,0,8,0" Command="{Binding CancelEditCommand}"/>
+                            <Button AutomationProperties.AutomationId="Suppliers_SaveButton" Content="{l:T 'Save'}" Style="{StaticResource PrimaryButton}" MinWidth="90" Command="{Binding SaveCommand}"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

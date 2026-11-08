@@ -24,13 +24,13 @@
                         </Grid.RowDefinitions>
 
                         <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
-                            <TextBlock Text="{l:T 'Category'}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name"/>
+                            <TextBlock x:Name="CategoryLabel" Text="{l:T 'Category'}" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox AutomationProperties.AutomationId="NewOrder_CategoryCombo" AutomationProperties.LabeledBy="{Binding ElementName=CategoryLabel}" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,16">
-                            <TextBlock Text="{l:T 'Item'}" Style="{StaticResource FieldLabel}"/>
-                            <ComboBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
+                            <TextBlock x:Name="ItemLabel" Text="{l:T 'Item'}" Style="{StaticResource FieldLabel}"/>
+                            <ComboBox AutomationProperties.AutomationId="NewOrder_ItemCombo" AutomationProperties.LabeledBy="{Binding ElementName=ItemLabel}" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <DockPanel>
@@ -42,7 +42,7 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                             <DockPanel Visibility="{Binding SelectedItem, Converter={StaticResource HasValueToVisibility}}">
-                                <Button DockPanel.Dock="Right" Content="{l:T 'Item card'}" Style="{StaticResource LinkButton}" FontSize="12" Margin="10,0,0,0"
+                                <Button AutomationProperties.AutomationId="NewOrder_OpenCardButton" DockPanel.Dock="Right" Content="{l:T 'Item card'}" Style="{StaticResource LinkButton}" FontSize="12" Margin="10,0,0,0"
                                         Command="{Binding OpenCardCommand}" ToolTip="{l:T 'Every movement of this item in and out'}"
                                         Visibility="{Binding CanOpenItemCard, Converter={StaticResource BoolToVisibility}}"/>
                                 <TextBlock Style="{StaticResource Hint}" Text="{Binding AvailableHint}" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -50,38 +50,38 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,16">
-                            <TextBlock Text="{l:T 'Quantity'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock x:Name="QuantityLabel" Text="{l:T 'Quantity'}" Style="{StaticResource FieldLabel}"/>
                             <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="{l:T '+ Add another item'}" Style="{StaticResource LinkButton}" Margin="10,0,0,0"
+                                <Button AutomationProperties.AutomationId="NewOrder_AddLineButton" DockPanel.Dock="Right" Content="{l:T '+ Add another item'}" Style="{StaticResource LinkButton}" Margin="10,0,0,0"
                                         Command="{Binding AddLineCommand}" ToolTip="{l:T 'Keep this item in the order and pick another one'}"/>
-                                <TextBox MaxLength="9" Text="{Binding QuantityText, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox AutomationProperties.AutomationId="NewOrder_QuantityBox" AutomationProperties.LabeledBy="{Binding ElementName=QuantityLabel}" MaxLength="9" Text="{Binding QuantityText, UpdateSourceTrigger=PropertyChanged}"/>
                             </DockPanel>
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,16">
                             <DockPanel>
-                                <Button DockPanel.Dock="Right" Content="{l:T '+ New customer'}" Style="{StaticResource LinkButton}" Margin="0,-6,0,0"
+                                <Button AutomationProperties.AutomationId="NewOrder_QuickAddCustomerButton" DockPanel.Dock="Right" Content="{l:T '+ New customer'}" Style="{StaticResource LinkButton}" Margin="0,-6,0,0"
                                         Command="{Binding QuickAddCustomerCommand}"
                                         Visibility="{Binding CanAddCustomer, Converter={StaticResource BoolToVisibility}}"/>
-                                <TextBlock Text="{l:T 'Customer (type number or name)'}" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock x:Name="CustomerSearchLabel" Text="{l:T 'Customer (type number or name)'}" Style="{StaticResource FieldLabel}"/>
                             </DockPanel>
-                            <TextBox MaxLength="200" Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged, Delay=200}" Margin="0,0,0,6"
+                            <TextBox AutomationProperties.AutomationId="NewOrder_CustomerSearchBox" AutomationProperties.LabeledBy="{Binding ElementName=CustomerSearchLabel}" MaxLength="200" Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged, Delay=200}" Margin="0,0,0,6"
                                      ToolTip="{l:T 'Type the customer number or part of the name'}"/>
-                            <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Display"
+                            <ComboBox AutomationProperties.AutomationId="NewOrder_CustomerCombo" ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Display"
                                       IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="Display"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,16">
-                            <TextBlock Text="{l:T 'Issue voucher number *'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox MaxLength="30" Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock x:Name="IssueVoucherNumberLabel" Text="{l:T 'Issue voucher number *'}" Style="{StaticResource FieldLabel}"/>
+                            <TextBox AutomationProperties.AutomationId="NewOrder_IssueVoucherNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=IssueVoucherNumberLabel}" MaxLength="30" Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The number on the warehouse issue voucher. Required, and each number is used once.'}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,16">
-                            <CheckBox Content="{l:T 'Add a receipt'}" IsChecked="{Binding WithReceipt}" Margin="0,0,0,8"/>
+                            <CheckBox AutomationProperties.AutomationId="NewOrder_WithReceiptCheck" Content="{l:T 'Add a receipt'}" IsChecked="{Binding WithReceipt}" Margin="0,0,0,8"/>
                             <StackPanel Visibility="{Binding WithReceipt, Converter={StaticResource BoolToVisibility}}">
-                                <TextBlock Text="{l:T 'Receipt number'}" Style="{StaticResource FieldLabel}"/>
-                                <TextBox MaxLength="50" Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock x:Name="ReceiptNumberLabel" Text="{l:T 'Receipt number'}" Style="{StaticResource FieldLabel}"/>
+                                <TextBox AutomationProperties.AutomationId="NewOrder_ReceiptNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=ReceiptNumberLabel}" MaxLength="50" Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}"/>
                                 <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Each receipt number can be used once. You can search orders by it later.'}"/>
                             </StackPanel>
                         </StackPanel>
@@ -94,7 +94,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DockPanel Margin="0,4">
-                                        <Button DockPanel.Dock="Right" Content="{l:T 'Remove'}" Style="{StaticResource LinkButton}" FontSize="12"
+                                        <Button AutomationProperties.AutomationId="NewOrder_RemoveLineButton" DockPanel.Dock="Right" Content="{l:T 'Remove'}" Style="{StaticResource LinkButton}" FontSize="12"
                                                 Command="{Binding DataContext.RemoveLineCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                 CommandParameter="{Binding}"/>
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding Quantity, StringFormat='× {0}'}" FontWeight="SemiBold" Margin="12,0" VerticalAlignment="Center"/>
@@ -105,8 +105,8 @@
                         </ItemsControl>
                     </Border>
 
-                    <TextBlock Text="{l:T 'Notes (optional)'}" Style="{StaticResource FieldLabel}"/>
-                    <TextBox MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,18"/>
+                    <TextBlock x:Name="NotesLabel" Text="{l:T 'Notes (optional)'}" Style="{StaticResource FieldLabel}"/>
+                    <TextBox AutomationProperties.AutomationId="NewOrder_NotesBox" AutomationProperties.LabeledBy="{Binding ElementName=NotesLabel}" MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,18"/>
 
                     <Border Style="{StaticResource SoftStrip}" Margin="0,0,0,18" Visibility="{Binding HasSummary, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>
@@ -116,8 +116,8 @@
                     </Border>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="{l:T 'Cancel'}" Margin="0,0,8,0" MinWidth="90" Command="{Binding CancelCommand}"/>
-                        <Button Content="{l:T 'Save order'}" Style="{StaticResource PrimaryButton}" MinWidth="120" Command="{Binding SaveCommand}"
+                        <Button AutomationProperties.AutomationId="NewOrder_CancelButton" Content="{l:T 'Cancel'}" Margin="0,0,8,0" MinWidth="90" Command="{Binding CancelCommand}"/>
+                        <Button AutomationProperties.AutomationId="NewOrder_SaveButton" Content="{l:T 'Save order'}" Style="{StaticResource PrimaryButton}" MinWidth="120" Command="{Binding SaveCommand}"
                                 IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"/>
                     </StackPanel>
                 </StackPanel>

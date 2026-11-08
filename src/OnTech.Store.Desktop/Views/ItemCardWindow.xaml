@@ -61,17 +61,17 @@
         <!-- Period -->
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button Content="{l:T 'Print / PDF'}" Margin="0,0,8,0" Command="{Binding PrintCommand}"
+                <Button AutomationProperties.AutomationId="ItemCard_PrintButton" Content="{l:T 'Print / PDF'}" Margin="0,0,8,0" Command="{Binding PrintCommand}"
                         ToolTip="{l:T 'To save a PDF, choose Microsoft Print to PDF as the printer.'}"/>
-                <Button Content="{l:T 'Export to Excel'}" Command="{Binding ExportExcelCommand}"/>
+                <Button AutomationProperties.AutomationId="ItemCard_ExportExcelButton" Content="{l:T 'Export to Excel'}" Command="{Binding ExportExcelCommand}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{l:T 'From'}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <DatePicker SelectedDate="{Binding FromDate}"/>
-                <TextBlock Text="{l:T 'To'}" VerticalAlignment="Center" Margin="14,0,8,0"/>
-                <DatePicker SelectedDate="{Binding ToDate}"/>
-                <Button Content="{l:T 'Show'}" Style="{StaticResource PrimaryButton}" Margin="12,0,0,0" Command="{Binding ShowPeriodCommand}"/>
-                <Button Content="{l:T 'All dates'}" Style="{StaticResource LinkButton}" Margin="6,0,0,0" Command="{Binding ShowAllDatesCommand}"/>
+                <TextBlock x:Name="FromDateLabel" Text="{l:T 'From'}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <DatePicker AutomationProperties.AutomationId="ItemCard_FromDate" AutomationProperties.LabeledBy="{Binding ElementName=FromDateLabel}" SelectedDate="{Binding FromDate}"/>
+                <TextBlock x:Name="ToDateLabel" Text="{l:T 'To'}" VerticalAlignment="Center" Margin="14,0,8,0"/>
+                <DatePicker AutomationProperties.AutomationId="ItemCard_ToDate" AutomationProperties.LabeledBy="{Binding ElementName=ToDateLabel}" SelectedDate="{Binding ToDate}"/>
+                <Button AutomationProperties.AutomationId="ItemCard_ShowPeriodButton" Content="{l:T 'Show'}" Style="{StaticResource PrimaryButton}" Margin="12,0,0,0" Command="{Binding ShowPeriodCommand}"/>
+                <Button AutomationProperties.AutomationId="ItemCard_ShowAllDatesButton" Content="{l:T 'All dates'}" Style="{StaticResource LinkButton}" Margin="6,0,0,0" Command="{Binding ShowAllDatesCommand}"/>
                 <TextBlock Text="{Binding PeriodText}" Style="{StaticResource Hint}" VerticalAlignment="Center" Margin="12,0,0,0"/>
             </StackPanel>
         </DockPanel>
@@ -80,8 +80,8 @@
 
         <DockPanel DockPanel.Dock="Bottom" Margin="0,14,0,0">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                <Button Content="{l:T 'Refresh'}" Margin="0,0,8,0" Command="{Binding RefreshCommand}"/>
-                <Button Content="{l:T 'Close'}" Style="{StaticResource PrimaryButton}" MinWidth="90" IsCancel="True" Click="OnClose"/>
+                <Button AutomationProperties.AutomationId="ItemCard_RefreshButton" Content="{l:T 'Refresh'}" Margin="0,0,8,0" Command="{Binding RefreshCommand}"/>
+                <Button AutomationProperties.AutomationId="ItemCard_CloseButton" Content="{l:T 'Close'}" Style="{StaticResource PrimaryButton}" MinWidth="90" IsCancel="True" Click="OnClose"/>
             </StackPanel>
             <TextBlock Text="{l:T 'Oldest first. Balance is the quantity in the store right after each movement. Double-click a movement to open its order or stock-in.'}"
                        Style="{StaticResource Hint}" VerticalAlignment="Center" TextWrapping="Wrap"/>
@@ -95,7 +95,7 @@
 
             <Border Style="{StaticResource Card}" Padding="0">
                 <Grid>
-                    <DataGrid x:Name="LinesGrid" ItemsSource="{Binding Lines}" SelectedItem="{Binding SelectedLine}" Margin="6" MouseDoubleClick="OnLineDoubleClick">
+                    <DataGrid AutomationProperties.AutomationId="ItemCard_LinesGrid" x:Name="LinesGrid" ItemsSource="{Binding Lines}" SelectedItem="{Binding SelectedLine}" Margin="6" MouseDoubleClick="OnLineDoubleClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding Date, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="130"/>
                             <DataGridTextColumn Header="{l:T 'MOVEMENT'}" Binding="{Binding Type, Converter={StaticResource MovementType}, Mode=OneWay}" Width="150"/>

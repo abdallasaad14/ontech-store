@@ -476,6 +476,10 @@ internal static class Arabic
             "تم تعديل هذا السجل من جهاز آخر، وتمت إعادة تحميله. راجِع البيانات ثم احفظ مرة أخرى.",
         ["You must change your password before you continue."] = "يجب تغيير كلمة المرور قبل المتابعة.",
 
+        // ---- Accessibility names (M-9) ----
+        ["Main menu"] = "القائمة الرئيسية",
+        ["Admin menu"] = "قائمة الإدارة",
+
         // ---- Validation errors from the server, shown per field (M-3). {0} = the field's label below. ----
         ["{0} is required."] = "{0}: هذا الحقل مطلوب.",
         ["{0} can be at most {1} characters."] = "{0}: الحد الأقصى {1} حرفًا.",

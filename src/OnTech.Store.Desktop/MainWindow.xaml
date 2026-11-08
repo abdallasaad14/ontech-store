@@ -25,10 +25,15 @@
                 <TextBlock Text="{Binding Title}" FontSize="13" VerticalAlignment="Center"/>
             </StackPanel>
         </DataTemplate>
+        <!-- Menu items: a fixed id from the Page enum (not the display text) and the page title as their accessible name. -->
+        <Style x:Key="NavItemWithIds" TargetType="ListBoxItem" BasedOn="{StaticResource NavItem}">
+            <Setter Property="AutomationProperties.AutomationId" Value="{Binding Page, StringFormat='Shell_Nav_{0}'}"/>
+            <Setter Property="AutomationProperties.Name" Value="{Binding Title}"/>
+        </Style>
         <Style x:Key="NavList" TargetType="ListBox">
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="ItemContainerStyle" Value="{StaticResource NavItem}"/>
+            <Setter Property="ItemContainerStyle" Value="{StaticResource NavItemWithIds}"/>
             <Setter Property="ItemTemplate" Value="{StaticResource NavItemTemplate}"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
         </Style>
@@ -62,9 +67,9 @@
                             </StackPanel>
                         </DockPanel>
                         <StackPanel Orientation="Horizontal" Margin="-6,8,0,0">
-                            <Button Content="{l:T 'Password'}" Style="{StaticResource LinkButton}" FontSize="12" Command="{Binding ChangePasswordCommand}"/>
-                            <Button Content="{l:T 'Sign out'}" Style="{StaticResource LinkButton}" FontSize="12" Command="{Binding SignOutCommand}"/>
-                            <Button Content="{Binding OtherLanguage}" Style="{StaticResource LinkButton}" FontSize="12" Command="{Binding SwitchLanguageCommand}"
+                            <Button AutomationProperties.AutomationId="Shell_ChangePasswordButton" Content="{l:T 'Password'}" Style="{StaticResource LinkButton}" FontSize="12" Command="{Binding ChangePasswordCommand}"/>
+                            <Button AutomationProperties.AutomationId="Shell_SignOutButton" Content="{l:T 'Sign out'}" Style="{StaticResource LinkButton}" FontSize="12" Command="{Binding SignOutCommand}"/>
+                            <Button AutomationProperties.AutomationId="Shell_SwitchLanguageButton" Content="{Binding OtherLanguage}" Style="{StaticResource LinkButton}" FontSize="12" Command="{Binding SwitchLanguageCommand}"
                                     ToolTip="{l:T 'Change the language'}"/>
                         </StackPanel>
                         <TextBlock FontSize="10" Foreground="{StaticResource BrandGrayBrush}" Margin="0,4,0,0">
@@ -74,10 +79,10 @@
                 </Border>
 
                 <StackPanel>
-                    <ListBox Style="{StaticResource NavList}" ItemsSource="{Binding MainMenu}" SelectedItem="{Binding SelectedMainItem}"/>
+                    <ListBox AutomationProperties.AutomationId="Shell_MainMenuList" AutomationProperties.Name="{l:T 'Main menu'}" Style="{StaticResource NavList}" ItemsSource="{Binding MainMenu}" SelectedItem="{Binding SelectedMainItem}"/>
                     <StackPanel Visibility="{Binding HasAdminMenu, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="{l:T 'ADMIN'}" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="10,20,0,6"/>
-                        <ListBox Style="{StaticResource NavList}" ItemsSource="{Binding AdminMenu}" SelectedItem="{Binding SelectedAdminItem}"/>
+                        <ListBox AutomationProperties.AutomationId="Shell_AdminMenuList" AutomationProperties.Name="{l:T 'Admin menu'}" Style="{StaticResource NavList}" ItemsSource="{Binding AdminMenu}" SelectedItem="{Binding SelectedAdminItem}"/>
                     </StackPanel>
                 </StackPanel>
             </DockPanel>

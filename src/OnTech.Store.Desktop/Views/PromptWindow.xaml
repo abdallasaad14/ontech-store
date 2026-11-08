@@ -7,11 +7,11 @@
     <Border Style="{StaticResource Card}" Margin="16" Padding="22">
         <StackPanel>
             <TextBlock x:Name="LabelText" Style="{StaticResource PageSubtitle}" Foreground="{StaticResource TextBrush}" Margin="0,0,0,10"/>
-            <TextBox MaxLength="500" x:Name="InputBox" Margin="0,0,0,18"/>
-            <PasswordBox MaxLength="500" x:Name="PasswordInput" Margin="0,0,0,18" Visibility="Collapsed"/>
+            <TextBox AutomationProperties.AutomationId="Prompt_InputBox" MaxLength="500" x:Name="InputBox" Margin="0,0,0,18"/>
+            <PasswordBox AutomationProperties.AutomationId="Prompt_PasswordInputBox" MaxLength="500" x:Name="PasswordInput" Margin="0,0,0,18" Visibility="Collapsed"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="{l:T 'Cancel'}" IsCancel="True" Margin="0,0,8,0" MinWidth="90"/>
-                <Button x:Name="OkButton" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="OnOk" MinWidth="90"/>
+                <Button AutomationProperties.AutomationId="Prompt_CancelButton" Content="{l:T 'Cancel'}" IsCancel="True" Margin="0,0,8,0" MinWidth="90"/>
+                <Button AutomationProperties.AutomationId="Prompt_OkButton" x:Name="OkButton" Style="{StaticResource PrimaryButton}" IsDefault="True" Click="OnOk" MinWidth="90"/>
             </StackPanel>
         </StackPanel>
     </Border>
