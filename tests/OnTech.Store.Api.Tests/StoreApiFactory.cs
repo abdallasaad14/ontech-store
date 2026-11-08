@@ -108,7 +108,13 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
     {
         if (_sqlServer is not null)
         {
-            try { WithDb(db => db.Database.EnsureDeleted()); } catch { /* best effort */ }
+            // The host may have failed to start (startup tests), so drop the database without it.
+            try
+            {
+                using var db = new StoreDbContext(new DbContextOptionsBuilder<StoreDbContext>().UseSqlServer($"{_sqlServer};Database={_sqlDbName}").Options);
+                db.Database.EnsureDeleted();
+            }
+            catch { /* best effort */ }
         }
         base.Dispose(disposing);
         SqliteConnection.ClearAllPools();
