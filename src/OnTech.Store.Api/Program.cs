@@ -18,7 +18,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Host.UseWindowsService(o => o.ServiceName = "OnTech Store Server");
 
 builder.Services.AddStoreDatabase(builder.Configuration);
-builder.Services.AddStoreAuth(builder.Configuration);
+builder.Services.AddStoreAuth(builder.Configuration, builder.Environment);
 builder.Services.AddScoped<StockService>();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
@@ -52,6 +52,10 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+if (app.Services.GetRequiredService<JwtSigningKey>().Generated)
+    app.Logger.LogWarning("Jwt:SigningKey is not set, so a random key was made for this run (Development only). " +
+        "Sign-ins stop working when the server restarts. Set it with: dotnet user-secrets set Jwt:SigningKey <random secret>");
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();

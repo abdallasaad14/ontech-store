@@ -9,13 +9,15 @@ namespace OnTech.Store.Api.Auth;
 
 public static class AuthSetup
 {
-    public static IServiceCollection AddStoreAuth(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddStoreAuth(this IServiceCollection services, IConfiguration config, IHostEnvironment env)
     {
         var jwt = config.GetSection(JwtOptions.Section).Get<JwtOptions>() ?? new JwtOptions();
-        if (string.IsNullOrWhiteSpace(jwt.SigningKey) || jwt.SigningKey.Length < 32)
-            throw new InvalidOperationException("Jwt:SigningKey must be set to at least 32 characters in appsettings.json.");
+        var key = JwtSigningKey.Resolve(jwt.SigningKey, env);
+        jwt.SigningKey = key.Value;
 
         services.Configure<JwtOptions>(config.GetSection(JwtOptions.Section));
+        services.PostConfigure<JwtOptions>(o => o.SigningKey = key.Value);
+        services.AddSingleton(key);
         services.AddSingleton<TokenService>();
         services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();

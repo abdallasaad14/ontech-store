@@ -26,23 +26,35 @@ public sealed class StoreApiFactory : WebApplicationFactory<Program>
 
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
+    /// <summary>The host environment. "Testing" unless a test needs to see Development or Production behaviour.</summary>
+    public string EnvironmentName { get; init; } = "Testing";
+
+    /// <summary>Settings that replace the defaults below. A null value leaves that setting out entirely.</summary>
+    public Dictionary<string, string?> Settings { get; init; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Testing");
+        builder.UseEnvironment(EnvironmentName);
+        var settings = new Dictionary<string, string?>
+        {
+            ["Jwt:SigningKey"] = "test-signing-key-0123456789abcdefghijklmnop",
+            ["Seed:AdminUsername"] = AdminUsername,
+            ["Seed:AdminPassword"] = AdminPassword,
+        };
         if (_sqlServer is not null)
         {
-            builder.UseSetting("Database:Provider", "SqlServer");
-            builder.UseSetting("ConnectionStrings:Store", $"{_sqlServer};Database={_sqlDbName}");
+            settings["Database:Provider"] = "SqlServer";
+            settings["ConnectionStrings:Store"] = $"{_sqlServer};Database={_sqlDbName}";
         }
         else
         {
-            builder.UseSetting("Database:Provider", "Sqlite");
+            settings["Database:Provider"] = "Sqlite";
             // A busy timeout lets concurrent requests queue for SQLite's write lock.
-            builder.UseSetting("ConnectionStrings:Store", $"Data Source={_dbPath};Default Timeout=30;Pooling=False");
+            settings["ConnectionStrings:Store"] = $"Data Source={_dbPath};Default Timeout=30;Pooling=False";
         }
-        builder.UseSetting("Jwt:SigningKey", "test-signing-key-0123456789abcdefghijklmnop");
-        builder.UseSetting("Seed:AdminUsername", AdminUsername);
-        builder.UseSetting("Seed:AdminPassword", AdminPassword);
+        foreach (var (k, v) in Settings) settings[k] = v;
+        foreach (var (k, v) in settings)
+            if (v is not null) builder.UseSetting(k, v);
     }
 
     public async Task<HttpClient> LoginAsync(string username = AdminUsername, string password = AdminPassword)
