@@ -475,6 +475,7 @@ internal static class Arabic
         ["This record was changed on another device. It has been reloaded; check it and save again."] =
             "تم تعديل هذا السجل من جهاز آخر، وتمت إعادة تحميله. راجِع البيانات ثم احفظ مرة أخرى.",
         ["You must change your password before you continue."] = "يجب تغيير كلمة المرور قبل المتابعة.",
+        ["This number or code is already used. Reload and try again."] = "هذا الرقم أو الكود مستخدم من قبل. أعد تحميل البيانات وحاول مرة أخرى.",
 
         // ---- Accessibility names (M-9) ----
         ["Main menu"] = "القائمة الرئيسية",
@@ -530,6 +531,7 @@ internal static class Arabic
         (P(@"Supplier number (\d+) is already used\."), "رقم المورد $1 مستخدم من قبل."),
         (P(@"'(.+)' is disabled\."), "'$1' موقوف."),
         (P(@"The username '(.+)' is already taken\."), "اسم المستخدم '$1' مستخدم من قبل."),
+        (P(@"Too many wrong passwords\. Wait (\d+) seconds and try again\."), "تم إدخال كلمة مرور خاطئة عدة مرات. انتظر $1 ثانية ثم حاول مرة أخرى."),
         // Customer import, per row
         (P(@"Row (\d+): no company name"), "الصف $1: لا يوجد اسم شركة"),
         (P(@"Row (\d+): company name is longer than 200 characters"), "الصف $1: اسم الشركة أطول من 200 حرف"),
