@@ -90,8 +90,8 @@ public static class DatabaseSetup
     ];
 
     /// <summary>
-    /// The audit fixes (AuditFixes migration on SQL Server): Version columns (M-1) and case-insensitive document-number
-    /// indexes (M-4). Each step checks first, so it runs once; the file is backed up before the first change and all steps
+    /// The audit fixes (AuditFixes migration on SQL Server): Version columns (M-1), case-insensitive document-number
+    /// indexes (M-4) and the CreatedByUserId indexes (L-6; the FK itself only on new files). Each step checks first, so it runs once; the file is backed up before the first change and all steps
     /// run in one transaction.
     /// </summary>
     private static async Task UpgradeSqliteAuditFixesAsync(StoreDbContext db, ILogger log)
@@ -118,6 +118,13 @@ public static class DatabaseSetup
             steps.Add($"DROP INDEX IF EXISTS {index}");
             steps.Add($"CREATE UNIQUE INDEX {index} ON {table} ({column} COLLATE NOCASE) {filter}");
         }
+
+        // L-6: SQLite cannot add a foreign key to an existing table without rebuilding it, and live tables are never rebuilt,
+        // so on existing files Customers/Suppliers.CreatedByUserId stay without the FK (new files have it). The index that
+        // comes with the FK is added so the schema matches otherwise.
+        foreach (var table in new[] { "Customers", "Suppliers" })
+            if (await ScalarAsync(db, $"SELECT COUNT(*) FROM pragma_index_list('{table}') WHERE name = 'IX_{table}_CreatedByUserId'") == 0)
+                steps.Add($"CREATE INDEX IX_{table}_CreatedByUserId ON {table} (CreatedByUserId)");
 
         if (steps.Count == 0) return;
         await BackupSqliteAsync(db, db.Database.GetDbConnection().DataSource, "before-audit-fixes", log);

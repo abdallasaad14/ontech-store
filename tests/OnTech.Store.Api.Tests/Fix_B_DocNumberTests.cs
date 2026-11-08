@@ -135,6 +135,7 @@ public class Fix_B_SqliteUpgradeTests
             "ALTER TABLE Customers DROP COLUMN Version", "ALTER TABLE Suppliers DROP COLUMN Version",
             "DROP INDEX IX_StockIns_VoucherNumber", "CREATE UNIQUE INDEX IX_StockIns_VoucherNumber ON StockIns (VoucherNumber COLLATE BINARY)",
             "DROP INDEX IX_Orders_IssueVoucherNumber", "CREATE UNIQUE INDEX IX_Orders_IssueVoucherNumber ON Orders (IssueVoucherNumber COLLATE BINARY) WHERE [IssueVoucherNumber] IS NOT NULL",
+            "DROP INDEX IX_Customers_CreatedByUserId", "DROP INDEX IX_Suppliers_CreatedByUserId",
             "UPDATE StockIns SET VoucherNumber = 'old-1' WHERE VoucherNumber = 'OLD-1' COLLATE BINARY");
         Assert.Equal("BINARY", SqliteUpgrade.Collation(cs, "IX_StockIns_VoucherNumber"));
 
@@ -146,6 +147,8 @@ public class Fix_B_SqliteUpgradeTests
                 Assert.Equal(1L, SqliteUpgrade.Scalar(cs, $"SELECT COUNT(*) FROM pragma_table_info('{t}') WHERE name = 'Version'"));
             Assert.Equal("NOCASE", SqliteUpgrade.Collation(cs, "IX_StockIns_VoucherNumber"));
             Assert.Equal("NOCASE", SqliteUpgrade.Collation(cs, "IX_Orders_IssueVoucherNumber"));
+            Assert.Equal(1L, SqliteUpgrade.Scalar(cs, "SELECT COUNT(*) FROM pragma_index_list('Customers') WHERE name = 'IX_Customers_CreatedByUserId'"));
+            Assert.Equal(1L, SqliteUpgrade.Scalar(cs, "SELECT COUNT(*) FROM pragma_index_list('Suppliers') WHERE name = 'IX_Suppliers_CreatedByUserId'"));
             Assert.Equal(1L, SqliteUpgrade.Scalar(cs, "SELECT COUNT(*) FROM StockIns WHERE VoucherNumber = 'OLD-1' COLLATE BINARY"));
             Assert.Single(Directory.GetFiles(dir.Path, "store-backup-before-audit-fixes-*.db"));
 

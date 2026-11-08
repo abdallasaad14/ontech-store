@@ -72,6 +72,8 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
             e.HasIndex(x => x.CustomerNumber).IsUnique();
+            // L-6: who created it. No navigation property; on SQLite only new files get the FK (see UpgradeSqliteAuditFixesAsync).
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
             e.Property(x => x.Version).IsConcurrencyToken();
         });
 
@@ -117,6 +119,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CompanyName);
             e.HasIndex(x => x.TaxNumber);
             e.HasIndex(x => x.SupplierNumber).IsUnique();
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict); // L-6
             e.Property(x => x.Version).IsConcurrencyToken();
         });
 
