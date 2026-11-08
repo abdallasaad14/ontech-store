@@ -8,7 +8,8 @@ public sealed class SeedOptions
 {
     public const string Section = "Seed";
     public string AdminUsername { get; set; } = "admin";
-    public string AdminPassword { get; set; } = "ChangeMe!123";
+    /// <summary>Only used when the database has no admin. Comes from env Seed__AdminPassword or user-secrets, never from git.</summary>
+    public string AdminPassword { get; set; } = "";
     public string AdminName { get; set; } = "Administrator";
 }
 
@@ -172,6 +173,12 @@ public static class DatabaseSetup
     private static async Task CreateFirstAdminAsync(IServiceProvider services, StoreDbContext db, ILogger log)
     {
         var seed = services.GetRequiredService<IConfiguration>().GetSection(SeedOptions.Section).Get<SeedOptions>() ?? new SeedOptions();
+        // L-5: no default admin password in code or in git-tracked config.
+        if (string.IsNullOrWhiteSpace(seed.AdminPassword))
+            throw new InvalidOperationException(
+                $"The database has no admin yet and Seed:AdminPassword is not set. Set the environment variable Seed__AdminPassword " +
+                $"(or user-secrets Seed:AdminPassword) to a temporary password for the first admin '{seed.AdminUsername}', start the server once, " +
+                "sign in and change it, then remove the variable.");
         var admin = new User
         {
             FullName = seed.AdminName,
