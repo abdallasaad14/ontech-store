@@ -128,6 +128,18 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (f.WithReceipt is { } wr) q = q.Where(o => o.WithReceipt == wr);
         if (f.Status is { } st) q = q.Where(o => o.Status == st);
         if (f.Type is { } type) q = q.Where(o => o.Type == type);
+        if (f.DemoState is { } ds)
+        {
+            q = q.Where(o => o.Type == IssueType.Demo && o.Status == OrderStatus.Completed);
+            q = ds switch
+            {
+                DemoState.StillOut => q.Where(o => o.Lines.Any(l => l.ReturnedQuantity < l.Quantity)),
+                DemoState.NothingBack => q.Where(o => o.Lines.All(l => l.ReturnedQuantity == 0)),
+                DemoState.PartlyBack => q.Where(o => o.Lines.Any(l => l.ReturnedQuantity > 0) && o.Lines.Any(l => l.ReturnedQuantity < l.Quantity)),
+                DemoState.AllBack => q.Where(o => o.Lines.All(l => l.ReturnedQuantity >= l.Quantity)),
+                _ => throw ApiException.BadRequest("Unknown demo state."),
+            };
+        }
         if (f.ReceiptNumber.CleanDocNumber() is { } rn) q = q.Where(o => o.ReceiptNumber != null && o.ReceiptNumber.ToUpper().Contains(rn));
         if (f.OrderNumber.CleanDocNumber() is { } on) q = q.Where(o => o.OrderNumber.ToUpper().Contains(on));
         if (f.IssueVoucherNumber.CleanDocNumber() is { } iv) q = q.Where(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.ToUpper().Contains(iv));

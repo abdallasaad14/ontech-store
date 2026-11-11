@@ -28,6 +28,7 @@ public class DashboardController(StoreDbContext db) : ControllerBase
             .Where(i => i.LowStockThreshold > 0 && i.Quantity <= i.LowStockThreshold)
             .OrderBy(i => i.Quantity).ThenBy(i => i.Name).Take(20).ToListAsync(ct);
         var completed = db.Orders.Where(o => o.Status == OrderStatus.Completed);
+        var openDemoLines = db.OrderLines.Where(l => l.Order.Type == IssueType.Demo && l.Order.Status == OrderStatus.Completed && l.ReturnedQuantity < l.Quantity);
 
         return new DashboardSummaryDto
         {
@@ -41,6 +42,8 @@ public class DashboardController(StoreDbContext db) : ControllerBase
             UnitsOutToday = await db.OrderLines.Where(l => l.Order.Status == OrderStatus.Completed && l.Order.CreatedAt >= todayStart)
                 .SumAsync(l => (int?)l.Quantity, ct) ?? 0,
             OrdersThisMonth = await completed.CountAsync(o => o.CreatedAt >= monthStart, ct),
+            OpenDemoQuantity = await openDemoLines.SumAsync(l => (int?)(l.Quantity - l.ReturnedQuantity), ct) ?? 0,
+            OpenDemoCustomers = await openDemoLines.Select(l => l.Order.CustomerId).Distinct().CountAsync(ct),
             LowStockItems = lowStock.Select(i => i.ToDto()).ToList(),
         };
     }

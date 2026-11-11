@@ -104,6 +104,21 @@ public sealed class OpenDemoQuery
 {
     public int? CustomerId { get; set; }
     public int? ItemId { get; set; }
+    /// <summary>Free text: matches the issue voucher number, customer name or number, item name or code.</summary>
+    [MaxLength(100)] public string? Search { get; set; }
+}
+
+/// <summary>Where a demo issue voucher stands. Filtering by it also means: demos only, cancelled ones left out.</summary>
+public enum DemoState
+{
+    /// <summary>Something is still with the customer (nothing back yet, or part back).</summary>
+    StillOut = 0,
+    /// <summary>Nothing has come back yet.</summary>
+    NothingBack = 1,
+    /// <summary>Some came back, some is still out.</summary>
+    PartlyBack = 2,
+    /// <summary>Everything came back.</summary>
+    AllBack = 3
 }
 
 public enum OrderSort
@@ -134,6 +149,8 @@ public sealed class OrderQuery
     [MaxLength(50)] public string? IssueVoucherNumber { get; set; }
     public OrderStatus? Status { get; set; }
     public IssueType? Type { get; set; }
+    /// <summary>Demos only, by how much came back. Leaves out sales and cancelled demos.</summary>
+    public DemoState? DemoState { get; set; }
     public OrderSort Sort { get; set; } = OrderSort.NewestFirst;
     /// <summary>1 to <see cref="Paging.MaxPage"/>; anything else is a 400.</summary>
     [Range(1, Paging.MaxPage)] public int Page { get; set; } = 1;
@@ -152,5 +169,9 @@ public sealed class DashboardSummaryDto
     public int OrdersToday { get; init; }
     public int UnitsOutToday { get; init; }
     public int OrdersThisMonth { get; init; }
+    /// <summary>Demo units still with customers.</summary>
+    public int OpenDemoQuantity { get; init; }
+    /// <summary>How many customers hold at least one demo unit.</summary>
+    public int OpenDemoCustomers { get; init; }
     public IReadOnlyList<ItemDto> LowStockItems { get; init; } = Array.Empty<ItemDto>();
 }
