@@ -23,6 +23,24 @@ public enum Permission
     All = ViewStock | ManageCustomers | ManageSuppliers | CreateOrders | AddStock | ViewOrders | CancelOrders | ManageCatalog | ManageUsers
 }
 
+/// <summary>What an issue voucher (إذن خروج) is for. Both take stock out to a customer.</summary>
+public enum IssueType
+{
+    /// <summary>Sold to the customer.</summary>
+    Sale = 0,
+    /// <summary>Lent to the customer as a demo; stays open until it comes back on a demo return.</summary>
+    Demo = 1
+}
+
+/// <summary>What a receive voucher (إذن دخول) is for. Both add stock.</summary>
+public enum ReceiveType
+{
+    /// <summary>Bought from a supplier.</summary>
+    Purchase = 0,
+    /// <summary>A demo coming back from the customer it went out to. Every line points at a demo line.</summary>
+    DemoReturn = 1
+}
+
 public enum OrderStatus
 {
     Completed = 0,
