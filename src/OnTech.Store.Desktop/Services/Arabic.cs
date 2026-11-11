@@ -468,13 +468,9 @@ internal static class Arabic
             "جزء من هذا الديمو رجع بالفعل، لذلك لا يمكن إلغاؤه. ألغِ أذون رجوع الديمو الخاصة به أولًا.",
         ["Mark issue voucher {0} as a demo? Its items will show as still with {1} until a demo return brings them back. Stock does not change."] =
             "تحويل إذن الصرف {0} إلى ديمو؟ ستظهر أصنافه على أنها لدى {1} حتى تُستلم بإذن رجوع ديمو. الرصيد لن يتغير.",
-        ["Mark issue voucher {0} as a sale? It will no longer count as a demo with {1}. Stock does not change."] =
-            "تحويل إذن الصرف {0} إلى بيع؟ لن يُحسب ديمو لدى {1} بعد الآن. الرصيد لن يتغير.",
         ["Issue voucher {0} is now a demo."] = "إذن الصرف {0} أصبح ديمو.",
-        ["Issue voucher {0} is now a sale."] = "إذن الصرف {0} أصبح بيع.",
         ["Admin only: for an order saved with the wrong type"] = "لمسؤول النظام فقط: لإذن تم حفظه بنوع خاطئ",
         ["Mark as demo"] = "تحويل إلى ديمو",
-        ["Mark as sale"] = "تحويل إلى بيع",
         ["Back:"] = "رجع:",
         ["Still with the customer:"] = "لا يزال لدى العميل:",
         ["{0} back"] = "رجع {0}",
@@ -509,6 +505,65 @@ internal static class Arabic
         ["A damaged item still comes back into stock: say what is wrong with it in the notes."] = "الصنف التالف يرجع للرصيد أيضًا: اكتب ما به في الملاحظات.",
         ["SUPPLIER / CUSTOMER"] = "المورد / العميل",
 
+        // ---- Demo page ----
+        ["Demos"] = "الديمو",
+        ["Everything lent to customers to try: what is still out and with whom, demo issue vouchers and demo returns. Numbers come from the same issue and receipt voucher books."] =
+            "كل ما خرج للعملاء للتجربة: ما لا يزال بالخارج ولدى من، وأذون صرف الديمو، ورجوع الديمو. الأرقام من نفس دفتر أذون الصرف ودفتر أذون الإضافة.",
+        ["New demo voucher"] = "إذن ديمو جديد",
+        ["New Demo Voucher"] = "إذن ديمو جديد",
+        ["Demo Return"] = "رجوع ديمو",
+        ["With customers now"] = "لدى العملاء الآن",
+        ["Demo issue vouchers"] = "أذون صرف الديمو",
+        ["Demo returns"] = "رجوع الديمو",
+        ["By customer"] = "حسب العميل",
+        ["By item"] = "حسب الصنف",
+        ["Customer name or number, item name or code, or issue voucher number"] = "اسم العميل أو رقمه، اسم الصنف أو كوده، أو رقم إذن الصرف",
+        ["No demos are out right now."] = "لا يوجد ديمو بالخارج حاليًا.",
+        ["No open demos match the search."] = "لا يوجد ديمو بالخارج يطابق البحث.",
+        ["{0} unit(s) out with {1} customer(s)"] = "{0} وحدة بالخارج لدى {1} عميل",
+        ["{0} · {1} unit(s) out"] = "{0} · {1} وحدة بالخارج",
+        ["DAYS OUT"] = "أيام بالخارج",
+        ["Days out:"] = "أيام بالخارج:",
+        ["WENT OUT"] = "خرج",
+        ["BACK"] = "رجع",
+        ["STILL OUT"] = "لا يزال بالخارج",
+        ["STATE"] = "الحالة",
+        ["Return"] = "رجّع",
+        ["Opens a demo return for this customer with this line filled in"] = "يفتح رجوع ديمو لهذا العميل وهذا السطر جاهز",
+        ["Open the voucher"] = "فتح الإذن",
+        ["You can make demo vouchers here. To see what is out with customers, ask an admin for the Stock In or View Orders permission."] =
+            "يمكنك عمل أذون ديمو من هنا. لعرض ما هو بالخارج لدى العملاء، اطلب من مسؤول النظام صلاحية إذن الإضافة أو عرض السجلات.",
+        ["All demo vouchers"] = "كل أذون الديمو",
+        ["Still out"] = "لا يزال بالخارج",
+        ["Nothing back yet"] = "لم يرجع شيء بعد",
+        ["Part back"] = "رجع جزء",
+        ["All back"] = "رجع بالكامل",
+        ["Out"] = "بالخارج",
+        ["No demo vouchers"] = "لا توجد أذون ديمو",
+        ["Page {0} of {1} · {2} demo vouchers"] = "صفحة {0} من {1} · {2} إذن ديمو",
+        ["No demo returns"] = "لا يوجد رجوع ديمو",
+        ["Page {0} of {1} · {2} demo returns"] = "صفحة {0} من {1} · {2} رجوع ديمو",
+        ["Open it"] = "افتحه",
+        ["No sales match. {0} is a demo voucher: it is on the Demo page."] = "لا توجد أذون بيع مطابقة. الإذن {0} إذن ديمو: تجده في صفحة الديمو.",
+        ["No demo vouchers match. {0} is a sale voucher: it is in the Orders Log."] = "لا توجد أذون ديمو مطابقة. الإذن {0} إذن بيع: تجده في سجل أذون الصرف.",
+        ["No purchases match. {0} is a demo return voucher: it is on the Demo page."] = "لا توجد أذون شراء مطابقة. الإذن {0} إذن رجوع ديمو: تجده في صفحة الديمو.",
+        ["No demo returns match. {0} is a purchase voucher: it is in the Stock In Log."] = "لا يوجد رجوع ديمو مطابق. الإذن {0} إذن شراء: تجده في سجل أذون الإضافة.",
+        ["Issue voucher {0} is now a demo. It moved to the Demo page."] = "إذن الصرف {0} أصبح ديمو، وانتقل إلى صفحة الديمو.",
+        ["Every sale taken from the store, newest first. Demos are on the Demo page. Search by issue voucher, receipt number, customer or item."] =
+            "كل أذون البيع من المخزن، الأحدث أولًا. الديمو في صفحة الديمو. ابحث برقم إذن الصرف أو رقم الإيصال أو العميل أو الصنف.",
+        ["Everything bought from suppliers, newest first. Demo returns are on the Demo page. Search by number, voucher, supplier invoice, supplier or item."] =
+            "كل المشتريات من الموردين، الأحدث أولًا. رجوع الديمو في صفحة الديمو. ابحث بالرقم أو رقم الإذن أو فاتورة المورد أو المورد أو الصنف.",
+        ["Choose what goes out to the customer to try. Stock is deducted when you save, and it shows on the Demo page until it comes back."] =
+            "اختر ما سيخرج للعميل للتجربة. تُخصم الكمية من الرصيد عند الحفظ، ويظهر في صفحة الديمو حتى يرجع.",
+        ["Record a demo coming back from a customer. Pick the customer, then type how much of each demo came back. Stock is added when you save."] =
+            "سجّل ديمو راجع من عميل. اختر العميل، ثم أدخل الكمية التي رجعت من كل ديمو. تُضاف الكمية للرصيد عند الحفظ.",
+        ["Record items bought from a supplier. Stock is added when you save. New items are added by an admin under Items & Categories."] =
+            "سجّل الأصناف المشتراة من مورد. تُضاف الكمية للرصيد عند الحفظ. الأصناف الجديدة يضيفها مسؤول النظام من شاشة الأصناف والفئات.",
+        ["Demos with customers"] = "ديمو لدى العملاء",
+        [" units · {0} customers"] = " وحدة · {0} عميل",
+        ["Open the Demo page"] = "فتح صفحة الديمو",
+        ["Unknown demo state."] = "حالة الديمو غير معروفة.",
+
         // ---- Voucher types: messages from the server ----
         ["A demo can't have a receipt. Receipts are for sales."] = "الديمو ليس له إيصال. الإيصال للبيع فقط.",
         ["A demo return comes from a customer, not a supplier."] = "رجوع الديمو يكون من عميل وليس من مورد.",
@@ -520,7 +575,7 @@ internal static class Arabic
         ["Unknown issue voucher type."] = "نوع إذن الصرف غير معروف.",
         ["Unknown receive voucher type."] = "نوع إذن الإضافة غير معروف.",
         ["A cancelled order's type can't be changed."] = "لا يمكن تغيير نوع إذن صرف ملغى.",
-        ["Some of this demo has already come back, so it can't become a sale."] = "جزء من هذا الديمو رجع بالفعل، لذلك لا يمكن تحويله إلى بيع.",
+        ["A demo can't be turned into a sale."] = "لا يمكن تحويل الديمو إلى بيع.",
         ["You are returning more than the customer still has of one or more items. Nothing was saved."] =
             "الكمية الراجعة أكبر مما لدى العميل لصنف أو أكثر. لم يتم حفظ أي شيء.",
 

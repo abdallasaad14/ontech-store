@@ -5,19 +5,12 @@
              xmlns:views="clr-namespace:OnTech.Store.Desktop.Views">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,28,32,24" MaxWidth="900" HorizontalAlignment="Left">
-            <TextBlock Text="{l:T 'New Order'}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{l:T 'Choose what is leaving the store and who it is for. Stock is deducted when you save.'}" Style="{StaticResource PageSubtitle}" Margin="0,4,0,20"/>
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}"/>
+            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource PageSubtitle}" Margin="0,4,0,20" TextWrapping="Wrap"/>
             <views:MessageBanners/>
 
             <Border Style="{StaticResource Card}" Padding="24">
                 <StackPanel>
-                    <TextBlock x:Name="OrderTypeLabel" Text="{l:T 'Type'}" Style="{StaticResource FieldLabel}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8" AutomationProperties.LabeledBy="{Binding ElementName=OrderTypeLabel}">
-                        <RadioButton AutomationProperties.AutomationId="NewOrder_SaleRadio" GroupName="NewOrderType" Style="{StaticResource SegmentButton}"
-                                     Content="{l:T 'Sale'}" IsChecked="{Binding IsSale}"/>
-                        <RadioButton AutomationProperties.AutomationId="NewOrder_DemoRadio" GroupName="NewOrderType" Style="{StaticResource DemoSegmentButton}"
-                                     Content="{l:T 'Demo'}" IsChecked="{Binding IsDemo}"/>
-                    </StackPanel>
                     <Border Background="{StaticResource WarnSoftBrush}" CornerRadius="{StaticResource ControlRadius}" Padding="12,8" Margin="0,0,0,16"
                             Visibility="{Binding IsDemo, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>

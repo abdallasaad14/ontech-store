@@ -6,36 +6,48 @@ using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
 
-/// <summary>The stock-in log: purchases from suppliers and demo returns from customers, with search, a type filter and paging. The mirror of the orders log.</summary>
-public sealed partial class StockInsViewModel(Session session) : PageViewModel(session)
+/// <summary>
+/// A receive voucher log with search and paging: purchases in the Stock In Log, demo returns in a tab of the Demo page.
+/// The mirror of the orders log; both types share one number book.
+/// </summary>
+public sealed partial class StockInsViewModel(Session session, ShellViewModel shell, ReceiveType type = ReceiveType.Purchase) : PageViewModel(session)
 {
     public ObservableCollection<StockInDto> StockIns { get; } = new();
+    public ReceiveType Type { get; } = type;
+    public bool IsDemoReturnLog => Type == ReceiveType.DemoReturn;
+    public bool IsPurchaseLog => !IsDemoReturnLog;
     public bool CanCancel => Session.Can(Permission.CancelOrders);
 
     [ObservableProperty] private string? _search;
 
-    // 0 all, 1 purchases, 2 demo returns.
-    public IReadOnlyList<string> TypeFilters { get; } = [L.T("Purchases and demo returns"), L.T("Purchases only"), L.T("Demo returns only")];
-    [ObservableProperty] private int _typeFilterIndex;
-    partial void OnTypeFilterIndexChanged(int value) => _ = SearchAsync();
+    /// <summary>Set when the search found nothing here but matches a voucher of the other type (same number book).</summary>
+    [ObservableProperty] private string? _otherTypeHint;
+    private string? _otherTypeSearch;
     [ObservableProperty] private StockInDto? _selected;
     [ObservableProperty] private int _page = 1;
     [ObservableProperty] private int _totalPages;
     [ObservableProperty] private int _totalCount;
 
-    public string PageText => TotalCount == 0 ? L.T("No stock-ins") : L.T("Page {0} of {1} · {2} stock-ins", Page, TotalPages, TotalCount);
+    public string PageText => TotalCount == 0
+        ? (IsDemoReturnLog ? L.T("No demo returns") : L.T("No stock-ins"))
+        : IsDemoReturnLog ? L.T("Page {0} of {1} · {2} demo returns", Page, TotalPages, TotalCount)
+        : L.T("Page {0} of {1} · {2} stock-ins", Page, TotalPages, TotalCount);
 
     public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
 
+    private readonly LatestRequest _requests = new();
+
     private async Task ReloadAsync()
     {
+        var ticket = _requests.Begin();
         var result = await Api.SearchStockInsAsync(new StockInQuery
         {
             Search = Search,
-            Type = TypeFilterIndex switch { 1 => ReceiveType.Purchase, 2 => ReceiveType.DemoReturn, _ => null },
+            Type = Type,
             Page = Page,
             PageSize = 50,
-        });
+        }, ticket.Token);
+        if (!ticket.IsCurrent) return;
         var keep = Selected?.Id;
         StockIns.Clear();
         foreach (var s in result.Items) StockIns.Add(s);
@@ -43,6 +55,34 @@ public sealed partial class StockInsViewModel(Session session) : PageViewModel(s
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
         Selected = StockIns.FirstOrDefault(s => s.Id == keep);
+        await CheckOtherTypeAsync(result.TotalCount, ticket);
+    }
+
+    /// <summary>Nothing found: look for the search text among the other type, so a demo return number typed in the purchase log isn't "missing".</summary>
+    private async Task CheckOtherTypeAsync(int found, LatestRequest.Ticket ticket)
+    {
+        OtherTypeHint = null;
+        _otherTypeSearch = null;
+        var search = Search?.Trim();
+        if (found > 0 || string.IsNullOrEmpty(search)) return;
+        var other = IsDemoReturnLog ? ReceiveType.Purchase : ReceiveType.DemoReturn;
+        var match = await Api.SearchStockInsAsync(new StockInQuery { Search = search, Type = other, PageSize = 1 }, ticket.Token);
+        if (!ticket.IsCurrent || match.TotalCount == 0) return;
+        _otherTypeSearch = search;
+        var first = match.Items[0].VoucherNumber;
+        OtherTypeHint = IsDemoReturnLog
+            ? L.T("No demo returns match. {0} is a purchase voucher: it is in the Stock In Log.", first)
+            : L.T("No purchases match. {0} is a demo return voucher: it is on the Demo page.", first);
+    }
+
+    /// <summary>Opens the other log with the same search.</summary>
+    [RelayCommand]
+    private void OpenOtherType()
+    {
+        var search = _otherTypeSearch;
+        if (search is null) return;
+        if (IsDemoReturnLog) shell.Open(ViewModels.Page.StockIns, vm => ((StockInsViewModel)vm).Search = search);
+        else shell.Open(ViewModels.Page.Demos, vm => ((DemosViewModel)vm).ShowReturns(search));
     }
 
     [RelayCommand]

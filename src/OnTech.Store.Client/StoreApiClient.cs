@@ -180,7 +180,7 @@ public sealed class StoreApiClient
         SendAsync<PagedResult<OrderDto>>(HttpMethod.Get, "api/orders" + Query(
             ("search", q.Search), ("from", q.From), ("to", q.To), ("customerId", q.CustomerId), ("categoryId", q.CategoryId),
             ("itemId", q.ItemId), ("createdByUserId", q.CreatedByUserId), ("withReceipt", q.WithReceipt),
-            ("receiptNumber", q.ReceiptNumber), ("orderNumber", q.OrderNumber), ("issueVoucherNumber", q.IssueVoucherNumber), ("type", q.Type), ("status", q.Status),
+            ("receiptNumber", q.ReceiptNumber), ("orderNumber", q.OrderNumber), ("issueVoucherNumber", q.IssueVoucherNumber), ("type", q.Type), ("demoState", q.DemoState), ("status", q.Status),
             ("sort", q.Sort), ("page", q.Page), ("pageSize", q.PageSize)), null, ct);
 
     public Task<OrderDto> GetOrderAsync(int id, CancellationToken ct = default) =>
@@ -197,7 +197,7 @@ public sealed class StoreApiClient
 
     /// <summary>Demo lines a customer still holds (what can come back on a demo return).</summary>
     public Task<List<OpenDemoLineDto>> GetOpenDemosAsync(OpenDemoQuery q, CancellationToken ct = default) =>
-        SendAsync<List<OpenDemoLineDto>>(HttpMethod.Get, "api/demos/open" + Query(("customerId", q.CustomerId), ("itemId", q.ItemId)), null, ct);
+        SendAsync<List<OpenDemoLineDto>>(HttpMethod.Get, "api/demos/open" + Query(("customerId", q.CustomerId), ("itemId", q.ItemId), ("search", q.Search)), null, ct);
 
     // ---- Users ----
 

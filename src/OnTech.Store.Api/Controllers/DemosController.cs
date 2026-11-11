@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OnTech.Store.Api.Auth;
 using OnTech.Store.Api.Data;
 using OnTech.Store.Api.Infrastructure;
+using OnTech.Store.Api.Services;
 using OnTech.Store.Contracts;
 
 namespace OnTech.Store.Api.Controllers;
@@ -24,6 +25,16 @@ public class DemosController(StoreDbContext db) : ControllerBase
             .Where(l => l.Order.Type == IssueType.Demo && l.Order.Status == OrderStatus.Completed && l.ReturnedQuantity < l.Quantity);
         if (f.CustomerId is { } cid) q = q.Where(l => l.Order.CustomerId == cid);
         if (f.ItemId is { } iid) q = q.Where(l => l.ItemId == iid);
+        if (f.Search.Clean()?.ToLower() is { } s) // ToLower: SQLite compares case-sensitively; SQL Server doesn't.
+        {
+            int? number = int.TryParse(s, out var n) ? n : null;
+            q = q.Where(l => (l.Order.IssueVoucherNumber != null && l.Order.IssueVoucherNumber.ToLower().Contains(s))
+                             || l.Order.OrderNumber.ToLower().Contains(s)
+                             || l.Order.Customer.CompanyName.ToLower().Contains(s)
+                             || (number != null && l.Order.Customer.CustomerNumber == number)
+                             || l.ItemName.ToLower().Contains(s)
+                             || (l.ItemCode != null && l.ItemCode.StartsWith(s)));
+        }
 
         var rows = await q
             .Select(l => new

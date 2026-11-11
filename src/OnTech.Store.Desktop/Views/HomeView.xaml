@@ -71,6 +71,16 @@
                         <TextBlock Text="{Binding Summary.CustomerCount}" FontSize="22" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Border>
+                <!-- Demos still out: opens the Demo page -->
+                <Button AutomationProperties.AutomationId="Home_DemosCard" Style="{StaticResource ActionCard}" Margin="6,0" Padding="0" Command="{Binding OpenDemosCommand}"
+                        ToolTip="{l:T 'Open the Demo page'}" Visibility="{Binding CanOpenDemos, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel Margin="-4,-6">
+                        <TextBlock Text="{l:T 'Demos with customers'}" Style="{StaticResource FieldLabel}"/>
+                        <TextBlock FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}">
+                            <Run Text="{Binding Summary.OpenDemoQuantity, Mode=OneWay}"/><Run Text="{Binding Summary.OpenDemoCustomers, Mode=OneWay, StringFormat={l:T ' units · {0} customers'}}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </Button>
             </UniformGrid>
         </StackPanel>
 

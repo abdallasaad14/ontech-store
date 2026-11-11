@@ -99,7 +99,8 @@ public static class TestSession
         .OnJson("GET", "api/users", Array.Empty<UserDto>())
         .OnJson("GET", "api/dashboard/summary", new DashboardSummaryDto())
         .OnJson("GET", "api/orders", new PagedResult<OrderDto> { Items = [] })
-        .OnJson("GET", "api/stock-ins", new PagedResult<StockInDto> { Items = [] });
+        .OnJson("GET", "api/stock-ins", new PagedResult<StockInDto> { Items = [] })
+        .OnJson("GET", "api/demos/open", Array.Empty<OpenDemoLineDto>());
 }
 
 /// <summary>Sets the UI language for one test and puts English back afterwards.</summary>

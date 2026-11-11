@@ -100,7 +100,8 @@ public class StaleResponseTests
         var server = new FakeServer().WithEmptyLists()
             .On("GET", "api/orders", SlowWhen("withReceipt=true", release,
                 req => req.RequestUri!.Query.Contains("withReceipt=true") ? Page("OLD") : Page("NEWEST")));
-        var vm = new OrdersViewModel(TestSession.Create(server, Permission.ViewOrders));
+        var session = TestSession.Create(server, Permission.ViewOrders);
+        var vm = new OrdersViewModel(session, new ShellViewModel(session));
         await vm.LoadAsync();
         vm.ReceiptFilterIndex = 1; // with receipt: slow
         await Task.Delay(30);

@@ -6,13 +6,20 @@ using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
 
-/// <summary>Basic orders list with search, the receipt filter and paging. The full log screen comes in the next phase.</summary>
-public sealed partial class OrdersViewModel(Session session) : PageViewModel(session)
+/// <summary>
+/// An issue voucher log with search, a filter and paging. The Orders Log shows sales only (with the receipt filter);
+/// the Demo page shows demos only (with the demo state filter) in one of its tabs. Both types share one number book,
+/// so a number search that only matches the other type says where that voucher is.
+/// </summary>
+public sealed partial class OrdersViewModel(Session session, ShellViewModel shell, IssueType type = IssueType.Sale) : PageViewModel(session)
 {
     public ObservableCollection<OrderDto> Orders { get; } = new();
+    public IssueType Type { get; } = type;
+    public bool IsDemoLog => Type == IssueType.Demo;
+    public bool IsSaleLog => !IsDemoLog;
     public bool CanCancel => Session.Can(Permission.CancelOrders);
     /// <summary>Only an admin may fix an order saved with the wrong type.</summary>
-    public bool CanChangeType => Session.User.IsAdmin;
+    public bool CanChangeType => Session.User.IsAdmin && type == IssueType.Sale;
 
     // Shown in the current language; the position picks the filter (0 all, 1 with, 2 without).
     public IReadOnlyList<string> ReceiptFilters { get; } = [L.T("All orders"), L.T("With receipt"), L.T("Without receipt")];
@@ -20,16 +27,24 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
     [ObservableProperty] private string? _search;
     [ObservableProperty] private int _receiptFilterIndex;
 
-    // 0 all, 1 sales, 2 demos.
-    public IReadOnlyList<string> TypeFilters { get; } = [L.T("Sales and demos"), L.T("Sales only"), L.T("Demos only")];
-    [ObservableProperty] private int _typeFilterIndex;
-    partial void OnTypeFilterIndexChanged(int value) => _ = SearchAsync();
+    // Demo log only. 0 all, then DemoState + 1 (still out, nothing back, part back, all back).
+    public IReadOnlyList<string> DemoStateFilters { get; } =
+        [L.T("All demo vouchers"), L.T("Still out"), L.T("Nothing back yet"), L.T("Part back"), L.T("All back")];
+    [ObservableProperty] private int _demoStateFilterIndex;
+    partial void OnDemoStateFilterIndexChanged(int value) => _ = SearchAsync();
+
+    /// <summary>Set when the search found nothing here but matches a voucher of the other type (same number book).</summary>
+    [ObservableProperty] private string? _otherTypeHint;
+    private string? _otherTypeSearch;
     [ObservableProperty] private OrderDto? _selected;
     [ObservableProperty] private int _page = 1;
     [ObservableProperty] private int _totalPages;
     [ObservableProperty] private int _totalCount;
 
-    public string PageText => TotalCount == 0 ? L.T("No orders") : L.T("Page {0} of {1} · {2} orders", Page, TotalPages, TotalCount);
+    public string PageText => TotalCount == 0
+        ? (IsDemoLog ? L.T("No demo vouchers") : L.T("No orders"))
+        : IsDemoLog ? L.T("Page {0} of {1} · {2} demo vouchers", Page, TotalPages, TotalCount)
+        : L.T("Page {0} of {1} · {2} orders", Page, TotalPages, TotalCount);
 
     public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
 
@@ -42,8 +57,9 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
         var result = await Api.SearchOrdersAsync(new OrderQuery
         {
             Search = Search,
-            WithReceipt = ReceiptFilterIndex switch { 1 => true, 2 => false, _ => null },
-            Type = TypeFilterIndex switch { 1 => IssueType.Sale, 2 => IssueType.Demo, _ => null },
+            WithReceipt = IsDemoLog ? null : ReceiptFilterIndex switch { 1 => true, 2 => false, _ => null },
+            Type = Type,
+            DemoState = IsDemoLog && DemoStateFilterIndex > 0 ? (DemoState)(DemoStateFilterIndex - 1) : null,
             Page = Page,
             PageSize = 50,
         }, ticket.Token);
@@ -55,6 +71,34 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
         Selected = Orders.FirstOrDefault(o => o.Id == keep);
+        await CheckOtherTypeAsync(result.TotalCount, ticket);
+    }
+
+    /// <summary>Nothing found: look for the search text among the other type, so a demo number typed in the sales log isn't "missing".</summary>
+    private async Task CheckOtherTypeAsync(int found, LatestRequest.Ticket ticket)
+    {
+        OtherTypeHint = null;
+        _otherTypeSearch = null;
+        var search = Search?.Trim();
+        if (found > 0 || string.IsNullOrEmpty(search)) return;
+        var other = IsDemoLog ? IssueType.Sale : IssueType.Demo;
+        var match = await Api.SearchOrdersAsync(new OrderQuery { Search = search, Type = other, PageSize = 1 }, ticket.Token);
+        if (!ticket.IsCurrent || match.TotalCount == 0) return;
+        _otherTypeSearch = search;
+        var first = match.Items[0].IssueVoucherNumber;
+        OtherTypeHint = IsDemoLog
+            ? L.T("No demo vouchers match. {0} is a sale voucher: it is in the Orders Log.", first)
+            : L.T("No sales match. {0} is a demo voucher: it is on the Demo page.", first);
+    }
+
+    /// <summary>Opens the other log with the same search.</summary>
+    [RelayCommand]
+    private void OpenOtherType()
+    {
+        var search = _otherTypeSearch;
+        if (search is null) return;
+        if (IsDemoLog) shell.Open(ViewModels.Page.Orders, vm => ((OrdersViewModel)vm).Search = search);
+        else shell.Open(ViewModels.Page.Demos, vm => ((DemosViewModel)vm).ShowIssues(search));
     }
 
     [RelayCommand]
@@ -103,24 +147,19 @@ public sealed partial class OrdersViewModel(Session session) : PageViewModel(ses
         });
     }
 
-    /// <summary>Admin only: turns a sale into a demo or back, for orders saved with the wrong type. Stock does not change.</summary>
+    /// <summary>Admin only: turns a sale into a demo, for orders saved with the wrong type. Never a demo into a sale. Stock does not change.</summary>
     [RelayCommand]
     private Task ChangeTypeAsync(OrderDto? order)
     {
-        if (order is null || order.Status == OrderStatus.Cancelled) return Task.CompletedTask;
-        var to = order.Type == IssueType.Demo ? IssueType.Sale : IssueType.Demo;
-        var question = to == IssueType.Demo
-            ? L.T("Mark issue voucher {0} as a demo? Its items will show as still with {1} until a demo return brings them back. Stock does not change.", order.IssueVoucherNumber, order.CustomerName)
-            : L.T("Mark issue voucher {0} as a sale? It will no longer count as a demo with {1}. Stock does not change.", order.IssueVoucherNumber, order.CustomerName);
+        if (order is null || order.Status == OrderStatus.Cancelled || order.Type == IssueType.Demo) return Task.CompletedTask;
+        var question = L.T("Mark issue voucher {0} as a demo? Its items will show as still with {1} until a demo return brings them back. Stock does not change.", order.IssueVoucherNumber, order.CustomerName);
         if (!Dialogs.Confirm(question)) return Task.CompletedTask;
         return RunAsync(async () =>
         {
-            var changed = await Api.ChangeOrderTypeAsync(order.Id, to);
+            var changed = await Api.ChangeOrderTypeAsync(order.Id, IssueType.Demo);
             await ReloadAsync();
             Selected = Orders.FirstOrDefault(o => o.Id == changed.Id);
-            SuccessMessage = changed.Type == IssueType.Demo
-                ? L.T("Issue voucher {0} is now a demo.", changed.IssueVoucherNumber)
-                : L.T("Issue voucher {0} is now a sale.", changed.IssueVoucherNumber);
+            SuccessMessage = L.T("Issue voucher {0} is now a demo. It moved to the Demo page.", changed.IssueVoucherNumber);
         });
     }
 }

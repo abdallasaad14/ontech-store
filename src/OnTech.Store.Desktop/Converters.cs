@@ -106,6 +106,23 @@ public sealed class VoucherTypeConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 
+/// <summary>Where a demo issue voucher stands, from its returned and open quantities: out, part back, all back or cancelled.</summary>
+public sealed class DemoStateConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => Describe(value as Contracts.OrderDto);
+
+    public static string? Describe(Contracts.OrderDto? order) => order switch
+    {
+        null => null,
+        { Status: Contracts.OrderStatus.Cancelled } => Services.L.T("Cancelled"),
+        { OpenQuantity: 0 } => Services.L.T("All back"),
+        { ReturnedQuantity: > 0 } => Services.L.T("Part back"),
+        _ => Services.L.T("Out"),
+    };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
 /// <summary>Shows 0 as an empty cell, so an in/out column only shows the side that moved.</summary>
 public sealed class ZeroAsBlankConverter : IValueConverter
 {

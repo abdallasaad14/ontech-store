@@ -3,10 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:l="clr-namespace:OnTech.Store.Desktop.Services"
              xmlns:views="clr-namespace:OnTech.Store.Desktop.Views">
-    <DockPanel Margin="32,28,32,24">
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+    <DockPanel>
+        <DockPanel.Style>
+            <!-- On the Demo page this log sits inside a tab, under the page's own title. -->
+            <Style TargetType="DockPanel">
+                <Setter Property="Margin" Value="32,28,32,24"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsDemoLog}" Value="True">
+                        <Setter Property="Margin" Value="0,12,0,0"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </DockPanel.Style>
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20" Visibility="{Binding IsSaleLog, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Text="{l:T 'Orders Log'}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{l:T 'Every order taken from the store, newest first. Search by issue voucher, receipt number, customer or item.'}" Style="{StaticResource PageSubtitle}"/>
+            <TextBlock Text="{l:T 'Every sale taken from the store, newest first. Demos are on the Demo page. Search by issue voucher, receipt number, customer or item.'}" Style="{StaticResource PageSubtitle}"/>
         </StackPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
 
@@ -19,8 +30,10 @@
             <Border Style="{StaticResource Card}" Padding="0">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
-                        <ComboBox AutomationProperties.AutomationId="Orders_ReceiptFilterCombo" DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding ReceiptFilters}" SelectedIndex="{Binding ReceiptFilterIndex}"/>
-                        <ComboBox AutomationProperties.AutomationId="Orders_TypeFilterCombo" DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding TypeFilters}" SelectedIndex="{Binding TypeFilterIndex}"/>
+                        <ComboBox AutomationProperties.AutomationId="Orders_ReceiptFilterCombo" DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding ReceiptFilters}" SelectedIndex="{Binding ReceiptFilterIndex}"
+                                  Visibility="{Binding IsSaleLog, Converter={StaticResource BoolToVisibility}}"/>
+                        <ComboBox AutomationProperties.AutomationId="Orders_DemoStateFilterCombo" DockPanel.Dock="Right" Width="170" Margin="8,0,0,0" ItemsSource="{Binding DemoStateFilters}" SelectedIndex="{Binding DemoStateFilterIndex}"
+                                  Visibility="{Binding IsDemoLog, Converter={StaticResource BoolToVisibility}}"/>
                         <Button AutomationProperties.AutomationId="Orders_SearchButton" DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
                         <TextBox AutomationProperties.AutomationId="Orders_SearchBox" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
@@ -28,6 +41,15 @@
                             </TextBox.InputBindings>
                         </TextBox>
                     </DockPanel>
+                    <!-- One number book: a number that belongs to the other type says where it is. -->
+                    <Border DockPanel.Dock="Top" Background="{StaticResource WarnSoftBrush}" CornerRadius="{StaticResource ControlRadius}" Padding="12,8" Margin="16,0,16,8"
+                            Visibility="{Binding OtherTypeHint, Converter={StaticResource HasValueToVisibility}}">
+                        <DockPanel>
+                            <Button AutomationProperties.AutomationId="Orders_OpenOtherTypeButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Margin="12,0,0,0"
+                                    Content="{l:T 'Open it'}" Command="{Binding OpenOtherTypeCommand}"/>
+                            <TextBlock Text="{Binding OtherTypeHint}" Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
                     <DockPanel DockPanel.Dock="Bottom" Margin="16,8,16,12">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                             <Button AutomationProperties.AutomationId="Orders_PreviousPageButton" Content="{l:T 'Previous'}" Margin="0,0,8,0" Command="{Binding PreviousPageCommand}"/>
@@ -38,13 +60,15 @@
                     <DataGrid AutomationProperties.AutomationId="Orders_OrdersGrid" ItemsSource="{Binding Orders}" SelectedItem="{Binding Selected}" Margin="6,0,6,0">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'ISSUE VOUCHER'}" Binding="{Binding IssueVoucherNumber}" Width="130" FontWeight="SemiBold"/>
-                            <DataGridTextColumn Header="{l:T 'TYPE'}" Binding="{Binding Type, Converter={StaticResource VoucherType}, Mode=OneWay}" Width="80">
+                            <DataGridTextColumn x:Name="DemoStateColumn" Header="{l:T 'STATE'}" Binding="{Binding Converter={StaticResource DemoState}, Mode=OneWay}" Width="100">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Type}" Value="Demo">
-                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
-                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <DataTrigger Binding="{Binding OpenQuantity}" Value="0">
+                                                <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                                                <Setter Property="FontWeight" Value="Normal"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -53,7 +77,8 @@
                             <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding CreatedAt, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="140"/>
                             <DataGridTextColumn Header="{l:T 'CUSTOMER'}" Binding="{Binding CustomerName}" Width="2*"/>
                             <DataGridTextColumn Header="{l:T 'UNITS'}" Binding="{Binding TotalQuantity}" Width="70"/>
-                            <DataGridTextColumn Header="{l:T 'RECEIPT'}" Binding="{Binding ReceiptNumber}" Width="*"/>
+                            <DataGridTextColumn x:Name="OpenColumn" Header="{l:T 'STILL OUT'}" Binding="{Binding OpenQuantity, Converter={StaticResource ZeroAsBlank}, Mode=OneWay}" Width="80"/>
+                            <DataGridTextColumn x:Name="ReceiptColumn" Header="{l:T 'RECEIPT'}" Binding="{Binding ReceiptNumber}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'BY'}" Binding="{Binding CreatedByUserName}" Width="*"/>
                             <DataGridTextColumn Header="{l:T 'STATUS'}" Binding="{Binding Status, Converter={StaticResource Translate}, Mode=OneWay}" Width="100"/>
                         </DataGrid.Columns>
@@ -151,17 +176,8 @@
 
                         <Button AutomationProperties.AutomationId="Orders_ChangeTypeButton" Margin="0,12,0,0" HorizontalAlignment="Left"
                                 Command="{Binding DataContext.ChangeTypeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}" ToolTip="{l:T 'Admin only: for an order saved with the wrong type'}">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource LinkButton}">
-                                    <Setter Property="Content" Value="{l:T 'Mark as demo'}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Type}" Value="Demo">
-                                            <Setter Property="Content" Value="{l:T 'Mark as sale'}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
+                                CommandParameter="{Binding}" ToolTip="{l:T 'Admin only: for an order saved with the wrong type'}"
+                                Style="{StaticResource LinkButton}" Content="{l:T 'Mark as demo'}">
                             <Button.Visibility>
                                 <MultiBinding Converter="{StaticResource CanCancelOrder}">
                                     <Binding Path="DataContext.CanChangeType" RelativeSource="{RelativeSource AncestorType=UserControl}"/>

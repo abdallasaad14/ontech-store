@@ -83,8 +83,8 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
     }
 
     /// <summary>
-    /// Admin only: fixes an order saved with the wrong type, e.g. a demo that went out before demos existed and was saved as a sale.
-    /// Refused when the order is cancelled, or when it is a demo that already has something back.
+    /// Admin only: fixes a sale that was really a demo, e.g. one that went out before demos existed.
+    /// Sale to demo only: a demo is never turned into a sale (owner's decision). Refused when the order is cancelled.
     /// </summary>
     [HttpPost("{id:int}/type")]
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -97,8 +97,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (order.Type != req.Type)
         {
             if (order.Status != OrderStatus.Completed) throw ApiException.Conflict("A cancelled order's type can't be changed.");
-            if (order.Lines.Any(l => l.ReturnedQuantity > 0))
-                throw ApiException.Conflict("Some of this demo has already come back, so it can't become a sale.");
+            if (req.Type == IssueType.Sale) throw ApiException.BadRequest("A demo can't be turned into a sale.");
             if (req.Type == IssueType.Demo && order.ReceiptNumber is not null)
                 throw ApiException.BadRequest("An order with a receipt can't become a demo. Receipts are for sales.");
             // Conditional, so a return saved on another PC in the meantime can't be lost.
@@ -128,6 +127,18 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (f.WithReceipt is { } wr) q = q.Where(o => o.WithReceipt == wr);
         if (f.Status is { } st) q = q.Where(o => o.Status == st);
         if (f.Type is { } type) q = q.Where(o => o.Type == type);
+        if (f.DemoState is { } ds)
+        {
+            q = q.Where(o => o.Type == IssueType.Demo && o.Status == OrderStatus.Completed);
+            q = ds switch
+            {
+                DemoState.StillOut => q.Where(o => o.Lines.Any(l => l.ReturnedQuantity < l.Quantity)),
+                DemoState.NothingBack => q.Where(o => o.Lines.All(l => l.ReturnedQuantity == 0)),
+                DemoState.PartlyBack => q.Where(o => o.Lines.Any(l => l.ReturnedQuantity > 0) && o.Lines.Any(l => l.ReturnedQuantity < l.Quantity)),
+                DemoState.AllBack => q.Where(o => o.Lines.All(l => l.ReturnedQuantity >= l.Quantity)),
+                _ => throw ApiException.BadRequest("Unknown demo state."),
+            };
+        }
         if (f.ReceiptNumber.CleanDocNumber() is { } rn) q = q.Where(o => o.ReceiptNumber != null && o.ReceiptNumber.ToUpper().Contains(rn));
         if (f.OrderNumber.CleanDocNumber() is { } on) q = q.Where(o => o.OrderNumber.ToUpper().Contains(on));
         if (f.IssueVoucherNumber.CleanDocNumber() is { } iv) q = q.Where(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.ToUpper().Contains(iv));
