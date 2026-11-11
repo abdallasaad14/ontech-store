@@ -156,7 +156,7 @@ public static class TestStock
         supplier ??= await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Test supplier {Guid.NewGuid():N}" })).Read<SupplierDto>();
         return await (await admin.Post("/api/stock-ins", new CreateStockInRequest
         {
-            SupplierId = supplier.Id, VoucherNumber = Voucher(), Lines = { new OrderLineRequest { ItemId = itemId, Quantity = quantity } },
+            SupplierId = supplier.Id, VoucherNumber = Voucher(), Lines = { new StockInLineRequest { ItemId = itemId, Quantity = quantity } },
         })).Read<StockInDto>();
     }
 }

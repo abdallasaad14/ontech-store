@@ -23,6 +23,21 @@
                     <TextBlock Text="{Binding CancelInfo}" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" Margin="0,8,0,0"
                                Visibility="{Binding CancelInfo, Converter={StaticResource HasValueToVisibility}}"/>
 
+                    <TextBlock Text="{l:T 'TYPE'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
+                    <TextBlock Text="{Binding TypeText}" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsDemoKind}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Text="{Binding DemoInfo}" Style="{StaticResource Hint}" Foreground="{StaticResource WarnBrush}"
+                               Visibility="{Binding DemoInfo, Converter={StaticResource HasValueToVisibility}}"/>
+
                     <TextBlock Text="{Binding PartyLabel}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
                     <TextBlock Text="{Binding PartyName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
 
@@ -40,6 +55,12 @@
                             <DataTemplate>
                                 <DockPanel Margin="0,3">
                                     <TextBlock DockPanel.Dock="Right" Text="{Binding Quantity}" FontWeight="SemiBold" Margin="12,0,0,0"/>
+                                    <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource WarnBrush}" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"
+                                               Text="{Binding ReturnedQuantity, StringFormat={l:T '\{0\} back'}}"
+                                               Visibility="{Binding ReturnedQuantity, Converter={StaticResource HasValueToVisibility}}"/>
+                                    <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource Hint}" Foreground="{StaticResource WarnBrush}"
+                                               Text="{Binding DemoIssueVoucherNumber, StringFormat={l:T 'From demo \{0\}'}}"
+                                               Visibility="{Binding DemoIssueVoucherNumber, Converter={StaticResource HasValueToVisibility}}"/>
                                     <TextBlock TextWrapping="Wrap"><Run Text="{Binding ItemName, Mode=OneWay}"/> <Run Text="{Binding ItemCode, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/></TextBlock>
                                 </DockPanel>
                             </DataTemplate>

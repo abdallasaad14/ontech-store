@@ -20,6 +20,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <ComboBox AutomationProperties.AutomationId="Orders_ReceiptFilterCombo" DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding ReceiptFilters}" SelectedIndex="{Binding ReceiptFilterIndex}"/>
+                        <ComboBox AutomationProperties.AutomationId="Orders_TypeFilterCombo" DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding TypeFilters}" SelectedIndex="{Binding TypeFilterIndex}"/>
                         <Button AutomationProperties.AutomationId="Orders_SearchButton" DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
                         <TextBox AutomationProperties.AutomationId="Orders_SearchBox" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
@@ -37,6 +38,18 @@
                     <DataGrid AutomationProperties.AutomationId="Orders_OrdersGrid" ItemsSource="{Binding Orders}" SelectedItem="{Binding Selected}" Margin="6,0,6,0">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'ISSUE VOUCHER'}" Binding="{Binding IssueVoucherNumber}" Width="130" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="{l:T 'TYPE'}" Binding="{Binding Type, Converter={StaticResource VoucherType}, Mode=OneWay}" Width="80">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Type}" Value="Demo">
+                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding CreatedAt, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="140"/>
                             <DataGridTextColumn Header="{l:T 'CUSTOMER'}" Binding="{Binding CustomerName}" Width="2*"/>
                             <DataGridTextColumn Header="{l:T 'UNITS'}" Binding="{Binding TotalQuantity}" Width="70"/>
@@ -56,6 +69,25 @@
                         <TextBlock Text="{Binding IssueVoucherNumber, StringFormat={l:T 'Issue voucher \{0\}'}}" Style="{StaticResource SectionTitle}"/>
                         <TextBlock Text="{Binding CreatedAt, Converter={StaticResource LocalTime}, ConverterParameter='dddd d MMMM yyyy, HH:mm'}" Style="{StaticResource Hint}"/>
 
+                        <TextBlock Text="{l:T 'TYPE'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
+                        <TextBlock Text="{Binding Type, Converter={StaticResource VoucherType}}" FontWeight="SemiBold"/>
+                        <Border Background="{StaticResource WarnSoftBrush}" CornerRadius="{StaticResource ControlRadius}" Padding="10,6" Margin="0,6,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Type}" Value="Demo">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Foreground="{StaticResource WarnBrush}" TextWrapping="Wrap">
+                                <Run Text="{l:T 'Back:'}"/> <Run Text="{Binding ReturnedQuantity, Mode=OneWay}" FontWeight="SemiBold"/>
+                                <Run Text=" · "/><Run Text="{l:T 'Still with the customer:'}"/> <Run Text="{Binding OpenQuantity, Mode=OneWay}" FontWeight="SemiBold"/>
+                            </TextBlock>
+                        </Border>
+
                         <TextBlock Text="{l:T 'CUSTOMER'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
                         <TextBlock Text="{Binding CustomerName}" FontWeight="SemiBold" TextWrapping="Wrap"/>
                         <TextBlock Text="{Binding CustomerTaxNumber, StringFormat={l:T 'Tax no. {0}'}}" Style="{StaticResource Hint}"
@@ -67,6 +99,9 @@
                                 <DataTemplate>
                                     <DockPanel Margin="0,3">
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding Quantity, StringFormat='× {0}'}" FontWeight="SemiBold"/>
+                                        <TextBlock DockPanel.Dock="Right" Margin="0,0,8,0" Foreground="{StaticResource WarnBrush}" FontSize="11" VerticalAlignment="Center"
+                                                   Text="{Binding ReturnedQuantity, StringFormat={l:T '\{0\} back'}}"
+                                                   Visibility="{Binding ReturnedQuantity, Converter={StaticResource HasValueToVisibility}}"/>
                                         <TextBlock TextWrapping="Wrap"><Run Text="{Binding ItemName, Mode=OneWay}"/> <Run Text="{Binding CategoryName, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/></TextBlock>
                                     </DockPanel>
                                 </DataTemplate>
@@ -74,8 +109,19 @@
                         </ItemsControl>
 
 
-                        <TextBlock Text="{l:T 'RECEIPT'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
-                        <TextBlock Text="{Binding ReceiptNumber, TargetNullValue={l:T 'No receipt'}}"/>
+                        <StackPanel>
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Type}" Value="Demo">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="{l:T 'RECEIPT'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
+                            <TextBlock Text="{Binding ReceiptNumber, TargetNullValue={l:T 'No receipt'}}"/>
+                        </StackPanel>
 
                         <StackPanel Visibility="{Binding Notes, Converter={StaticResource HasValueToVisibility}}">
                             <TextBlock Text="{l:T 'NOTES'}" Style="{StaticResource FieldLabel}" Margin="0,16,0,4"/>
@@ -98,6 +144,27 @@
                             <Button.Visibility>
                                 <MultiBinding Converter="{StaticResource CanCancelOrder}">
                                     <Binding Path="DataContext.CanCancel" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                    <Binding Path="Status"/>
+                                </MultiBinding>
+                            </Button.Visibility>
+                        </Button>
+
+                        <Button AutomationProperties.AutomationId="Orders_ChangeTypeButton" Margin="0,12,0,0" HorizontalAlignment="Left"
+                                Command="{Binding DataContext.ChangeTypeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}" ToolTip="{l:T 'Admin only: for an order saved with the wrong type'}">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource LinkButton}">
+                                    <Setter Property="Content" Value="{l:T 'Mark as demo'}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Type}" Value="Demo">
+                                            <Setter Property="Content" Value="{l:T 'Mark as sale'}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Visibility>
+                                <MultiBinding Converter="{StaticResource CanCancelOrder}">
+                                    <Binding Path="DataContext.CanChangeType" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
                                     <Binding Path="Status"/>
                                 </MultiBinding>
                             </Button.Visibility>

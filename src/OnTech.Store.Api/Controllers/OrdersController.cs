@@ -82,6 +82,33 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         return await LoadDto(id, ct);
     }
 
+    /// <summary>
+    /// Admin only: fixes an order saved with the wrong type, e.g. a demo that went out before demos existed and was saved as a sale.
+    /// Refused when the order is cancelled, or when it is a demo that already has something back.
+    /// </summary>
+    [HttpPost("{id:int}/type")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<ActionResult<OrderDto>> ChangeType(int id, ChangeOrderTypeRequest req, CancellationToken ct)
+    {
+        if (!Enum.IsDefined(req.Type)) throw ApiException.BadRequest("Unknown issue voucher type.");
+        var me = User.GetUserId();
+        if (!await db.Users.AnyAsync(u => u.Id == me && u.IsAdmin && u.IsActive, ct)) return Forbid();
+        var order = await db.Orders.Include(o => o.Lines).FirstOrDefaultAsync(o => o.Id == id, ct) ?? throw ApiException.NotFound("Order");
+        if (order.Type != req.Type)
+        {
+            if (order.Status != OrderStatus.Completed) throw ApiException.Conflict("A cancelled order's type can't be changed.");
+            if (order.Lines.Any(l => l.ReturnedQuantity > 0))
+                throw ApiException.Conflict("Some of this demo has already come back, so it can't become a sale.");
+            if (req.Type == IssueType.Demo && order.ReceiptNumber is not null)
+                throw ApiException.BadRequest("An order with a receipt can't become a demo. Receipts are for sales.");
+            // Conditional, so a return saved on another PC in the meantime can't be lost.
+            var changed = await db.Orders.Where(o => o.Id == id && o.Status == OrderStatus.Completed && !o.Lines.Any(l => l.ReturnedQuantity > 0))
+                .ExecuteUpdateAsync(u => u.SetProperty(o => o.Type, req.Type), ct);
+            if (changed == 0) throw ApiException.ConcurrencyConflict();
+        }
+        return await LoadDto(id, ct);
+    }
+
     private async Task<OrderDto> LoadDto(int id, CancellationToken ct)
     {
         var order = await db.Orders.AsNoTracking()
@@ -100,6 +127,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (f.CategoryId is { } catId) q = q.Where(o => o.Lines.Any(l => l.CategoryId == catId));
         if (f.WithReceipt is { } wr) q = q.Where(o => o.WithReceipt == wr);
         if (f.Status is { } st) q = q.Where(o => o.Status == st);
+        if (f.Type is { } type) q = q.Where(o => o.Type == type);
         if (f.ReceiptNumber.CleanDocNumber() is { } rn) q = q.Where(o => o.ReceiptNumber != null && o.ReceiptNumber.ToUpper().Contains(rn));
         if (f.OrderNumber.CleanDocNumber() is { } on) q = q.Where(o => o.OrderNumber.ToUpper().Contains(on));
         if (f.IssueVoucherNumber.CleanDocNumber() is { } iv) q = q.Where(o => o.IssueVoucherNumber != null && o.IssueVoucherNumber.ToUpper().Contains(iv));

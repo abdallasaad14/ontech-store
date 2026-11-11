@@ -155,15 +155,15 @@ public sealed class StoreApiClient
     public Task DisableSupplierAsync(int id, CancellationToken ct = default) =>
         SendAsync(HttpMethod.Delete, $"api/suppliers/{id}", null, ct);
 
-    // ---- Stock in (from suppliers) ----
+    // ---- Stock in (purchases from suppliers, demo returns from customers) ----
 
     public Task<StockInDto> CreateStockInAsync(CreateStockInRequest req, CancellationToken ct = default) =>
         SendAsync<StockInDto>(HttpMethod.Post, "api/stock-ins", req, ct);
 
     public Task<PagedResult<StockInDto>> SearchStockInsAsync(StockInQuery q, CancellationToken ct = default) =>
         SendAsync<PagedResult<StockInDto>>(HttpMethod.Get, "api/stock-ins" + Query(
-            ("search", q.Search), ("from", q.From), ("to", q.To), ("supplierId", q.SupplierId), ("itemId", q.ItemId),
-            ("status", q.Status), ("page", q.Page), ("pageSize", q.PageSize)), null, ct);
+            ("search", q.Search), ("from", q.From), ("to", q.To), ("supplierId", q.SupplierId), ("customerId", q.CustomerId), ("itemId", q.ItemId),
+            ("type", q.Type), ("status", q.Status), ("page", q.Page), ("pageSize", q.PageSize)), null, ct);
 
     public Task<StockInDto> GetStockInAsync(int id, CancellationToken ct = default) =>
         SendAsync<StockInDto>(HttpMethod.Get, $"api/stock-ins/{id}", null, ct);
@@ -180,7 +180,7 @@ public sealed class StoreApiClient
         SendAsync<PagedResult<OrderDto>>(HttpMethod.Get, "api/orders" + Query(
             ("search", q.Search), ("from", q.From), ("to", q.To), ("customerId", q.CustomerId), ("categoryId", q.CategoryId),
             ("itemId", q.ItemId), ("createdByUserId", q.CreatedByUserId), ("withReceipt", q.WithReceipt),
-            ("receiptNumber", q.ReceiptNumber), ("orderNumber", q.OrderNumber), ("issueVoucherNumber", q.IssueVoucherNumber), ("status", q.Status),
+            ("receiptNumber", q.ReceiptNumber), ("orderNumber", q.OrderNumber), ("issueVoucherNumber", q.IssueVoucherNumber), ("type", q.Type), ("status", q.Status),
             ("sort", q.Sort), ("page", q.Page), ("pageSize", q.PageSize)), null, ct);
 
     public Task<OrderDto> GetOrderAsync(int id, CancellationToken ct = default) =>
@@ -188,6 +188,16 @@ public sealed class StoreApiClient
 
     public Task<OrderDto> CancelOrderAsync(int id, string reason, CancellationToken ct = default) =>
         SendAsync<OrderDto>(HttpMethod.Post, $"api/orders/{id}/cancel", new CancelOrderRequest { Reason = reason }, ct);
+
+    /// <summary>Admin only: fixes an order saved with the wrong type (sale or demo).</summary>
+    public Task<OrderDto> ChangeOrderTypeAsync(int id, IssueType type, CancellationToken ct = default) =>
+        SendAsync<OrderDto>(HttpMethod.Post, $"api/orders/{id}/type", new ChangeOrderTypeRequest { Type = type }, ct);
+
+    // ---- Demos ----
+
+    /// <summary>Demo lines a customer still holds (what can come back on a demo return).</summary>
+    public Task<List<OpenDemoLineDto>> GetOpenDemosAsync(OpenDemoQuery q, CancellationToken ct = default) =>
+        SendAsync<List<OpenDemoLineDto>>(HttpMethod.Get, "api/demos/open" + Query(("customerId", q.CustomerId), ("itemId", q.ItemId)), null, ct);
 
     // ---- Users ----
 

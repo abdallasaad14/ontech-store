@@ -98,7 +98,20 @@
                     <DataGrid AutomationProperties.AutomationId="ItemCard_LinesGrid" x:Name="LinesGrid" ItemsSource="{Binding Lines}" SelectedItem="{Binding SelectedLine}" Margin="6" MouseDoubleClick="OnLineDoubleClick">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding Date, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="130"/>
-                            <DataGridTextColumn Header="{l:T 'MOVEMENT'}" Binding="{Binding Type, Converter={StaticResource MovementType}, Mode=OneWay}" Width="150"/>
+                            <DataGridTextColumn Header="{l:T 'MOVEMENT'}" Binding="{Binding Converter={StaticResource MovementType}, Mode=OneWay}" Width="150">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IssueType}" Value="Demo">
+                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding ReceiveType}" Value="DemoReturn">
+                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
                             <DataGridTextColumn Header="{l:T 'IN'}" Binding="{Binding In, Converter={StaticResource ZeroAsBlank}, Mode=OneWay}" Width="60"
                                                 FontWeight="SemiBold" Foreground="{StaticResource OkBrush}"/>
                             <DataGridTextColumn Header="{l:T 'OUT'}" Binding="{Binding Out, Converter={StaticResource ZeroAsBlank}, Mode=OneWay}" Width="60"

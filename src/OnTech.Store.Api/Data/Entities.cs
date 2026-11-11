@@ -84,6 +84,8 @@ public class Order
     public Customer Customer { get; set; } = null!;
     /// <summary>Warehouse issue voucher number (إذن صرف). Required and unique; it is also <see cref="OrderNumber"/>.</summary>
     public string? IssueVoucherNumber { get; set; }
+    /// <summary>Sale or Demo. Both take stock out; a demo stays open on the customer until its lines come back on demo returns.</summary>
+    public IssueType Type { get; set; }
     public bool WithReceipt { get; set; }
     public string? ReceiptNumber { get; set; }
     public string? Notes { get; set; }
@@ -111,6 +113,8 @@ public class OrderLine
     public string? ItemCode { get; set; }
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = "";
+    /// <summary>Demo lines only: units that came back on demo returns. Never more than <see cref="Quantity"/> (DB check).</summary>
+    public int ReturnedQuantity { get; set; }
 }
 
 public class Supplier
@@ -133,14 +137,22 @@ public class Supplier
     public List<StockIn> StockIns { get; set; } = new();
 }
 
-/// <summary>Stock received from a supplier (إذن إضافة). The mirror of <see cref="Order"/>.</summary>
+/// <summary>
+/// Stock received (إذن إضافة / دخول): bought from a supplier (Purchase), or a demo coming back from a customer (DemoReturn).
+/// The mirror of <see cref="Order"/>.
+/// </summary>
 public class StockIn
 {
     public int Id { get; set; }
     /// <summary>Human-friendly number, e.g. IN-000012. Assigned from the Id when saved.</summary>
     public string StockInNumber { get; set; } = "";
-    public int SupplierId { get; set; }
-    public Supplier Supplier { get; set; } = null!;
+    public ReceiveType Type { get; set; }
+    /// <summary>Set on a purchase, empty on a demo return (DB check).</summary>
+    public int? SupplierId { get; set; }
+    public Supplier? Supplier { get; set; }
+    /// <summary>Set on a demo return: the customer the demo went out to. Empty on a purchase (DB check).</summary>
+    public int? CustomerId { get; set; }
+    public Customer? Customer { get; set; }
     /// <summary>Warehouse receipt voucher number. Required and unique.</summary>
     public string VoucherNumber { get; set; } = "";
     public string? SupplierInvoiceNumber { get; set; }
@@ -168,6 +180,9 @@ public class StockInLine
     public string? ItemCode { get; set; }
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = "";
+    /// <summary>Demo return lines only: the demo line this quantity came back on.</summary>
+    public int? DemoOrderLineId { get; set; }
+    public OrderLine? DemoOrderLine { get; set; }
 }
 
 /// <summary>Every change to an item's quantity, so stock can always be explained.</summary>

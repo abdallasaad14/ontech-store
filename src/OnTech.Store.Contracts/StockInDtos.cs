@@ -2,16 +2,32 @@ using System.ComponentModel.DataAnnotations;
 
 namespace OnTech.Store.Contracts;
 
-/// <summary>Stock received from a supplier. This and orders are the only ways quantities change.</summary>
+/// <summary>
+/// Stock received: bought from a supplier (Purchase) or a demo coming back from a customer (DemoReturn).
+/// This and orders are the only ways quantities change.
+/// </summary>
 public sealed class CreateStockInRequest
 {
-    [Range(1, int.MaxValue)] public int SupplierId { get; set; }
-    [Required, MinLength(1)] public List<OrderLineRequest> Lines { get; set; } = new();
+    /// <summary>Purchase (the default) or DemoReturn.</summary>
+    public ReceiveType Type { get; set; } = ReceiveType.Purchase;
+    /// <summary>Required for a purchase; must be empty for a demo return.</summary>
+    [Range(1, int.MaxValue)] public int? SupplierId { get; set; }
+    /// <summary>Required for a demo return: the customer the demo went out to. Must be empty for a purchase.</summary>
+    [Range(1, int.MaxValue)] public int? CustomerId { get; set; }
+    [Required, MinLength(1)] public List<StockInLineRequest> Lines { get; set; } = new();
     /// <summary>The warehouse receipt voucher number (إذن إضافة). Required and unique.</summary>
     [Required, MaxLength(50)] public string VoucherNumber { get; set; } = "";
     /// <summary>The supplier's invoice or delivery note number, if there is one.</summary>
     [MaxLength(50)] public string? SupplierInvoiceNumber { get; set; }
     [MaxLength(1000)] public string? Notes { get; set; }
+}
+
+public sealed class StockInLineRequest
+{
+    [Range(1, int.MaxValue)] public int ItemId { get; set; }
+    [Range(1, 1_000_000)] public int Quantity { get; set; }
+    /// <summary>Demo return only (required there): the demo line this quantity comes back on.</summary>
+    [Range(1, int.MaxValue)] public int? DemoOrderLineId { get; set; }
 }
 
 public sealed class CancelStockInRequest
@@ -24,9 +40,16 @@ public sealed class StockInDto
     public int Id { get; init; }
     /// <summary>Human-friendly number, e.g. IN-000012.</summary>
     public string StockInNumber { get; init; } = "";
-    public int SupplierId { get; init; }
+    public ReceiveType Type { get; init; }
+    /// <summary>Set on a purchase.</summary>
+    public int? SupplierId { get; init; }
     public string SupplierName { get; init; } = "";
     public string? SupplierTaxNumber { get; init; }
+    /// <summary>Set on a demo return.</summary>
+    public int? CustomerId { get; init; }
+    public string? CustomerName { get; init; }
+    /// <summary>The supplier on a purchase, the customer on a demo return.</summary>
+    public string PartyName { get; init; } = "";
     public string VoucherNumber { get; init; } = "";
     public string? SupplierInvoiceNumber { get; init; }
     public string? Notes { get; init; }
@@ -49,8 +72,10 @@ public sealed class StockInQuery
     public DateTimeOffset? From { get; set; }
     public DateTimeOffset? To { get; set; }
     public int? SupplierId { get; set; }
+    public int? CustomerId { get; set; }
     public int? ItemId { get; set; }
     public OrderStatus? Status { get; set; }
+    public ReceiveType? Type { get; set; }
     /// <summary>1 to <see cref="Paging.MaxPage"/>; anything else is a 400.</summary>
     [Range(1, Paging.MaxPage)] public int Page { get; set; } = 1;
     /// <summary>1 to <see cref="Paging.MaxPageSize"/>.</summary>

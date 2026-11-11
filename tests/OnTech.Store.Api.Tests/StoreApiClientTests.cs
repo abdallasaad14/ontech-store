@@ -76,7 +76,7 @@ public class StoreApiClientTests : IClassFixture<StoreApiFactory>
         var stockIn = await api.CreateStockInAsync(new CreateStockInRequest
         {
             SupplierId = supplier.Id, VoucherNumber = $"IN-{tag}", SupplierInvoiceNumber = "Delivery 42",
-            Lines = [new OrderLineRequest { ItemId = fargo.Id, Quantity = 5 }, new OrderLineRequest { ItemId = fargo.Id, Quantity = 3 }],
+            Lines = [new StockInLineRequest { ItemId = fargo.Id, Quantity = 5 }, new StockInLineRequest { ItemId = fargo.Id, Quantity = 3 }],
         });
         Assert.Equal(8, stockIn.TotalQuantity);
         Assert.Equal(stockIn.Id, Assert.Single((await api.SearchStockInsAsync(new StockInQuery { SupplierId = supplier.Id })).Items).Id);

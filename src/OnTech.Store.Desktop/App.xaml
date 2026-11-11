@@ -17,6 +17,7 @@
             <local:TranslateConverter x:Key="Translate"/>
             <local:MovementTypeConverter x:Key="MovementType"/>
             <local:ZeroAsBlankConverter x:Key="ZeroAsBlank"/>
+            <local:VoucherTypeConverter x:Key="VoucherType"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
