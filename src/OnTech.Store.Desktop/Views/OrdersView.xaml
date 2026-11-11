@@ -41,6 +41,16 @@
                             </TextBox.InputBindings>
                         </TextBox>
                     </DockPanel>
+                    <!-- Only one customer's vouchers, with their totals at the bottom. -->
+                    <DockPanel DockPanel.Dock="Top" Margin="16,0,16,8">
+                        <TextBlock x:Name="PartyLabel" DockPanel.Dock="Left" Text="{Binding PartyLabel}" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextMutedBrush}"/>
+                        <TextBox AutomationProperties.AutomationId="Orders_PartySearchBox" AutomationProperties.LabeledBy="{Binding ElementName=PartyLabel}" DockPanel.Dock="Left" Width="200" MaxLength="200"
+                                 Text="{Binding Party.Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" ToolTip="{Binding PartyHint}"/>
+                        <Button AutomationProperties.AutomationId="Orders_PartyClearButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Margin="8,0,0,0"
+                                Content="{Binding PartyAllText}" Command="{Binding Party.ClearCommand}"/>
+                        <ComboBox AutomationProperties.AutomationId="Orders_PartyCombo" AutomationProperties.LabeledBy="{Binding ElementName=PartyLabel}" Margin="8,0,0,0"
+                                  ItemsSource="{Binding Party.Choices}" SelectedItem="{Binding Party.Selected}" DisplayMemberPath="Display"/>
+                    </DockPanel>
                     <!-- One number book: a number that belongs to the other type says where it is. -->
                     <Border DockPanel.Dock="Top" Background="{StaticResource WarnSoftBrush}" CornerRadius="{StaticResource ControlRadius}" Padding="12,8" Margin="16,0,16,8"
                             Visibility="{Binding OtherTypeHint, Converter={StaticResource HasValueToVisibility}}">
@@ -55,6 +65,7 @@
                             <Button AutomationProperties.AutomationId="Orders_PreviousPageButton" Content="{l:T 'Previous'}" Margin="0,0,8,0" Command="{Binding PreviousPageCommand}"/>
                             <Button AutomationProperties.AutomationId="Orders_NextPageButton" Content="{l:T 'Next'}" Command="{Binding NextPageCommand}"/>
                         </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="{Binding TotalsText}" FontWeight="SemiBold" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding PageText}" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}"/>
                     </DockPanel>
                     <DataGrid AutomationProperties.AutomationId="Orders_OrdersGrid" ItemsSource="{Binding Orders}" SelectedItem="{Binding Selected}" Margin="6,0,6,0">

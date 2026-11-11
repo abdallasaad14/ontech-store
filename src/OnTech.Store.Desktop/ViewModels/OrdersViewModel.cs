@@ -19,7 +19,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
     public bool IsSaleLog => !IsDemoLog;
     public bool CanCancel => Session.Can(Permission.CancelOrders);
     /// <summary>Only an admin may fix an order saved with the wrong type.</summary>
-    public bool CanChangeType => Session.User.IsAdmin && type == IssueType.Sale;
+    public bool CanChangeType => Session.User.IsAdmin && Type == IssueType.Sale;
 
     // Shown in the current language; the position picks the filter (0 all, 1 with, 2 without).
     public IReadOnlyList<string> ReceiptFilters { get; } = [L.T("All orders"), L.T("With receipt"), L.T("Without receipt")];
@@ -46,7 +46,22 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
         : IsDemoLog ? L.T("Page {0} of {1} · {2} demo vouchers", Page, TotalPages, TotalCount)
         : L.T("Page {0} of {1} · {2} orders", Page, TotalPages, TotalCount);
 
-    public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
+    /// <summary>Only this customer's vouchers.</summary>
+    public PartyFilter Party => _party ??= new(() => _ = SearchAsync());
+    private PartyFilter? _party;
+    public string PartyLabel => L.T("Customer");
+    public string PartyHint => L.T("Type the customer number or part of the name");
+    public string PartyAllText => L.T("All customers");
+
+    /// <summary>Over every page of the list; cancelled vouchers left out.</summary>
+    [ObservableProperty] private string? _totalsText;
+
+    public override Task LoadAsync() => RunAsync(async () =>
+    {
+        if (!Party.IsLoaded)
+            Party.SetAll((await Api.GetCustomersAsync(includeInactive: true)).Select(c => new PartyChoice(c.Id, c.CustomerNumber, c.CompanyName)));
+        await ReloadAsync();
+    }, clearMessages: false);
 
     private readonly LatestRequest _requests = new();
 
@@ -59,6 +74,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
             Search = Search,
             WithReceipt = IsDemoLog ? null : ReceiptFilterIndex switch { 1 => true, 2 => false, _ => null },
             Type = Type,
+            CustomerId = Party.Selected?.Id,
             DemoState = IsDemoLog && DemoStateFilterIndex > 0 ? (DemoState)(DemoStateFilterIndex - 1) : null,
             Page = Page,
             PageSize = 50,
@@ -70,6 +86,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
         TotalPages = result.TotalPages;
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
+        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces (cancelled not counted)", t.Vouchers, t.Quantity) : null;
         Selected = Orders.FirstOrDefault(o => o.Id == keep);
         await CheckOtherTypeAsync(result.TotalCount, ticket);
     }

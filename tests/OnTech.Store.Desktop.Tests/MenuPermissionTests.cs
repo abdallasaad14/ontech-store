@@ -74,7 +74,8 @@ public class MenuPermissionTests
     [InlineData(Permission.AddStock, new[] { Page.Home, Page.StockIn, Page.Customers, Page.Suppliers, Page.Demos })]
     [InlineData(Permission.ManageCustomers, new[] { Page.Home, Page.Customers })]
     [InlineData(Permission.ManageSuppliers, new[] { Page.Home, Page.Suppliers })]
-    [InlineData(Permission.ViewOrders, new[] { Page.Home, Page.Orders, Page.StockIns, Page.Demos })]
+    // Customers and Suppliers: the logs filter by customer or supplier, so ViewOrders can read them (ReadAccess, voucher party filter).
+    [InlineData(Permission.ViewOrders, new[] { Page.Home, Page.Customers, Page.Suppliers, Page.Orders, Page.StockIns, Page.Demos })]
     [InlineData(Permission.ManageCatalog, new[] { Page.Home, Page.Catalog })]
     [InlineData(Permission.ManageUsers, new[] { Page.Home, Page.Users })]
     public void Menu_shows_the_pages_of_each_permission(Permission permission, Page[] expected)
