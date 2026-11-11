@@ -73,7 +73,7 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
         TotalPages = result.TotalPages;
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
-        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces (cancelled not counted)", t.Vouchers, t.Quantity) : null;
+        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces", t.Vouchers, t.Quantity) : null;
         Selected = StockIns.FirstOrDefault(s => s.Id == keep);
         await CheckOtherTypeAsync(result.TotalCount, ticket);
     }

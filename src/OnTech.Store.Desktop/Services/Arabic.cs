@@ -323,7 +323,7 @@ internal static class Arabic
         ["Page {0} of {1} · {2} orders"] = "صفحة {0} من {1} · {2} إذن",
         ["All customers"] = "كل العملاء",
         ["All suppliers"] = "كل الموردين",
-        ["Total: {0} vouchers · {1} pieces (cancelled not counted)"] = "الإجمالي: {0} إذن · {1} قطعة (بدون الأذون الملغاة)",
+        ["Total: {0} vouchers · {1} pieces"] = "الإجمالي: {0} إذن · {1} قطعة",
         ["Cancel issue voucher {0}"] = "إلغاء إذن الصرف {0}",
         ["Why is this order cancelled? Its items go back into stock."] = "سبب الإلغاء؟ ستعود الأصناف إلى المخزن.",
         ["Issue voucher {0} was cancelled and its stock returned."] = "تم إلغاء إذن الصرف {0} وإعادة الكمية إلى المخزن.",

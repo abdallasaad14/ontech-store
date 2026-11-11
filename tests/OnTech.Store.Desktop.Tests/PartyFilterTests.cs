@@ -22,7 +22,7 @@ public class PartyFilterTests
         Assert.Equal(2, vm.Party.Choices.Count);
         Assert.Null(vm.Party.Selected);
         Assert.DoesNotContain("customerId", Query(server, "api/orders"));
-        Assert.Equal("Total: 4 vouchers · 37 pieces (cancelled not counted)", vm.TotalsText);
+        Assert.Equal("Total: 4 vouchers · 37 pieces", vm.TotalsText);
 
         vm.Party.Search = "١٣"; // Arabic-Indic digits: one match is picked straight away
         Assert.Equal(4, vm.Party.Selected!.Id);

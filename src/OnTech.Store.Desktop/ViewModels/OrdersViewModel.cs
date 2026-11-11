@@ -86,7 +86,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
         TotalPages = result.TotalPages;
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
-        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces (cancelled not counted)", t.Vouchers, t.Quantity) : null;
+        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces", t.Vouchers, t.Quantity) : null;
         Selected = Orders.FirstOrDefault(o => o.Id == keep);
         await CheckOtherTypeAsync(result.TotalCount, ticket);
     }
