@@ -105,6 +105,7 @@ public class DemoVoucherTests : IClassFixture<StoreApiFactory>
 
         var res = await ReturnAsync(admin, customer.Id, (item.Id, lineId, 1), (item.Id, lineId, 2)); // 3 in total
         Assert.Equal(HttpStatusCode.Conflict, res.StatusCode);
+        Assert.Equal(ErrorCodes.OverReturn, (await res.ProblemAsync()).Code);
         Assert.Equal(18, await QtyAsync(admin, item.Id));
         Assert.Equal(0, (await admin.GetAs<OrderDto>($"/api/orders/{demo.Id}")).ReturnedQuantity);
     }

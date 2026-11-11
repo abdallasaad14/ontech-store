@@ -79,7 +79,29 @@ public sealed class TranslateConverter : IValueConverter
 public sealed class MovementTypeConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is Contracts.StockMovementType t ? ViewModels.ItemCardViewModel.Describe(t) : null;
+        value switch
+        {
+            Contracts.ItemCardLineDto line => ViewModels.ItemCardViewModel.Describe(line),
+            Contracts.StockMovementType t => ViewModels.ItemCardViewModel.Describe(t),
+            _ => null,
+        };
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>A voucher type (sale / demo, purchase / demo return) in plain words, in the current language.</summary>
+public sealed class VoucherTypeConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => Describe(value);
+
+    public static string? Describe(object? value) => value switch
+    {
+        Contracts.IssueType.Sale => Services.L.T("Sale"),
+        Contracts.IssueType.Demo => Services.L.T("Demo"),
+        Contracts.ReceiveType.Purchase => Services.L.T("Purchase"),
+        Contracts.ReceiveType.DemoReturn => Services.L.T("Demo return"),
+        _ => null,
+    };
 
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }

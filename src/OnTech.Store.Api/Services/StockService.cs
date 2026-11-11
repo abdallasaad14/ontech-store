@@ -262,7 +262,7 @@ public sealed class StockService(StoreDbContext db)
         {
             await tx.RollbackAsync(ct);
             throw ApiException.Conflict("You are returning more than the customer still has of one or more items. Nothing was saved.",
-                new Dictionary<string, object?> { ["overReturns"] = tooMuch });
+                new Dictionary<string, object?> { ["code"] = ErrorCodes.OverReturn, ["overReturns"] = tooMuch });
         }
 
         foreach (var line in stockIn.Lines.OrderBy(l => l.ItemId))

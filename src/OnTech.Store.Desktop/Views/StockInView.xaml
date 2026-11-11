@@ -6,12 +6,118 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,28,32,24" MaxWidth="900" HorizontalAlignment="Left">
             <TextBlock Text="{l:T 'Stock In'}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{l:T 'Record items received from a supplier. Stock is added when you save. New items are added by an admin under Items &amp; Categories.'}"
+            <TextBlock Text="{l:T 'Record items received from a supplier, or a demo coming back from a customer. Stock is added when you save. New items are added by an admin under Items &amp; Categories.'}"
                        Style="{StaticResource PageSubtitle}" Margin="0,4,0,20" TextWrapping="Wrap"/>
             <views:MessageBanners/>
 
             <Border Style="{StaticResource Card}" Padding="24">
                 <StackPanel>
+                    <TextBlock x:Name="ReceiveTypeLabel" Text="{l:T 'Type'}" Style="{StaticResource FieldLabel}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16" AutomationProperties.LabeledBy="{Binding ElementName=ReceiveTypeLabel}">
+                        <RadioButton AutomationProperties.AutomationId="StockIn_PurchaseRadio" GroupName="StockInType" Style="{StaticResource SegmentButton}"
+                                     Content="{l:T 'Purchase'}" IsChecked="{Binding IsPurchase}"/>
+                        <RadioButton AutomationProperties.AutomationId="StockIn_DemoReturnRadio" GroupName="StockInType" Style="{StaticResource DemoSegmentButton}"
+                                     Content="{l:T 'Demo return'}" IsChecked="{Binding IsDemoReturn}"/>
+                    </StackPanel>
+
+                    <!-- Demo return: the customer, then what comes back of each demo they still hold -->
+                    <StackPanel Visibility="{Binding IsDemoReturn, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,8">
+                        <TextBlock x:Name="DemoCustomerSearchLabel" Text="{l:T 'Customer (type number or name)'}" Style="{StaticResource FieldLabel}"/>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" AutomationProperties.AutomationId="StockIn_CustomerSearchBox" AutomationProperties.LabeledBy="{Binding ElementName=DemoCustomerSearchLabel}" MaxLength="200"
+                                     Text="{Binding CustomerSearch, UpdateSourceTrigger=PropertyChanged, Delay=200}" ToolTip="{l:T 'Type the customer number or part of the name'}"/>
+                            <ComboBox Grid.Column="2" AutomationProperties.AutomationId="StockIn_CustomerCombo" AutomationProperties.LabeledBy="{Binding ElementName=DemoCustomerSearchLabel}"
+                                      ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Display"
+                                      IsEditable="True" IsTextSearchEnabled="True" TextSearch.TextPath="Display"/>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,16" Text="{l:T 'This customer has no demo out right now.'}"
+                                   Visibility="{Binding NoOpenDemos, Converter={StaticResource BoolToVisibility}}"/>
+
+                        <StackPanel Visibility="{Binding OpenDemos.Count, Converter={StaticResource HasValueToVisibility}}">
+                            <DockPanel Margin="0,0,0,8">
+                                <Button AutomationProperties.AutomationId="StockIn_ReturnEverythingButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}"
+                                        Content="{l:T 'Return everything the customer has'}" Command="{Binding ReturnEverythingCommand}"/>
+                                <TextBlock Text="{l:T 'Demos with this customer'}" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding OpenDemos}" AutomationProperties.AutomationId="StockIn_OpenDemosList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource ControlRadius}" Margin="0,0,0,10" Padding="12,8">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,6">
+                                                    <Button AutomationProperties.AutomationId="StockIn_ReturnVoucherButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" FontSize="12"
+                                                            Content="{l:T 'Return all of this voucher'}" Command="{Binding ReturnAllCommand}"/>
+                                                    <TextBlock FontWeight="SemiBold" VerticalAlignment="Center">
+                                                        <Run Text="{l:T 'Demo voucher'}"/> <Run Text="{Binding VoucherNumber, Mode=OneWay}"/>
+                                                        <Run Text=" · " Foreground="{StaticResource TextMutedBrush}"/><Run Text="{Binding CreatedAt, Mode=OneWay, Converter={StaticResource LocalTime}}" Foreground="{StaticResource TextMutedBrush}"/>
+                                                    </TextBlock>
+                                                </DockPanel>
+                                                <Grid Margin="0,0,0,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="90"/>
+                                                        <ColumnDefinition Width="110"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{l:T 'Item'}" Style="{StaticResource Hint}"/>
+                                                    <TextBlock Grid.Column="1" Text="{l:T 'Went out'}" Style="{StaticResource Hint}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{l:T 'Back'}" Style="{StaticResource Hint}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="3" Text="{l:T 'With customer'}" Style="{StaticResource Hint}" HorizontalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="4" Text="{l:T 'Coming back now'}" Style="{StaticResource Hint}" HorizontalAlignment="Center"/>
+                                                </Grid>
+                                                <ItemsControl ItemsSource="{Binding Lines}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,3">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="70"/>
+                                                                    <ColumnDefinition Width="70"/>
+                                                                    <ColumnDefinition Width="90"/>
+                                                                    <ColumnDefinition Width="110"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Description}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Line.Quantity}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding Line.ReturnedQuantity}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                <TextBlock Grid.Column="3" Text="{Binding Line.OpenQuantity}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                           FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}"/>
+                                                                <DockPanel Grid.Column="4">
+                                                                    <Button AutomationProperties.AutomationId="StockIn_ReturnLineAllButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" FontSize="12" Margin="6,0,0,0"
+                                                                            Content="{l:T 'All'}" Command="{Binding ReturnAllCommand}" ToolTip="{l:T 'Everything the customer still has of this item'}"/>
+                                                                    <TextBox AutomationProperties.AutomationId="StockIn_ReturnQuantityBox" AutomationProperties.Name="{Binding Description}" MaxLength="9"
+                                                                             Text="{Binding ReturnText, UpdateSourceTrigger=PropertyChanged}">
+                                                                        <TextBox.Style>
+                                                                            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsInvalid}" Value="True">
+                                                                                        <Setter Property="BorderBrush" Value="{StaticResource DangerBrush}"/>
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBox.Style>
+                                                                    </TextBox>
+                                                                </DockPanel>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,16"
+                                       Text="{l:T 'A damaged item still comes back into stock: say what is wrong with it in the notes.'}"/>
+                        </StackPanel>
+                    </StackPanel>
+
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -24,12 +130,12 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16">
+                        <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,16" Visibility="{Binding IsPurchase, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock x:Name="CategoryLabel" Text="{l:T 'Category'}" Style="{StaticResource FieldLabel}"/>
                             <ComboBox AutomationProperties.AutomationId="StockIn_CategoryCombo" AutomationProperties.LabeledBy="{Binding ElementName=CategoryLabel}" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,16">
+                        <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,16" Visibility="{Binding IsPurchase, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock x:Name="ItemLabel" Text="{l:T 'Item'}" Style="{StaticResource FieldLabel}"/>
                             <ComboBox AutomationProperties.AutomationId="StockIn_ItemCombo" AutomationProperties.LabeledBy="{Binding ElementName=ItemLabel}" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}">
                                 <ComboBox.ItemTemplate>
@@ -50,7 +156,7 @@
                             </DockPanel>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,16">
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,0,16" Visibility="{Binding IsPurchase, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock x:Name="QuantityLabel" Text="{l:T 'Quantity received'}" Style="{StaticResource FieldLabel}"/>
                             <DockPanel>
                                 <Button AutomationProperties.AutomationId="StockIn_AddLineButton" DockPanel.Dock="Right" Content="{l:T '+ Add another item'}" Style="{StaticResource LinkButton}" Margin="10,0,0,0"
@@ -59,7 +165,7 @@
                             </DockPanel>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,16">
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,0,0,16" Visibility="{Binding IsPurchase, Converter={StaticResource BoolToVisibility}}">
                             <DockPanel>
                                 <Button AutomationProperties.AutomationId="StockIn_QuickAddSupplierButton" DockPanel.Dock="Right" Content="{l:T '+ New supplier'}" Style="{StaticResource LinkButton}" Margin="0,-6,0,0"
                                         Command="{Binding QuickAddSupplierCommand}"
@@ -78,13 +184,14 @@
                             <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The number on the warehouse receipt voucher. Required, and each number is used once.'}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,16">
+                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,16" Visibility="{Binding IsPurchase, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock x:Name="SupplierInvoiceNumberLabel" Text="{l:T 'Supplier invoice number (optional)'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="StockIn_SupplierInvoiceNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=SupplierInvoiceNumberLabel}" MaxLength="50" Text="{Binding SupplierInvoiceNumber, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Items already in this stock-in -->
+                    <!-- Items already in this stock-in (purchase) -->
+                    <StackPanel Visibility="{Binding IsPurchase, Converter={StaticResource BoolToVisibility}}">
                     <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="{StaticResource ControlRadius}" Margin="0,0,0,16"
                             Visibility="{Binding Lines.Count, Converter={StaticResource HasValueToVisibility}}">
                         <ItemsControl ItemsSource="{Binding Lines}" Margin="12,6">
@@ -101,6 +208,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </Border>
+                    </StackPanel>
 
                     <TextBlock x:Name="NotesLabel" Text="{l:T 'Notes (optional)'}" Style="{StaticResource FieldLabel}"/>
                     <TextBox AutomationProperties.AutomationId="StockIn_NotesBox" AutomationProperties.LabeledBy="{Binding ElementName=NotesLabel}" MaxLength="1000" Style="{StaticResource MultiLineTextBox}" Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,18"/>
@@ -114,7 +222,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button AutomationProperties.AutomationId="StockIn_CancelButton" Content="{l:T 'Cancel'}" Margin="0,0,8,0" MinWidth="90" Command="{Binding CancelCommand}"/>
-                        <Button AutomationProperties.AutomationId="StockIn_SaveButton" Content="{l:T 'Save stock-in'}" Style="{StaticResource PrimaryButton}" MinWidth="120" Command="{Binding SaveCommand}"
+                        <Button AutomationProperties.AutomationId="StockIn_SaveButton" Content="{Binding SaveText}" Style="{StaticResource PrimaryButton}" MinWidth="120" Command="{Binding SaveCommand}"
                                 IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"/>
                     </StackPanel>
                 </StackPanel>

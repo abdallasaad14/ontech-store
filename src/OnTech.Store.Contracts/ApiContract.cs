@@ -14,6 +14,8 @@ public static class ErrorCodes
     public const string MustChangePassword = "MustChangePassword";
     /// <summary>429: too many wrong passwords for this username; wait (see the Retry-After header) and try again.</summary>
     public const string TooManyAttempts = "TooManyAttempts";
+    /// <summary>409: a demo return asks for more than the customer still has of a demo line (see the overReturns extension). Nothing was saved.</summary>
+    public const string OverReturn = "OverReturn";
 }
 
 /// <summary>

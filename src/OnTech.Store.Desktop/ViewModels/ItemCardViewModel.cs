@@ -113,7 +113,7 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
 
     public static IReadOnlyList<object?> Cells(ItemCardLineDto l) =>
     [
-        l.Date.ToLocalTime().ToString("dd MMM yyyy HH:mm", L.Culture), Describe(l.Type),
+        l.Date.ToLocalTime().ToString("dd MMM yyyy HH:mm", L.Culture), Describe(l),
         l.In == 0 ? null : l.In, l.Out == 0 ? null : l.Out, l.Balance, l.PartyName, l.VoucherNumber, l.DocumentNumber, l.InvoiceNumber, l.UserName,
     ];
 
@@ -168,6 +168,16 @@ public sealed partial class ItemCardViewModel(Session session, ItemDto item) : P
         SuccessMessage = L.T("Saved {0}.", System.IO.Path.GetFileName(dlg.FileName));
         return Task.CompletedTask;
     });
+
+    /// <summary>A card line's movement, naming demos and demo returns apart from sales and purchases.</summary>
+    public static string Describe(ItemCardLineDto line) => (line.Type, line.IssueType, line.ReceiveType) switch
+    {
+        (StockMovementType.Order, IssueType.Demo, _) => L.T("Demo to customer"),
+        (StockMovementType.OrderCancelled, IssueType.Demo, _) => L.T("Demo cancelled"),
+        (StockMovementType.StockIn, _, ReceiveType.DemoReturn) => L.T("Demo returned"),
+        (StockMovementType.StockInCancelled, _, ReceiveType.DemoReturn) => L.T("Demo return cancelled"),
+        _ => Describe(line.Type),
+    };
 
     public static string Describe(StockMovementType type) => L.T(type switch
     {

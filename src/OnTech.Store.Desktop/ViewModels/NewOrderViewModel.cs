@@ -18,6 +18,8 @@ public sealed partial class OrderLineViewModel(ItemDto item, int quantity) : Obs
 /// New Order: pick category, item (with the available quantity), quantity and customer, the warehouse issue voucher
 /// number (required) and optionally a receipt number.
 /// One order can hold several items: "Add another item" moves the current pick into the list.
+/// An order is a sale or a demo: a demo goes out to the customer to try and is expected back on a demo return voucher,
+/// so it never has a receipt.
 /// </summary>
 public sealed partial class NewOrderViewModel(Session session, ShellViewModel shell) : PageViewModel(session)
 {
@@ -46,6 +48,19 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [ObservableProperty] private string? _customerSearch;
     private List<CustomerDto> _allCustomers = new();
 
+    /// <summary>True for a demo, false for a sale (the default).</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsSale), nameof(SaveText), nameof(Summary), nameof(HasSummary))]
+    private bool _isDemo;
+
+    public bool IsSale { get => !IsDemo; set => IsDemo = !value; }
+
+    public string SaveText => IsDemo ? L.T("Save demo voucher") : L.T("Save order");
+
+    partial void OnIsDemoChanged(bool value)
+    {
+        if (value) { WithReceipt = false; ReceiptNumber = null; }
+    }
+
     [ObservableProperty] private string? _issueVoucherNumber;
     [ObservableProperty] private bool _withReceipt;
     [ObservableProperty] private string? _receiptNumber;
@@ -67,6 +82,10 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
             if (SelectedItem is not { } item || !TryQuantity(out var qty)) return null;
             var left = Remaining(item, includeCurrent: false) - qty;
             if (left < 0) return L.T("Only {0} {1} available. Lower the quantity.", Remaining(item, false), item.Name);
+            if (IsDemo)
+                return SelectedCustomer is { } dc
+                    ? L.T("Demo: {0} × {1} goes to {2} and is expected back. {3} left in the store meanwhile.", qty, item.Name, dc.CompanyName, left)
+                    : L.T("Demo: {0} × {1} goes out and is expected back. {2} left in the store meanwhile.", qty, item.Name, left);
             return SelectedCustomer is { } c
                 ? L.T("Taking {0} × {1} for {2}. {3} left after this order.", qty, item.Name, c.CompanyName, left)
                 : L.T("Taking {0} × {1}. {2} left after this order.", qty, item.Name, left);
@@ -215,10 +234,11 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
 
         var order = await Api.CreateOrderAsync(new CreateOrderRequest
         {
+            Type = IsDemo ? IssueType.Demo : IssueType.Sale,
             CustomerId = SelectedCustomer.Id,
             IssueVoucherNumber = Numbers.NormalizeDigits(IssueVoucherNumber).Trim(),
-            WithReceipt = WithReceipt,
-            ReceiptNumber = WithReceipt ? Numbers.NormalizeDigits(ReceiptNumber).Trim() : null,
+            WithReceipt = WithReceipt && !IsDemo,
+            ReceiptNumber = WithReceipt && !IsDemo ? Numbers.NormalizeDigits(ReceiptNumber).Trim() : null,
             Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(),
             Lines = Lines.Select(l => new OrderLineRequest { ItemId = l.Item.Id, Quantity = l.Quantity }).ToList(),
         });
@@ -226,13 +246,16 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
         LastOrder = order;
         ResetForm();
         await LoadItemsAsync(); // fresh quantities, including changes from other PCs
-        SuccessMessage = order.WithReceipt
+        SuccessMessage = order.Type == IssueType.Demo
+            ? L.T("Demo voucher {0} saved for {1}: {2} unit(s) went out as a demo. They come back on a demo return voucher.", order.IssueVoucherNumber, order.CustomerName, order.TotalQuantity)
+            : order.WithReceipt
             ? L.T("Issue voucher {0} saved for {1}: {2} unit(s) taken from stock, receipt {3}.", order.IssueVoucherNumber, order.CustomerName, order.TotalQuantity, order.ReceiptNumber)
             : L.T("Issue voucher {0} saved for {1}: {2} unit(s) taken from stock.", order.IssueVoucherNumber, order.CustomerName, order.TotalQuantity);
     });
 
     private void ResetForm()
     {
+        IsDemo = false; // back to a sale, so the next voucher is never a demo by accident
         Lines.Clear();
         SelectedItem = null;
         QuantityText = "1";
@@ -245,7 +268,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [RelayCommand]
     private void Cancel()
     {
-        if (Lines.Count > 0 && !Dialogs.Confirm(L.T("Discard this order?"))) return;
+        if (Lines.Count > 0 && !Dialogs.Confirm(IsDemo ? L.T("Discard this demo voucher?") : L.T("Discard this order?"))) return;
         shell.Navigate(Page.Home);
     }
 
