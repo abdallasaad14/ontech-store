@@ -16,6 +16,7 @@
         <DataTemplate DataType="{x:Type vm:SuppliersViewModel}"><views:SuppliersView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:OrdersViewModel}"><views:OrdersView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:StockInsViewModel}"><views:StockInsView/></DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DemosViewModel}"><views:DemosView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:CatalogViewModel}"><views:CatalogView/></DataTemplate>
         <DataTemplate DataType="{x:Type vm:UsersViewModel}"><views:UsersView/></DataTemplate>
 

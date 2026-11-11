@@ -6,7 +6,16 @@ using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
 
-public enum Page { Home, NewOrder, StockIn, Customers, Suppliers, Orders, StockIns, Catalog, Users }
+public enum Page
+{
+    Home, NewOrder, StockIn, Customers, Suppliers, Orders, StockIns, Catalog, Users,
+    /// <summary>Everything about demos: what is still out, demo issue vouchers, demo returns.</summary>
+    Demos,
+    /// <summary>New Order for a demo. Opened from the Demo page, not in the menu.</summary>
+    NewDemo,
+    /// <summary>Stock In for a demo return. Opened from the Demo page, not in the menu.</summary>
+    DemoReturn
+}
 
 public sealed record NavItem(Page Page, string Title, string Glyph)
 {
@@ -29,9 +38,10 @@ public sealed partial class ShellViewModel : ObservableObject
         Add(MainMenu, Page.Suppliers, "Suppliers", "\uE7B8");
         Add(MainMenu, Page.Orders, "Orders Log", "\uE8A5");
         Add(MainMenu, Page.StockIns, "Stock In Log", "\uE81C");
+        Add(MainMenu, Page.Demos, "Demos", "\uE8A1");
         Add(AdminMenu, Page.Catalog, "Items & Categories", "\uE8F1");
         Add(AdminMenu, Page.Users, "Users", "\uE77B");
-        Navigate(MainMenu.Concat(AdminMenu).Any(i => i.Page == startPage) ? startPage : Page.Home);
+        Navigate(CanOpen(_session, startPage) ? startPage : Page.Home);
     }
 
     private void Add(ObservableCollection<NavItem> menu, Page page, string title, string glyph)
@@ -51,6 +61,10 @@ public sealed partial class ShellViewModel : ObservableObject
         Page.Customers => session.CanAny(ReadAccess.Customers),
         Page.Suppliers => session.CanAny(ReadAccess.Suppliers),
         Page.Orders or Page.StockIns => session.Can(Permission.ViewOrders),
+        // What is still out is readable with either; each tab and button checks its own permission.
+        Page.Demos => session.Can(Permission.ViewOrders) || session.Can(Permission.AddStock) || session.Can(Permission.CreateOrders),
+        Page.NewDemo => session.Can(Permission.CreateOrders),
+        Page.DemoReturn => session.Can(Permission.AddStock),
         Page.Catalog => session.Can(Permission.ManageCatalog),
         Page.Users => session.Can(Permission.ManageUsers),
         _ => false,
@@ -100,8 +114,11 @@ public sealed partial class ShellViewModel : ObservableObject
             Page.StockIn => new StockInViewModel(_session, this),
             Page.Customers => new CustomersViewModel(_session),
             Page.Suppliers => new SuppliersViewModel(_session),
-            Page.Orders => new OrdersViewModel(_session),
-            Page.StockIns => new StockInsViewModel(_session),
+            Page.Orders => new OrdersViewModel(_session, this),
+            Page.StockIns => new StockInsViewModel(_session, this),
+            Page.Demos => new DemosViewModel(_session, this),
+            Page.NewDemo => new NewOrderViewModel(_session, this, IssueType.Demo),
+            Page.DemoReturn => new StockInViewModel(_session, this, ReceiveType.DemoReturn),
             Page.Catalog => new CatalogViewModel(_session),
             Page.Users => new UsersViewModel(_session),
             _ => throw new ArgumentOutOfRangeException(nameof(page)),
@@ -111,8 +128,9 @@ public sealed partial class ShellViewModel : ObservableObject
         CurrentPageKind = page;
 
         _syncingSelection = true;
-        SelectedMainItem = MainMenu.FirstOrDefault(i => i.Page == page);
-        SelectedAdminItem = AdminMenu.FirstOrDefault(i => i.Page == page);
+        var menuPage = page is Page.NewDemo or Page.DemoReturn ? Page.Demos : page; // the demo forms belong to the Demo page
+        SelectedMainItem = MainMenu.FirstOrDefault(i => i.Page == menuPage);
+        SelectedAdminItem = AdminMenu.FirstOrDefault(i => i.Page == menuPage);
         _syncingSelection = false;
 
         _ = vm.LoadAsync();

@@ -24,6 +24,7 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
     public bool CanAddStock => Session.Can(Permission.AddStock);
     public bool CanManageCustomers => Session.Can(Permission.ManageCustomers);
     public bool CanViewStock => Session.Can(Permission.ViewStock);
+    public bool CanOpenDemos => ShellViewModel.CanOpen(Session, Page.Demos);
 
     [ObservableProperty] private DashboardSummaryDto? _summary;
     [ObservableProperty] private string? _search;
@@ -84,6 +85,7 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
 
     [RelayCommand] private void NewOrder() => shell.Navigate(Page.NewOrder);
     [RelayCommand] private void StockIn() => shell.Navigate(Page.StockIn);
+    [RelayCommand] private void OpenDemos() => shell.Navigate(Page.Demos);
     [RelayCommand] private void AddCustomer() => shell.Open(Page.Customers, vm => ((CustomersViewModel)vm).StartNew());
 
     [RelayCommand]

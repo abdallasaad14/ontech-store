@@ -24,6 +24,7 @@ public class MenuPermissionTests
         if (path.StartsWith("api/categories") || path.StartsWith("api/items")) return ReadAccess.Catalog;
         if (path.StartsWith("api/customers")) return ReadAccess.Customers;
         if (path.StartsWith("api/suppliers")) return ReadAccess.Suppliers;
+        if (path.StartsWith("api/demos/open")) return Permission.AddStock | Permission.ViewOrders;
         if (path.StartsWith("api/orders") || path.StartsWith("api/stock-ins")) return Permission.ViewOrders;
         if (path.StartsWith("api/users")) return Permission.ManageUsers;
         return null;
@@ -68,11 +69,11 @@ public class MenuPermissionTests
     [Theory]
     [InlineData(Permission.None, new[] { Page.Home })]
     [InlineData(Permission.ViewStock, new[] { Page.Home, Page.Customers, Page.Suppliers })]
-    [InlineData(Permission.CreateOrders, new[] { Page.Home, Page.NewOrder, Page.Customers })]
-    [InlineData(Permission.AddStock, new[] { Page.Home, Page.StockIn, Page.Suppliers })]
+    [InlineData(Permission.CreateOrders, new[] { Page.Home, Page.NewOrder, Page.Customers, Page.Demos })]
+    [InlineData(Permission.AddStock, new[] { Page.Home, Page.StockIn, Page.Suppliers, Page.Demos })]
     [InlineData(Permission.ManageCustomers, new[] { Page.Home, Page.Customers })]
     [InlineData(Permission.ManageSuppliers, new[] { Page.Home, Page.Suppliers })]
-    [InlineData(Permission.ViewOrders, new[] { Page.Home, Page.Orders, Page.StockIns })]
+    [InlineData(Permission.ViewOrders, new[] { Page.Home, Page.Orders, Page.StockIns, Page.Demos })]
     [InlineData(Permission.ManageCatalog, new[] { Page.Home, Page.Catalog })]
     [InlineData(Permission.ManageUsers, new[] { Page.Home, Page.Users })]
     public void Menu_shows_the_pages_of_each_permission(Permission permission, Page[] expected)
@@ -85,7 +86,8 @@ public class MenuPermissionTests
     public void Admin_sees_every_page()
     {
         var shell = new ShellViewModel(TestSession.Create(new FakeServer().WithEmptyLists(), Permission.None, isAdmin: true));
-        Assert.Equal(Enum.GetValues<Page>(), shell.MainMenu.Concat(shell.AdminMenu).Select(i => i.Page).ToArray());
+        // The demo forms open from the Demo page, not from the menu.
+        Assert.Equal(Enum.GetValues<Page>().Except([Page.NewDemo, Page.DemoReturn]), shell.MainMenu.Concat(shell.AdminMenu).Select(i => i.Page).ToArray());
     }
 
     [Fact]

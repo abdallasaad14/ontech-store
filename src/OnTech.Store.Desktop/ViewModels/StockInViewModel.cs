@@ -49,22 +49,33 @@ public sealed partial class DemoReturnGroupViewModel(string voucherNumber, DateT
 /// open demo line comes back. Both need the warehouse receipt voucher number. The mirror of New Order; quantities are
 /// never typed in any other way.
 /// </summary>
-public sealed partial class StockInViewModel(Session session, ShellViewModel shell) : PageViewModel(session)
+public sealed partial class StockInViewModel(Session session, ShellViewModel shell, ReceiveType type = ReceiveType.Purchase) : PageViewModel(session)
 {
     // ---- Purchase or demo return ----
 
-    /// <summary>True for a demo return, false for a purchase (the default).</summary>
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsPurchase), nameof(Summary), nameof(HasSummary), nameof(SaveText))]
-    private bool _isDemoReturn;
-
-    public bool IsPurchase { get => !IsDemoReturn; set => IsDemoReturn = !value; }
+    /// <summary>
+    /// Fixed when the page opens: Stock In records purchases; the Demo page opens this page for demo returns.
+    /// Both use the same receipt voucher number book.
+    /// </summary>
+    public bool IsDemoReturn { get; } = type == ReceiveType.DemoReturn;
+    public bool IsPurchase => !IsDemoReturn;
 
     public string SaveText => IsDemoReturn ? L.T("Save demo return") : L.T("Save stock-in");
 
-    partial void OnIsDemoReturnChanged(bool value)
+    public string Title => IsDemoReturn ? L.T("Demo Return") : L.T("Stock In");
+    public string Subtitle => IsDemoReturn
+        ? L.T("Record a demo coming back from a customer. Pick the customer, then type how much of each demo came back. Stock is added when you save.")
+        : L.T("Record items bought from a supplier. Stock is added when you save. New items are added by an admin under Items & Categories.");
+
+    // Set by the Demo page's "Return" on a line: that customer, with that line filled in once the lists load.
+    private int? _startCustomerId;
+    private int? _startOrderLineId;
+
+    /// <summary>Opens the return for one customer, with one open demo line ready to come back in full.</summary>
+    public void StartReturn(int customerId, int? orderLineId)
     {
-        ErrorMessage = null;
-        if (value && _allCustomers.Count == 0) _ = RunAsync(LoadCustomersAsync, clearMessages: false);
+        _startCustomerId = customerId;
+        _startOrderLineId = orderLineId;
     }
 
     public ObservableCollection<CustomerDto> Customers { get; } = new();
@@ -88,6 +99,8 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
         _allCustomers = await Api.GetCustomersAsync();
         CustomerSearch = null;
         FilterCustomers();
+        if (_startCustomerId is { } id) SelectedCustomer = Customers.FirstOrDefault(c => c.Id == id);
+        _startCustomerId = null;
     }
 
     partial void OnCustomerSearchChanged(string? value) => FilterCustomers();
@@ -124,6 +137,11 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
             {
                 var lines = g.Select(l => new DemoReturnLineViewModel(l) { Changed = DemoLinesChanged }).ToList();
                 OpenDemos.Add(new DemoReturnGroupViewModel(g.First().IssueVoucherNumber ?? "", g.First().CreatedAt, lines));
+            }
+            if (customer is not null && _startOrderLineId is { } lineId)
+            {
+                DemoLines.FirstOrDefault(l => l.Line.OrderLineId == lineId)?.ReturnAllCommand.Execute(null);
+                _startOrderLineId = null;
             }
         }
         finally
@@ -199,7 +217,7 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
 
     private bool TryQuantity(out int qty) => Numbers.TryParseInt(QuantityText, out qty) && qty > 0;
 
-    public override Task LoadAsync() => RunAsync(async () =>
+    public override Task LoadAsync() => IsDemoReturn ? RunAsync(LoadCustomersAsync) : RunAsync(async () =>
     {
         var categories = Api.GetCategoriesAsync();
         var suppliers = Api.GetSuppliersAsync();
@@ -362,7 +380,7 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
     {
         var dirty = IsDemoReturn ? DemoLines.Any(l => l.ReturnQuantity != 0) : Lines.Count > 0;
         if (dirty && !Dialogs.Confirm(IsDemoReturn ? L.T("Discard this demo return?") : L.T("Discard this stock-in?"))) return;
-        shell.Navigate(Page.Home);
+        shell.Navigate(IsDemoReturn ? Page.Demos : Page.Home);
     }
 
     /// <summary>Opens the picked item's card, to check its history before saving.</summary>

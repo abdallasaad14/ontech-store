@@ -21,7 +21,7 @@ public sealed partial class OrderLineViewModel(ItemDto item, int quantity) : Obs
 /// An order is a sale or a demo: a demo goes out to the customer to try and is expected back on a demo return voucher,
 /// so it never has a receipt.
 /// </summary>
-public sealed partial class NewOrderViewModel(Session session, ShellViewModel shell) : PageViewModel(session)
+public sealed partial class NewOrderViewModel(Session session, ShellViewModel shell, IssueType type = IssueType.Sale) : PageViewModel(session)
 {
     public ObservableCollection<CategoryDto> Categories { get; } = new();
     public ObservableCollection<ItemDto> Items { get; } = new();
@@ -48,18 +48,19 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     [ObservableProperty] private string? _customerSearch;
     private List<CustomerDto> _allCustomers = new();
 
-    /// <summary>True for a demo, false for a sale (the default).</summary>
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsSale), nameof(SaveText), nameof(Summary), nameof(HasSummary))]
-    private bool _isDemo;
+    /// <summary>
+    /// Fixed when the page opens: New Order makes sales; the Demo page's "New demo voucher" opens this page for demos.
+    /// Both use the same issue voucher number book.
+    /// </summary>
+    public bool IsDemo { get; } = type == IssueType.Demo;
+    public bool IsSale => !IsDemo;
 
-    public bool IsSale { get => !IsDemo; set => IsDemo = !value; }
+    public string Title => IsDemo ? L.T("New Demo Voucher") : L.T("New Order");
+    public string Subtitle => IsDemo
+        ? L.T("Choose what goes out to the customer to try. Stock is deducted when you save, and it shows on the Demo page until it comes back.")
+        : L.T("Choose what is leaving the store and who it is for. Stock is deducted when you save.");
 
     public string SaveText => IsDemo ? L.T("Save demo voucher") : L.T("Save order");
-
-    partial void OnIsDemoChanged(bool value)
-    {
-        if (value) { WithReceipt = false; ReceiptNumber = null; }
-    }
 
     [ObservableProperty] private string? _issueVoucherNumber;
     [ObservableProperty] private bool _withReceipt;
@@ -255,7 +256,6 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
 
     private void ResetForm()
     {
-        IsDemo = false; // back to a sale, so the next voucher is never a demo by accident
         Lines.Clear();
         SelectedItem = null;
         QuantityText = "1";
@@ -269,7 +269,7 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     private void Cancel()
     {
         if (Lines.Count > 0 && !Dialogs.Confirm(IsDemo ? L.T("Discard this demo voucher?") : L.T("Discard this order?"))) return;
-        shell.Navigate(Page.Home);
+        shell.Navigate(IsDemo ? Page.Demos : Page.Home);
     }
 
     protected override void OnApiError(Client.ApiError error)
