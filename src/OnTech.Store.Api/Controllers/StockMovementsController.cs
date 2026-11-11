@@ -25,7 +25,8 @@ public class StockMovementsController(StoreDbContext db) : ControllerBase
         if (f.To is { } to) { var d = to.UtcDateTime; q = q.Where(m => m.CreatedAt <= d); }
 
         var total = await q.CountAsync(ct);
-        var rows = await q.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+        // Id is the order the stock lock granted, so QuantityAfter follows it; CreatedAt is taken before the lock.
+        var rows = await q.OrderByDescending(m => m.Id)
             .Skip(Paging.Skip(f.Page, f.PageSize)).Take(f.PageSize)
             .Select(m => new
             {

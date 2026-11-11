@@ -94,7 +94,8 @@ public class SchemaTests(ITestOutputHelper out_)
     public void Live_sqlite_copy_has_every_model_column()
     {
         using var db = SqlServerContext(); // only for the model
-        var file = Path.Combine(Paths.Audit, "backups", "ontech-store-dev_before_audit.db");
+        // The 5082 copy of the live file, after the new server's UpgradeSqliteAsync ran on it (adds Version etc.).
+        var file = Server.Sqlite.SqliteFile!;
         using var c = new SqliteConnection($"Data Source={file};Mode=ReadOnly"); c.Open();
         var problems = new List<string>();
         foreach (var e in db.Model.GetEntityTypes())

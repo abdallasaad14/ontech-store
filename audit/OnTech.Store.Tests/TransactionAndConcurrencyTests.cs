@@ -159,8 +159,9 @@ public class TransactionAndConcurrencyTests(ITestOutputHelper out_)
         var c = await Api.CustomerAsync(s);
         var (pc1, _) = await Api.UserAsync(s, Permission.All);
         var (pc2, _) = await Api.UserAsync(s, Permission.All);
-        await pc1.UpdateCustomerAsync(c.Id, new SaveCustomerRequest { CompanyName = c.CompanyName, PhoneNumber = "0100 PC1" });
-        var second = await Record.ExceptionAsync(() => pc2.UpdateCustomerAsync(c.Id, new SaveCustomerRequest { CompanyName = c.CompanyName, Notes = "edited on PC2" }));
+        await pc1.UpdateCustomerAsync(c.Id, new SaveCustomerRequest { CompanyName = c.CompanyName, PhoneNumber = "0100 PC1", Version = c.Version });
+        // Both PCs send the Version they loaded, as the real client does since M-1.
+        var second = await Record.ExceptionAsync(() => pc2.UpdateCustomerAsync(c.Id, new SaveCustomerRequest { CompanyName = c.CompanyName, Notes = "edited on PC2", Version = c.Version }));
         var phone = s.Scalar("SELECT PhoneNumber FROM Customers WHERE Id=@i", ("@i", c.Id));
         Evidence.Log("concurrency", $"{server}: PC1 set phone, PC2 (stale form) saved notes -> second save {(second is null ? "accepted" : "refused")}, phone now '{phone ?? "NULL"}'");
         Assert.True(second is not null || phone is not null, "PC1's phone number was wiped by PC2's save without any warning");

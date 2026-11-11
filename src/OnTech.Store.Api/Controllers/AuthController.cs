@@ -36,9 +36,12 @@ public class AuthController(StoreDbContext db, PasswordService passwords, TokenS
         if (!user.IsActive)
             throw new ApiException(StatusCodes.Status403Forbidden, "This account is disabled. Ask an admin to enable it.");
 
+        // Signing in is not an edit: write without the Version check, so an admin saving this user at the same moment can't make the login fail with 409.
         if (rehash) user.PasswordHash = passwords.Hash(user, req.Password);
         user.LastLoginAt = DateTime.UtcNow;
-        await db.SaveChangesAsync(ct);
+        var hash = user.PasswordHash; var at = user.LastLoginAt;
+        await db.Users.Where(u => u.Id == user.Id)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.PasswordHash, hash).SetProperty(u => u.LastLoginAt, at), ct);
 
         var (token, expires) = tokens.CreateToken(user);
         return new LoginResponse { Token = token, ExpiresAt = expires, User = user.ToDto() };

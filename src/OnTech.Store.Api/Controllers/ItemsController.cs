@@ -52,7 +52,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         if (f.From is { } fromOffset)
         {
             var from = fromOffset.UtcDateTime;
-            opening = await q.Where(m => m.CreatedAt < from).OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+            opening = await q.Where(m => m.CreatedAt < from).OrderByDescending(m => m.Id)
                 .Select(m => (int?)m.QuantityAfter).FirstOrDefaultAsync(ct) ?? 0;
             openingDate = fromOffset;
             q = q.Where(m => m.CreatedAt >= from);
@@ -69,7 +69,7 @@ public class ItemsController(StoreDbContext db) : ControllerBase
         }
         q = q.Where(m => m.Type != StockMovementType.Initial);
 
-        var rows = await q.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id)
+        var rows = await q.OrderBy(m => m.Id)
             .Select(m => new
             {
                 m.Id, m.CreatedAt, m.Type, m.Change, m.QuantityAfter, m.OrderId, m.StockInId, UserName = m.User.FullName, m.Note,
