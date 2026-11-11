@@ -61,8 +61,8 @@ public class ViewModelTests
         L.Set("ar");
         try
         {
-            var parsed = int.TryParse("٥", NumberStyles.Integer, CultureInfo.CurrentCulture, out var v);
-            Evidence.Log("viewmodels", $"int.TryParse(\"٥\") in {CultureInfo.CurrentCulture.Name}: {parsed} ({v})");
+            var parsed = OnTech.Store.Client.Numbers.TryParseInt("٥", out var v); // the helper every number field uses since H-3
+            Evidence.Log("viewmodels", $"Numbers.TryParseInt(\"٥\") in {CultureInfo.CurrentCulture.Name}: {parsed} ({v})");
             Assert.True(parsed && v == 5);
         }
         finally { L.Set("en"); }

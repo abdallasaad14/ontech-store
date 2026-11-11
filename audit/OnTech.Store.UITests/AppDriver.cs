@@ -52,7 +52,10 @@ public sealed class AppDriver : IDisposable
 
     public Window WaitWindow(string titleContains, int seconds = 20)
     {
-        var w = Retry.WhileNull(() => App.GetAllTopLevelWindows(Automation).FirstOrDefault(x => x.Title.Contains(titleContains)),
+        // Owned windows (the item card) are children of their owner in UIA, not top-level, so look one level down too.
+        var w = Retry.WhileNull(() => App.GetAllTopLevelWindows(Automation)
+                .SelectMany(x => x.FindAllChildren(Cf.ByControlType(ControlType.Window)).Select(c => c.AsWindow()).Prepend(x))
+                .FirstOrDefault(x => x.Title.Contains(titleContains)),
             TimeSpan.FromSeconds(seconds), TimeSpan.FromMilliseconds(200)).Result;
         return w ?? throw new TimeoutException($"No window with title containing '{titleContains}'. Open: {string.Join(" | ", App.GetAllTopLevelWindows(Automation).Select(x => x.Title))}");
     }

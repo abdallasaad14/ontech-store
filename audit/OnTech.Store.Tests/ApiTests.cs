@@ -283,7 +283,8 @@ public class ApiTests(ITestOutputHelper out_)
         using var h = Api.Raw(Server.ByName(server));
         var (st, body, _) = await Api.SendAsync(h, HttpMethod.Get, "swagger/v1/swagger.json");
         Evidence.Log("security", $"{server}: anonymous GET swagger/v1/swagger.json -> {(int)st} ({body.Length} bytes)");
-        Assert.Equal(HttpStatusCode.OK, st); // documented as intended; listed as Low in the report
+        // Since the fix Swagger is on only in Development: 5082 runs Development, 5081 Production.
+        Assert.Equal(server == "sqlite" ? HttpStatusCode.OK : HttpStatusCode.NotFound, st);
     }
 
     // ---------------- client behaviour when the server is down / slow ----------------

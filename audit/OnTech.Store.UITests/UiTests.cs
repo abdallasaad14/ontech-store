@@ -152,12 +152,15 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var save = d.ButtonById(main, "Customers_SaveButton");
         var company = d.Box(main, "Customers_CompanyNameBox");
         d.Type(company, new string('x', 205));
+        Retry.WhileFalse(() => company.Text.Length >= 200, TimeSpan.FromSeconds(10)); // typed keys arrive after Enter() returns
+        Thread.Sleep(500);
         Assert.Equal(200, company.Text.Length); // MaxLength = the server's limit (M-3)
-        d.Type(d.Box(main, "Customers_EmailBox"), "not-an-email");
+        // The email is checked first (M-3), so test the number with no email, then the email.
         d.Type(d.Box(main, "Customers_CustomerNumberBox"), "abc");
         save.Invoke();
         Assert.True(d.WaitText(main, "Customer number must be a whole number"), d.AllText(main));
         d.Type(d.Box(main, "Customers_CustomerNumberBox"), "");
+        d.Type(d.Box(main, "Customers_EmailBox"), "not-an-email");
         save.Invoke();
         Assert.True(d.WaitText(main, "Enter a valid email address, or leave it empty."), d.AllText(main));
         Log($"     validation shown to the user: {d.AllText(main)}");
@@ -204,7 +207,10 @@ public class UiTests(UiData data, ITestOutputHelper output)
         Thread.Sleep(800);
         Log($"     quantity '٥' -> {d.AllText(main)}");
         Assert.DoesNotContain("Enter a quantity of 1 or more.", d.AllText(main));
+        // ٥ was accepted, so that line was added and now the voucher is the missing field: fill it and ask for too much.
+        d.Combo(main, "NewOrder_ItemCombo").Select(0);
         d.Type(d.Box(main, "NewOrder_QuantityBox"), "99999");
+        d.Type(d.Box(main, "NewOrder_IssueVoucherNumberBox"), "UIBIG-" + data.Run);
         d.ButtonById(main, "NewOrder_SaveButton").Invoke();
         Assert.True(d.WaitText(main, "available"), d.AllText(main));
         Assert.Equal(before, Qty(data.Item.Id));
@@ -221,7 +227,9 @@ public class UiTests(UiData data, ITestOutputHelper output)
         var p = save.GetClickablePoint();
         Mouse.DoubleClick(p);
         Mouse.Click(p);
-        Assert.True(d.WaitText(main, $"Issue voucher {voucher} saved"), d.AllText(main));
+        // The first click saves and clears the form, so a later click may replace the "saved" banner
+        // with "Choose an item"; what matters is the order count.
+        Retry.WhileFalse(() => Convert.ToInt32(AppDriver.Sql("SELECT COUNT(*) FROM Orders WHERE IssueVoucherNumber=@v", ("@v", voucher))) > 0, TimeSpan.FromSeconds(15));
         Thread.Sleep(1500);
         Assert.Equal(1, Convert.ToInt32(AppDriver.Sql("SELECT COUNT(*) FROM Orders WHERE IssueVoucherNumber=@v", ("@v", voucher))));
         Assert.Equal(before - 1, Qty(data.Item.Id));
