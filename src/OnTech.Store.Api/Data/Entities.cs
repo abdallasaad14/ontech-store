@@ -19,6 +19,8 @@ public class User
     public Permission Permissions { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    /// <summary>Concurrency token: +1 on every edit made through the API (CONTRACTS.md §4).</summary>
+    public int Version { get; set; }
 
     public Permission EffectivePermissions => IsAdmin ? Permission.All : Permissions;
 }
@@ -49,6 +51,8 @@ public class Item
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    /// <summary>Concurrency token: +1 on every edit made through the API. Stock movements do not change it.</summary>
+    public int Version { get; set; }
 }
 
 public class Customer
@@ -66,6 +70,8 @@ public class Customer
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public int CreatedByUserId { get; set; }
+    /// <summary>Concurrency token: +1 on every edit made through the API.</summary>
+    public int Version { get; set; }
     public List<Order> Orders { get; set; } = new();
 }
 
@@ -122,6 +128,8 @@ public class Supplier
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
     public int CreatedByUserId { get; set; }
+    /// <summary>Concurrency token: +1 on every edit made through the API.</summary>
+    public int Version { get; set; }
     public List<StockIn> StockIns { get; set; } = new();
 }
 

@@ -45,7 +45,7 @@ public class StockInsController(StoreDbContext db, StockService stock) : Control
 
         var total = await q.CountAsync(ct);
         var page = await q.OrderByDescending(s => s.CreatedAt).ThenByDescending(s => s.Id)
-            .Skip((f.Page - 1) * f.PageSize).Take(f.PageSize)
+            .Skip(Paging.Skip(f.Page, f.PageSize)).Take(f.PageSize)
             .Include(s => s.Supplier).Include(s => s.CreatedByUser).Include(s => s.CancelledByUser).Include(s => s.Lines)
             .AsSplitQuery()
             .ToListAsync(ct);

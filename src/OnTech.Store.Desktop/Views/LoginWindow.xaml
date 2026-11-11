@@ -10,7 +10,7 @@
         <StackPanel>
             <Grid>
                 <Image Source="/Assets/ontech-logo-wordmark.png" Height="30" HorizontalAlignment="Left" RenderOptions.BitmapScalingMode="HighQuality" FlowDirection="LeftToRight"/>
-                <Button Content="{Binding OtherLanguage}" Style="{StaticResource LinkButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                <Button AutomationProperties.AutomationId="Login_SwitchLanguageButton" Content="{Binding OtherLanguage}" Style="{StaticResource LinkButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
                         Command="{Binding SwitchLanguageCommand}" ToolTip="{l:T 'Change the language'}"/>
             </Grid>
             <TextBlock Text="STORE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="2,6,0,22"/>
@@ -20,15 +20,15 @@
 
             <views:MessageBanners/>
 
-            <TextBlock Text="{l:T 'Username'}" Style="{StaticResource FieldLabel}"/>
-            <TextBox x:Name="UsernameBox" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14"/>
+            <TextBlock x:Name="UsernameLabel" Text="{l:T 'Username'}" Style="{StaticResource FieldLabel}"/>
+            <TextBox AutomationProperties.AutomationId="Login_UsernameBox" AutomationProperties.LabeledBy="{Binding ElementName=UsernameLabel}" MaxLength="64" x:Name="UsernameBox" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14"/>
 
-            <TextBlock Text="{l:T 'Password'}" Style="{StaticResource FieldLabel}"/>
+            <TextBlock x:Name="PasswordLabel" Text="{l:T 'Password'}" Style="{StaticResource FieldLabel}"/>
             <!-- The eye button swaps the hidden PasswordBox for a plain TextBox showing the same text. -->
             <Grid Margin="0,0,0,16">
-                <PasswordBox x:Name="PasswordBox" PasswordChanged="OnPasswordChanged" Padding="9,7,40,7"/>
-                <TextBox x:Name="PasswordText" TextChanged="OnPasswordTextChanged" Padding="9,7,40,7" Visibility="Collapsed"/>
-                <ToggleButton x:Name="ShowPassword" HorizontalAlignment="Right" Margin="0,0,4,0" Width="32" Height="28"
+                <PasswordBox AutomationProperties.AutomationId="Login_PasswordBox" AutomationProperties.LabeledBy="{Binding ElementName=PasswordLabel}" MaxLength="128" x:Name="PasswordBox" PasswordChanged="OnPasswordChanged" Padding="9,7,40,7"/>
+                <TextBox AutomationProperties.AutomationId="Login_PasswordTextBox" AutomationProperties.LabeledBy="{Binding ElementName=PasswordLabel}" MaxLength="128" x:Name="PasswordText" TextChanged="OnPasswordTextChanged" Padding="9,7,40,7" Visibility="Collapsed"/>
+                <ToggleButton AutomationProperties.AutomationId="Login_ShowPasswordToggle" x:Name="ShowPassword" HorizontalAlignment="Right" Margin="0,0,4,0" Width="32" Height="28"
                               Cursor="Hand" Focusable="False" ToolTip="{l:T 'Show password'}"
                               Checked="OnShowPasswordChanged" Unchecked="OnShowPasswordChanged">
                     <ToggleButton.Template>
@@ -52,21 +52,21 @@
 
             <!-- Server address: collapsed to one line once this PC has signed in before. -->
             <DockPanel Visibility="{Binding IsEditingServer, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" Margin="0,0,0,18">
-                <Button DockPanel.Dock="Right" Content="{l:T 'Change'}" Style="{StaticResource LinkButton}" Command="{Binding EditServerCommand}"/>
+                <Button AutomationProperties.AutomationId="Login_EditServerButton" DockPanel.Dock="Right" Content="{l:T 'Change'}" Style="{StaticResource LinkButton}" Command="{Binding EditServerCommand}"/>
                 <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" FontSize="12">
                     <Run Text="{l:T 'Server:'}"/> <Run Text="{Binding ServerUrl, Mode=OneWay}"/>
                 </TextBlock>
             </DockPanel>
             <StackPanel Visibility="{Binding IsEditingServer, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,18">
-                <TextBlock Text="{l:T 'Server address'}" Style="{StaticResource FieldLabel}"/>
+                <TextBlock x:Name="ServerUrlLabel" Text="{l:T 'Server address'}" Style="{StaticResource FieldLabel}"/>
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="{l:T 'Test'}" Margin="8,0,0,0" Command="{Binding TestConnectionCommand}"/>
-                    <TextBox Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button AutomationProperties.AutomationId="Login_TestConnectionButton" DockPanel.Dock="Right" Content="{l:T 'Test'}" Margin="8,0,0,0" Command="{Binding TestConnectionCommand}"/>
+                    <TextBox AutomationProperties.AutomationId="Login_ServerUrlBox" AutomationProperties.LabeledBy="{Binding ElementName=ServerUrlLabel}" MaxLength="200" Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
                 </DockPanel>
                 <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The IP address or name of the server PC, for example 192.168.1.10. Port 5080 is used if you don\'t type one.'}"/>
             </StackPanel>
 
-            <Button Content="{l:T 'Sign in'}" Style="{StaticResource PrimaryButton}" IsDefault="True" MinHeight="40"
+            <Button AutomationProperties.AutomationId="Login_SignInButton" Content="{l:T 'Sign in'}" Style="{StaticResource PrimaryButton}" IsDefault="True" MinHeight="40"
                     Command="{Binding SignInCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}"/>
         </StackPanel>

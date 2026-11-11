@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OnTech.Store.Client;
 using OnTech.Store.Contracts;
 using OnTech.Store.Desktop.Services;
 
@@ -43,6 +44,8 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     [ObservableProperty] private bool _isAdmin;
     [ObservableProperty] private bool _isActive = true;
     [ObservableProperty] private bool _mustChangePassword = true;
+    /// <summary>The Version of the user the form was loaded from (M-1).</summary>
+    private int? _editingVersion;
 
     public bool IsNew => EditingId is null;
     public string FormTitle => L.T(IsNew ? "Add user" : "Edit user");
@@ -69,6 +72,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     private void NewUser()
     {
         EditingId = null;
+        _editingVersion = null;
         FullName = Username = Password = "";
         IsAdmin = false;
         IsActive = true;
@@ -82,6 +86,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     {
         if (u is null) return;
         EditingId = u.Id;
+        _editingVersion = u.Version;
         FullName = u.FullName;
         Username = u.Username;
         Password = "";
@@ -114,10 +119,25 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
         {
             if (id == Session.User.Id && (!IsActive || (Session.User.IsAdmin && !IsAdmin)))
                 throw new ArgumentException(L.T("You can't remove your own admin rights or disable your own account."));
-            saved = await Api.UpdateUserAsync(id, new UpdateUserRequest
+            try
             {
-                FullName = FullName.Trim(), Username = Username.Trim(), IsAdmin = IsAdmin, IsActive = IsActive, Permissions = CheckedPermissions(),
-            });
+                saved = await Api.UpdateUserAsync(id, new UpdateUserRequest
+                {
+                    FullName = FullName.Trim(), Username = Username.Trim(), IsAdmin = IsAdmin, IsActive = IsActive, Permissions = CheckedPermissions(),
+                    Version = _editingVersion,
+                });
+            }
+            catch (ApiError ex) when (ex.Code == ErrorCodes.ConcurrencyConflict)
+            {
+                // Changed on another PC: show what is saved now and keep the form open.
+                try
+                {
+                    Edit(await Api.GetUserAsync(id));
+                    await ReloadAsync();
+                }
+                catch (ApiError) { /* the conflict message is shown */ }
+                throw;
+            }
         }
         else
         {
@@ -140,7 +160,7 @@ public sealed partial class UsersViewModel(Session session) : PageViewModel(sess
     {
         if (u is null) return Task.CompletedTask;
         var pwd = Dialogs.Prompt(L.T("Reset password: {0}", u.FullName),
-            L.T("New password (at least 8 characters). They will be asked to choose their own at next sign-in."), isPassword: true, okText: L.T("Reset password"));
+            L.T("New password (at least 8 characters). They will be asked to choose their own at next sign-in."), isPassword: true, okText: L.T("Reset password"), maxLength: 128);
         if (pwd is null) return Task.CompletedTask;
         return RunAsync(async () =>
         {

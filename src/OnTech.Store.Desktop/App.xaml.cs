@@ -11,12 +11,22 @@ public partial class App : Application
     private readonly AppSettings _settings = AppSettings.Load();
     private Session? _session;
     private MainWindow? _main;
+    private PasswordChangeGate? _passwordGate;
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        Log.Info("OnTech Store closed");
+        base.OnExit(e);
+    }
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         L.Set(_settings.Language);
         DispatcherUnhandledException += OnUnhandledException;
+        TaskScheduler.UnobservedTaskException += CrashHandlers.OnUnobservedTaskException;
+        AppDomain.CurrentDomain.UnhandledException += CrashHandlers.OnDomainUnhandledException;
+        Log.Info($"OnTech Store {typeof(App).Assembly.GetName().Version} started ({L.Code}, {Environment.MachineName})");
         ShowLogin();
     }
 
@@ -43,6 +53,7 @@ public partial class App : Application
             };
             if (change.ShowDialog() != true)
             {
+                Log.Info($"Password change refused at sign-in, signed out: {session.User.Username}");
                 session.Api.Logout();
                 ShowLogin();
                 return;
@@ -50,6 +61,14 @@ public partial class App : Application
         }
 
         _session = session;
+        _passwordGate = new PasswordChangeGate(
+            askForNewPassword: () => new ChangePasswordWindow(new ChangePasswordViewModel(session, isRequired: true)) { Owner = _main }.ShowDialog() == true,
+            onChanged: () => { if (_main?.DataContext is ShellViewModel shell) shell.Navigate(shell.CurrentPageKind); },
+            onRefused: () => BackToLogin(null));
+        session.PasswordChangeRequired += (_, _) => Dispatcher.BeginInvoke(() =>
+        {
+            if (_session == session) _passwordGate?.Request();
+        });
         session.Expired += (_, _) => Dispatcher.BeginInvoke(() =>
         {
             if (_session == session)
@@ -97,6 +116,7 @@ public partial class App : Application
         if (_main is not { } main || _session is not { } session) return;
         _main = null;
         _session = null;
+        Log.Info(message is null ? $"Signed out: {session.User.Username}" : $"Session ended: {session.User.Username}");
         session.Api.Logout();
         main.Close();
         if (message is not null)
@@ -106,6 +126,7 @@ public partial class App : Application
 
     private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
+        CrashHandlers.LogDispatcherException(e.Exception);
         MessageBox.Show(L.T("Something went wrong:") + "\n\n" + e.Exception.Message, L.T("OnTech Store"),
             MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, L.MessageBoxOptions);
         e.Handled = true;

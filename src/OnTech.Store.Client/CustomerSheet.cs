@@ -77,7 +77,7 @@ public static class CustomerSheet
     }
 
     private static int? ParseNumber(string? s) =>
-        double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && d == Math.Floor(d) && d is >= 1 and <= int.MaxValue
+        Numbers.TryParseDouble(s, out var d) && d == Math.Floor(d) && d is >= 1 and <= int.MaxValue
             ? (int)d : null;
 
     // ---- .xlsx (first sheet) ----

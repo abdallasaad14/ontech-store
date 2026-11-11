@@ -19,9 +19,9 @@
             <Border Style="{StaticResource Card}" Padding="0">
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
-                        <ComboBox DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding ReceiptFilters}" SelectedIndex="{Binding ReceiptFilterIndex}"/>
-                        <Button DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
+                        <ComboBox AutomationProperties.AutomationId="Orders_ReceiptFilterCombo" DockPanel.Dock="Right" Width="160" Margin="8,0,0,0" ItemsSource="{Binding ReceiptFilters}" SelectedIndex="{Binding ReceiptFilterIndex}"/>
+                        <Button AutomationProperties.AutomationId="Orders_SearchButton" DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
+                        <TextBox AutomationProperties.AutomationId="Orders_SearchBox" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>
@@ -29,12 +29,12 @@
                     </DockPanel>
                     <DockPanel DockPanel.Dock="Bottom" Margin="16,8,16,12">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="{l:T 'Previous'}" Margin="0,0,8,0" Command="{Binding PreviousPageCommand}"/>
-                            <Button Content="{l:T 'Next'}" Command="{Binding NextPageCommand}"/>
+                            <Button AutomationProperties.AutomationId="Orders_PreviousPageButton" Content="{l:T 'Previous'}" Margin="0,0,8,0" Command="{Binding PreviousPageCommand}"/>
+                            <Button AutomationProperties.AutomationId="Orders_NextPageButton" Content="{l:T 'Next'}" Command="{Binding NextPageCommand}"/>
                         </StackPanel>
                         <TextBlock Text="{Binding PageText}" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}"/>
                     </DockPanel>
-                    <DataGrid ItemsSource="{Binding Orders}" SelectedItem="{Binding Selected}" Margin="6,0,6,0">
+                    <DataGrid AutomationProperties.AutomationId="Orders_OrdersGrid" ItemsSource="{Binding Orders}" SelectedItem="{Binding Selected}" Margin="6,0,6,0">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="{l:T 'ISSUE VOUCHER'}" Binding="{Binding IssueVoucherNumber}" Width="130" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="{l:T 'DATE'}" Binding="{Binding CreatedAt, Converter={StaticResource LocalTime}, Mode=OneWay}" Width="140"/>
@@ -92,7 +92,7 @@
                             </TextBlock>
                         </Border>
 
-                        <Button Content="{l:T 'Cancel order'}" Style="{StaticResource DangerButton}" Margin="0,20,0,0" HorizontalAlignment="Left"
+                        <Button AutomationProperties.AutomationId="Orders_CancelOrderButton" Content="{l:T 'Cancel order'}" Style="{StaticResource DangerButton}" Margin="0,20,0,0" HorizontalAlignment="Left"
                                 Command="{Binding DataContext.CancelOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 CommandParameter="{Binding}" x:Name="CancelButton">
                             <Button.Visibility>

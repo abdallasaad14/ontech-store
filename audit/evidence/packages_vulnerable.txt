@@ -1,0 +1,29 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+
+The following sources were used:
+   https://api.nuget.org/v3/index.json
+   C:\Program Files (x86)\Microsoft SDKs\NuGetPackages\
+   C:\Program Files (x86)\Gamanet\C4 SDK\
+
+Project `OnTech.Store.Api` has the following vulnerable packages
+   [net8.0]: 
+   Transitive Package                Resolved   Severity   Advisory URL                                     
+   > SQLitePCLRaw.lib.e_sqlite3      2.1.6      High       https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+
+The given project `OnTech.Store.Contracts` has no vulnerable packages given the current sources.
+Project `OnTech.Store.Api.Tests` has the following vulnerable packages
+   [net8.0]: 
+   Transitive Package                    Resolved   Severity   Advisory URL                                     
+   > SQLitePCLRaw.lib.e_sqlite3          2.1.6      High       https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+   > System.Net.Http                     4.3.0      High       https://github.com/advisories/GHSA-7jgj-8wvc-jh57
+   > System.Text.RegularExpressions      4.3.0      High       https://github.com/advisories/GHSA-cmhx-cq75-c4mj
+
+The given project `OnTech.Store.Client` has no vulnerable packages given the current sources.
+The given project `OnTech.Store.Desktop` has no vulnerable packages given the current sources.
+The given project `OnTech.Store.LoadTest` has no vulnerable packages given the current sources.
+Project `OnTech.Store.DemoData` has the following vulnerable packages
+   [net8.0]: 
+   Transitive Package                Resolved   Severity   Advisory URL                                     
+   > SQLitePCLRaw.lib.e_sqlite3      2.1.6      High       https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+

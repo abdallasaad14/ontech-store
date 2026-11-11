@@ -8,6 +8,8 @@ public static class StoreClaims
 {
     public const string Permissions = "perms";
     public const string IsAdmin = "admin";
+    /// <summary>"true" while the user still has to change their password (M-2).</summary>
+    public const string MustChangePassword = "mustchangepw";
 }
 
 /// <summary>Requires the caller to hold a permission. Usage: [HasPermission(Permission.CreateOrders)].</summary>

@@ -31,7 +31,7 @@ public sealed class StoreApiClient
     /// <summary>Accepts "192.168.1.10", "pc-name:5080" or a full URL, and fills in http:// and the default port 5080.</summary>
     public static Uri NormalizeServerUrl(string serverUrl)
     {
-        var text = serverUrl.Trim();
+        var text = Numbers.NormalizeDigits(serverUrl).Trim();
         if (text.Length == 0) throw new ArgumentException("Enter the server address.");
         var hasScheme = text.Contains("://", StringComparison.Ordinal);
         if (!hasScheme) text = "http://" + text;
@@ -44,8 +44,8 @@ public sealed class StoreApiClient
 
     private static bool HasExplicitPort(string text)
     {
-        var host = text.Trim().Split('/')[0];
-        return host.Contains(':') && int.TryParse(host[(host.LastIndexOf(':') + 1)..], out _);
+        var host = Numbers.NormalizeDigits(text).Trim().Split('/')[0];
+        return host.Contains(':') && Numbers.TryParseInt(host[(host.LastIndexOf(':') + 1)..], out _);
     }
 
     public Uri? ServerUrl => _http.BaseAddress;
@@ -123,6 +123,9 @@ public sealed class StoreApiClient
     public Task<List<CustomerDto>> GetCustomersAsync(string? search = null, bool includeInactive = false, CancellationToken ct = default) =>
         SendAsync<List<CustomerDto>>(HttpMethod.Get, "api/customers" + Query(("search", search), ("includeInactive", includeInactive)), null, ct);
 
+    public Task<CustomerDto> GetCustomerAsync(int id, CancellationToken ct = default) =>
+        SendAsync<CustomerDto>(HttpMethod.Get, $"api/customers/{id}", null, ct);
+
     public Task<CustomerDto> CreateCustomerAsync(SaveCustomerRequest req, CancellationToken ct = default) =>
         SendAsync<CustomerDto>(HttpMethod.Post, "api/customers", req, ct);
 
@@ -139,6 +142,9 @@ public sealed class StoreApiClient
 
     public Task<List<SupplierDto>> GetSuppliersAsync(string? search = null, bool includeInactive = false, CancellationToken ct = default) =>
         SendAsync<List<SupplierDto>>(HttpMethod.Get, "api/suppliers" + Query(("search", search), ("includeInactive", includeInactive)), null, ct);
+
+    public Task<SupplierDto> GetSupplierAsync(int id, CancellationToken ct = default) =>
+        SendAsync<SupplierDto>(HttpMethod.Get, $"api/suppliers/{id}", null, ct);
 
     public Task<SupplierDto> CreateSupplierAsync(SaveSupplierRequest req, CancellationToken ct = default) =>
         SendAsync<SupplierDto>(HttpMethod.Post, "api/suppliers", req, ct);
@@ -187,6 +193,9 @@ public sealed class StoreApiClient
 
     public Task<List<UserDto>> GetUsersAsync(bool includeInactive = true, CancellationToken ct = default) =>
         SendAsync<List<UserDto>>(HttpMethod.Get, "api/users" + Query(("includeInactive", includeInactive)), null, ct);
+
+    public Task<UserDto> GetUserAsync(int id, CancellationToken ct = default) =>
+        SendAsync<UserDto>(HttpMethod.Get, $"api/users/{id}", null, ct);
 
     public Task<UserDto> CreateUserAsync(CreateUserRequest req, CancellationToken ct = default) =>
         SendAsync<UserDto>(HttpMethod.Post, "api/users", req, ct);
@@ -257,7 +266,9 @@ public sealed class StoreApiClient
     private static async Task<ApiError> ToErrorAsync(HttpResponseMessage res, CancellationToken ct)
     {
         string? title = null;
+        string? code = null;
         List<StockShortage>? shortages = null;
+        List<FieldError>? fieldErrors = null;
         try
         {
             var problem = await res.Content.ReadFromJsonAsync<JsonElement>(Json, ct);
@@ -265,13 +276,16 @@ public sealed class StoreApiClient
             {
                 if (problem.TryGetProperty("errors", out var errors) && errors.ValueKind == JsonValueKind.Object)
                 {
-                    // Validation errors: show the individual messages, not "One or more validation errors occurred."
-                    var messages = errors.EnumerateObject()
-                        .SelectMany(p => p.Value.ValueKind == JsonValueKind.Array ? p.Value.EnumerateArray().Select(m => m.GetString()) : [])
-                        .Where(m => !string.IsNullOrWhiteSpace(m));
-                    title = string.Join(Environment.NewLine, messages);
+                    // Validation errors: show each message with the field's label, not "One or more validation errors occurred."
+                    fieldErrors = errors.EnumerateObject()
+                        .SelectMany(p => p.Value.ValueKind == JsonValueKind.Array
+                            ? p.Value.EnumerateArray().Select(m => m.GetString()).Where(m => !string.IsNullOrWhiteSpace(m)).Select(m => FieldError.Parse(p.Name, m!))
+                            : [])
+                        .ToList();
+                    title = string.Join(Environment.NewLine, fieldErrors.Select(e => e.English).Distinct());
                 }
                 if (string.IsNullOrWhiteSpace(title) && problem.TryGetProperty("title", out var t)) title = t.GetString();
+                if (problem.TryGetProperty("code", out var c) && c.ValueKind == JsonValueKind.String) code = c.GetString();
                 if (problem.TryGetProperty("shortages", out var s) && s.ValueKind == JsonValueKind.Array)
                     shortages = s.Deserialize<List<StockShortage>>(Json);
             }
@@ -286,7 +300,7 @@ public sealed class StoreApiClient
         if (shortages is { Count: > 0 })
             title += Environment.NewLine + string.Join(Environment.NewLine,
                 shortages.Select(x => $"• {x.ItemName}: asked for {x.Requested}, only {x.Available} available"));
-        return new ApiError(res.StatusCode, title, shortages);
+        return new ApiError(res.StatusCode, title, shortages, code: code, fieldErrors: fieldErrors);
     }
 
     private static string DefaultMessage(HttpStatusCode status) => status switch

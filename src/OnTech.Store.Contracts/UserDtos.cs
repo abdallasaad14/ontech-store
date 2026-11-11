@@ -14,6 +14,8 @@ public sealed class UserDto
     public Permission Permissions { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset? LastLoginAt { get; init; }
+    /// <summary>Concurrency token. Send it back in <see cref="UpdateUserRequest.Version"/> when saving an edit.</summary>
+    public int Version { get; init; }
 }
 
 public sealed class CreateUserRequest
@@ -38,6 +40,8 @@ public sealed class UpdateUserRequest
     public bool IsAdmin { get; set; }
     public bool IsActive { get; set; } = true;
     public Permission Permissions { get; set; }
+    /// <summary>The <see cref="UserDto.Version"/> the form was loaded with. A different current value gives 409 ConcurrencyConflict. Null = no check.</summary>
+    public int? Version { get; set; }
 }
 
 public sealed class ResetPasswordRequest

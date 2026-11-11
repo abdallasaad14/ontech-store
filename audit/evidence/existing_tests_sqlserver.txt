@@ -1,0 +1,5 @@
+﻿Test run for C:\Users\PC\source\ontech-store\tests\OnTech.Store.Api.Tests\bin\Debug\net8.0\OnTech.Store.Api.Tests.dll (.NETCoreApp,Version=v8.0)
+A total of 1 test files matched the specified pattern.
+Results File: C:\Users\PC\source\ontech-store\audit\evidence\testresults\existing_sqlserver.trx
+
+Passed!  - Failed:     0, Passed:    87, Skipped:     0, Total:    87, Duration: 20 s - OnTech.Store.Api.Tests.dll (net8.0)

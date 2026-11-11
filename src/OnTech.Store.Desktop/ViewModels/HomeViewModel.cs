@@ -34,21 +34,26 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
 
     private static readonly CategoryDto AllCategories = new() { Id = 0, Name = L.T("All categories") };
     private bool _loading;
+    private readonly LatestRequest _requests = new();
 
     public override async Task LoadAsync()
     {
         if (!CanViewStock) return;
         await RunAsync(async () =>
         {
-            var categoriesTask = Api.GetCategoriesAsync();
-            Summary = await Api.GetDashboardAsync();
+            var ticket = _requests.Begin();
+            var categoriesTask = Api.GetCategoriesAsync(ct: ticket.Token);
+            var summary = await Api.GetDashboardAsync(ticket.Token);
+            var categories = await categoriesTask;
+            if (!ticket.IsCurrent) return;
+            Summary = summary;
             Categories.Clear();
             Categories.Add(AllCategories);
-            foreach (var c in await categoriesTask) Categories.Add(c);
+            foreach (var c in categories) Categories.Add(c);
             _loading = true;
             SelectedCategory = AllCategories;
             _loading = false;
-            await LoadItemsAsync();
+            await LoadItemsAsync(ticket);
         });
     }
 
@@ -60,14 +65,19 @@ public sealed partial class HomeViewModel(Session session, ShellViewModel shell)
     [RelayCommand]
     private Task RefreshAsync() => RunAsync(async () =>
     {
-        Summary = await Api.GetDashboardAsync();
-        await LoadItemsAsync();
+        // A quick category change or search cancels the reload still running and drops its late answer.
+        var ticket = _requests.Begin();
+        var summary = await Api.GetDashboardAsync(ticket.Token);
+        if (!ticket.IsCurrent) return;
+        Summary = summary;
+        await LoadItemsAsync(ticket);
     });
 
-    private async Task LoadItemsAsync()
+    private async Task LoadItemsAsync(LatestRequest.Ticket ticket)
     {
         var categoryId = SelectedCategory is { Id: > 0 } c ? c.Id : (int?)null;
-        var items = await Api.GetItemsAsync(categoryId, Search);
+        var items = await Api.GetItemsAsync(categoryId, Search, ct: ticket.Token);
+        if (!ticket.IsCurrent) return;
         Items.Clear();
         foreach (var i in items) Items.Add(i);
     }

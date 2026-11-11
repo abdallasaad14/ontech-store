@@ -51,6 +51,8 @@ public sealed class StockInQuery
     public int? SupplierId { get; set; }
     public int? ItemId { get; set; }
     public OrderStatus? Status { get; set; }
-    [Range(1, int.MaxValue)] public int Page { get; set; } = 1;
-    [Range(1, 200)] public int PageSize { get; set; } = 50;
+    /// <summary>1 to <see cref="Paging.MaxPage"/>; anything else is a 400.</summary>
+    [Range(1, Paging.MaxPage)] public int Page { get; set; } = 1;
+    /// <summary>1 to <see cref="Paging.MaxPageSize"/>.</summary>
+    [Range(1, Paging.MaxPageSize)] public int PageSize { get; set; } = 50;
 }
