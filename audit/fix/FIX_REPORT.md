@@ -25,6 +25,7 @@ Branch `fix/audit-main`, on top of `main` @ `d8e7ba7` (tag `pre-fix`). Work spli
 | L-8 | Stale list answers ignored in Home, Catalog, Orders | C |
 | L-10 | Last build warning (CS1573) | B |
 | Swagger | Only in Development | A |
+| Login 409 | Sign-in writes `LastLoginAt` without the `Version` check (`ExecuteUpdate`), so an admin saving the same user at that moment no longer makes the login fail with 409. Test `Fix_Lead_LoginVersionTests` (failed 3/3 before, passes 5/5) | lead |
 | Phase 3 | Stock movements and item card ordered by `Id`, not `CreatedAt` (fixes `Mixed_orders_restocks_and_cancels…`, flaky ~20% on SQLite) | lead |
 
 ## Not changed (owner decisions)
@@ -36,12 +37,14 @@ Branch `fix/audit-main`, on top of `main` @ `d8e7ba7` (tag `pre-fix`). Work spli
 
 | Suite | Before (`baseline.md`) | After |
 |---|---|---|
-| Build `OnTech.Store.sln` Debug | 1 warning | 0 errors, 0 warnings |
-| `tests/OnTech.Store.Api.Tests`, SQLite | 87/87 | **165/165** (flaky test 10/10 in a row) |
-| `tests/OnTech.Store.Api.Tests`, SQL Server | 87/87 | **165/165** |
+| Build `OnTech.Store.sln` Debug and Release (in the worktree) | 1 warning | 0 errors, 0 warnings |
+| `tests/OnTech.Store.Api.Tests`, SQLite | 87/87 | **166/166** (flaky test 10/10 in a row) |
+| `tests/OnTech.Store.Api.Tests`, SQL Server | 87/87 | **166/166** |
 | `tests/OnTech.Store.Desktop.Tests` | — | **150/150** |
 | `audit/OnTech.Store.Tests` (5081 SQL Server Production, 5082 SQLite Development) | 63/85 | **84/85**: only L-9 `Customers_page_does_not_load_every_customer_at_once` fails (won't fix). `BindingTraceTests` run alone: 1/1 |
 | `audit/OnTech.Store.UITests` (FlaUI) | 9 pass / 4 fail / 1 skip | **13 pass / 0 fail / 1 skip** (50k timing, skipped by the owner). One test (`New_order_invalid_inputs…`) hit a UIA COM error in the full run and passed on re-run |
+
+Also checked: Release build run on port 5084 in Production on a copy of the SQLite file: `/api/health` 200, `/swagger` 404, admin login 200, `/api/items` without a token 401; stopped and the copy deleted. `dotnet list package --vulnerable --include-transitive`: no vulnerable packages in the shipped projects; the API test project pulls System.Net.Http 4.3.0 and System.Text.RegularExpressions 4.3.0 (High, test-only, transitive from old test packages, not shipped).
 
 Raw output: `results/final_audit.txt`, `results/final_ui.txt`, `results/merged_*.txt`.
 
@@ -68,4 +71,4 @@ Test DB prep (test copies only): `MustChangePassword = 0` for `admin` on SQL Ser
 
 - Review and merge `fix/audit-main` into `main` (PR).
 - Then redeploy the live server in Production with a new key: `DEPLOY_NOTES.md`. Everyone signs in again once.
-- Known: `User.Version` is checked on login and change-password saves; if an admin edits the same user at the same instant, that save returns 409 instead of 500.
+- Change-password still checks `Version` (it is an edit): if an admin edits that user at the same instant, it returns 409 and the user tries again.
