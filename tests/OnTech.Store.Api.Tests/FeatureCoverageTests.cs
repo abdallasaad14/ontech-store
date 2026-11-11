@@ -213,7 +213,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
         await admin.DeleteAsync($"/api/items/{item.Id}");
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/orders", new CreateOrderRequest { IssueVoucherNumber = TestStock.Voucher(), CustomerId = customer2.Id, Lines = { line } })).StatusCode);
         var supplier = await (await admin.Post("/api/suppliers", new SaveSupplierRequest { CompanyName = $"Disabled test supplier {Tag()}" })).Read<SupplierDto>();
-        var stockIn = new CreateStockInRequest { SupplierId = supplier.Id, VoucherNumber = TestStock.Voucher(), Lines = { line } };
+        var stockIn = new CreateStockInRequest { SupplierId = supplier.Id, VoucherNumber = TestStock.Voucher(), Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 1 } } };
         Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post("/api/stock-ins", stockIn)).StatusCode);
         Assert.DoesNotContain(await admin.GetAs<List<ItemDto>>($"/api/items?categoryId={cat.Id}"), i => i.Id == item.Id);
 
@@ -453,7 +453,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
 
         var stockIns = await Task.WhenAll(pcs.Select(pc => pc.Post("/api/stock-ins", new CreateStockInRequest
         {
-            VoucherNumber = voucher, SupplierId = supplier.Id, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 5 } },
+            VoucherNumber = voucher, SupplierId = supplier.Id, Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 5 } },
         })));
         Assert.Single(stockIns, r => r.StatusCode == HttpStatusCode.Created);
         Assert.All(stockIns.Where(r => r.StatusCode != HttpStatusCode.Created), r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
@@ -477,7 +477,7 @@ public class FeatureCoverageTests : IClassFixture<StoreApiFactory>
                 {
                     var r = await pc.Post("/api/stock-ins", new CreateStockInRequest
                     {
-                        SupplierId = supplier.Id, VoucherNumber = TestStock.Voucher(), Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 2 } },
+                        SupplierId = supplier.Id, VoucherNumber = TestStock.Voucher(), Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 2 } },
                     });
                     Assert.Equal(HttpStatusCode.Created, r.StatusCode);
                     Interlocked.Add(ref restocked, 2);

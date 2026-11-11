@@ -90,6 +90,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CreatedAt);
             e.HasIndex(x => new { x.CustomerId, x.CreatedAt });
             e.HasIndex(x => new { x.CreatedByUserId, x.CreatedAt });
+            e.HasIndex(x => new { x.Type, x.CustomerId });
             e.HasOne(x => x.Customer).WithMany(c => c.Orders).HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.CreatedByUser).WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.CancelledByUser).WithMany().HasForeignKey(x => x.CancelledByUserId).OnDelete(DeleteBehavior.Restrict);
@@ -104,7 +105,12 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.CategoryId);
             e.HasOne(x => x.Order).WithMany(o => o.Lines).HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
-            e.ToTable(t => t.HasCheckConstraint("CK_OrderLines_Quantity_Positive", "[Quantity] > 0"));
+            e.ToTable(t =>
+            {
+                t.HasCheckConstraint("CK_OrderLines_Quantity_Positive", "[Quantity] > 0");
+                // A demo can never get back more than went out, even when two PCs save returns at the same moment.
+                t.HasCheckConstraint(CkReturnedQuantity, "[ReturnedQuantity] >= 0 AND [ReturnedQuantity] <= [Quantity]");
+            });
         });
 
         b.Entity<Supplier>(e =>
@@ -134,7 +140,12 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.VoucherNumber).IsUnique();
             e.HasIndex(x => x.CreatedAt);
             e.HasIndex(x => new { x.SupplierId, x.CreatedAt });
+            e.HasIndex(x => new { x.CustomerId, x.CreatedAt });
             e.HasOne(x => x.Supplier).WithMany(s => s.StockIns).HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Customer).WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+            // A purchase comes from a supplier, a demo return from a customer; never both.
+            e.ToTable(t => t.HasCheckConstraint(CkStockInParty,
+                "([Type] = 0 AND [SupplierId] IS NOT NULL AND [CustomerId] IS NULL) OR ([Type] = 1 AND [CustomerId] IS NOT NULL AND [SupplierId] IS NULL)"));
             e.HasOne(x => x.CreatedByUser).WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(x => x.CancelledByUser).WithMany().HasForeignKey(x => x.CancelledByUserId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -147,6 +158,7 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
             e.HasIndex(x => x.ItemId);
             e.HasOne(x => x.StockIn).WithMany(o => o.Lines).HasForeignKey(x => x.StockInId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Item).WithMany().HasForeignKey(x => x.ItemId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.DemoOrderLine).WithMany().HasForeignKey(x => x.DemoOrderLineId).OnDelete(DeleteBehavior.Restrict);
             e.ToTable(t => t.HasCheckConstraint("CK_StockInLines_Quantity_Positive", "[Quantity] > 0"));
         });
 
@@ -176,4 +188,6 @@ public class StoreDbContext(DbContextOptions<StoreDbContext> options) : DbContex
     }
 
     public const string SqliteNoCase = "NOCASE";
+    public const string CkReturnedQuantity = "CK_OrderLines_ReturnedQuantity";
+    public const string CkStockInParty = "CK_StockIns_Party";
 }

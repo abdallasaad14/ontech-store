@@ -8,12 +8,18 @@ using OnTech.Store.Contracts;
 
 namespace OnTech.Store.Api.Controllers;
 
-/// <summary>Stock received from suppliers (إذن إضافة). With orders, the only way quantities change.</summary>
+/// <summary>
+/// Stock received (إذن إضافة / دخول): purchases from suppliers and demos coming back from customers.
+/// With orders, the only way quantities change.
+/// </summary>
 [ApiController]
 [Route("api/stock-ins")]
 public class StockInsController(StoreDbContext db, StockService stock) : ControllerBase
 {
-    /// <summary>Records stock received from a supplier and adds the quantities, in one transaction.</summary>
+    /// <summary>
+    /// Records stock received and adds the quantities, in one transaction. A purchase needs a supplier; a demo return needs the
+    /// customer and, on every line, the demo line it comes back on (409 with "overReturns" if a line would bring back more than is out).
+    /// </summary>
     [HttpPost]
     [HasPermission(Permission.AddStock)]
     [ProducesResponseType<StockInDto>(StatusCodes.Status201Created)]
@@ -32,21 +38,25 @@ public class StockInsController(StoreDbContext db, StockService stock) : Control
         if (f.From is { } from) { var d = from.UtcDateTime; q = q.Where(s => s.CreatedAt >= d); }
         if (f.To is { } to) { var d = to.UtcDateTime; q = q.Where(s => s.CreatedAt <= d); }
         if (f.SupplierId is { } sid) q = q.Where(s => s.SupplierId == sid);
+        if (f.CustomerId is { } cid) q = q.Where(s => s.CustomerId == cid);
+        if (f.Type is { } type) q = q.Where(s => s.Type == type);
         if (f.ItemId is { } iid) q = q.Where(s => s.Lines.Any(l => l.ItemId == iid));
         if (f.Status is { } st) q = q.Where(s => s.Status == st);
         if (f.Search.Clean()?.ToLower() is { } t) // ToLower: SQLite compares case-sensitively; SQL Server doesn't.
             q = q.Where(s => s.StockInNumber.ToLower().Contains(t)
                              || s.VoucherNumber.ToLower().Contains(t)
                              || (s.SupplierInvoiceNumber != null && s.SupplierInvoiceNumber.ToLower().Contains(t))
-                             || s.Supplier.CompanyName.ToLower().Contains(t)
-                             || (s.Supplier.TaxNumber != null && s.Supplier.TaxNumber.ToLower().Contains(t))
+                             || (s.Supplier != null && s.Supplier.CompanyName.ToLower().Contains(t))
+                             || (s.Supplier != null && s.Supplier.TaxNumber != null && s.Supplier.TaxNumber.ToLower().Contains(t))
+                             || (s.Customer != null && s.Customer.CompanyName.ToLower().Contains(t))
                              || (s.Notes != null && s.Notes.ToLower().Contains(t))
                              || s.Lines.Any(l => l.ItemName.ToLower().Contains(t) || (l.ItemCode != null && l.ItemCode.StartsWith(t))));
 
         var total = await q.CountAsync(ct);
         var page = await q.OrderByDescending(s => s.CreatedAt).ThenByDescending(s => s.Id)
             .Skip(Paging.Skip(f.Page, f.PageSize)).Take(f.PageSize)
-            .Include(s => s.Supplier).Include(s => s.CreatedByUser).Include(s => s.CancelledByUser).Include(s => s.Lines)
+            .Include(s => s.Supplier).Include(s => s.Customer).Include(s => s.CreatedByUser).Include(s => s.CancelledByUser)
+            .Include(s => s.Lines).ThenInclude(l => l.DemoOrderLine).ThenInclude(l => l!.Order)
             .AsSplitQuery()
             .ToListAsync(ct);
 
@@ -75,7 +85,8 @@ public class StockInsController(StoreDbContext db, StockService stock) : Control
     private async Task<StockInDto> LoadDto(int id, CancellationToken ct)
     {
         var s = await db.StockIns.AsNoTracking()
-            .Include(x => x.Supplier).Include(x => x.CreatedByUser).Include(x => x.CancelledByUser).Include(x => x.Lines)
+            .Include(x => x.Supplier).Include(x => x.Customer).Include(x => x.CreatedByUser).Include(x => x.CancelledByUser)
+            .Include(x => x.Lines).ThenInclude(l => l.DemoOrderLine).ThenInclude(l => l!.Order)
             .FirstOrDefaultAsync(x => x.Id == id, ct) ?? throw ApiException.NotFound("Stock-in");
         return s.ToDto();
     }

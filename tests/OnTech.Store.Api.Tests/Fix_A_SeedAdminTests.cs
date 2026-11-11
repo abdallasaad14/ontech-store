@@ -11,7 +11,7 @@ public class Fix_A_SeedAdminTests
     {
         using var f = new StoreApiFactory { Settings = { ["Seed:AdminPassword"] = null } };
         var e = Assert.ThrowsAny<Exception>(() => f.CreateClient());
-        var messages = string.Join(" | ", Enumerable.Repeat(e, 1).Concat(e is AggregateException a ? a.InnerExceptions : []).SelectMany(Chain));
+        var messages = string.Join(" | ", Enumerable.Repeat(e, 1).Concat(e is AggregateException a ? a.InnerExceptions : Enumerable.Empty<Exception>()).SelectMany(Chain));
         Assert.Contains("Seed__AdminPassword", messages);
 
         static IEnumerable<string> Chain(Exception x) { for (Exception? i = x; i is not null; i = i.InnerException) yield return i.Message; }

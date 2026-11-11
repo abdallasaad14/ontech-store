@@ -25,8 +25,11 @@ public static class ReadAccess
     /// <summary>GET api/categories, api/categories/{id}, api/items, api/items/{id}: the item pickers on New Order, Stock In and Items &amp; Categories.</summary>
     public const Permission Catalog = Permission.ViewStock | Permission.CreateOrders | Permission.AddStock | Permission.ManageCatalog;
 
-    /// <summary>GET api/customers, api/customers/{id}: the Customers page and the customer picker on New Order.</summary>
-    public const Permission Customers = Permission.ViewStock | Permission.ManageCustomers | Permission.CreateOrders;
+    /// <summary>
+    /// GET api/customers, api/customers/{id}: the Customers page, the customer picker on New Order, and the customer picker of a
+    /// demo return on Stock In.
+    /// </summary>
+    public const Permission Customers = Permission.ViewStock | Permission.ManageCustomers | Permission.CreateOrders | Permission.AddStock;
 
     /// <summary>GET api/suppliers, api/suppliers/{id}: the Suppliers page and the supplier picker on Stock In.</summary>
     public const Permission Suppliers = Permission.ViewStock | Permission.ManageSuppliers | Permission.AddStock;

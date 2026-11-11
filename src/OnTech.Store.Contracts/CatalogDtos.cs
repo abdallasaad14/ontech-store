@@ -126,6 +126,10 @@ public sealed class ItemCardLineDto
     public long Id { get; init; }
     public DateTimeOffset Date { get; init; }
     public StockMovementType Type { get; init; }
+    /// <summary>Set when the movement belongs to an order: a sale or a demo.</summary>
+    public IssueType? IssueType { get; init; }
+    /// <summary>Set when the movement belongs to a stock-in: a purchase or a demo return.</summary>
+    public ReceiveType? ReceiveType { get; init; }
     /// <summary>Units that came in (0 when the movement took stock out).</summary>
     public int In { get; init; }
     /// <summary>Units that went out (0 when the movement brought stock in).</summary>
@@ -140,7 +144,7 @@ public sealed class ItemCardLineDto
     public string? VoucherNumber { get; init; }
     /// <summary>Customer receipt number for an order, supplier invoice number for a stock-in.</summary>
     public string? InvoiceNumber { get; init; }
-    /// <summary>The customer who took the stock or the supplier who sent it.</summary>
+    /// <summary>The customer who took the stock (or brought a demo back), or the supplier who sent it.</summary>
     public string? PartyName { get; init; }
     public string UserName { get; init; } = "";
     public string? Note { get; init; }

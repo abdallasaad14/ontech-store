@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 using OnTech.Store.Api.Services;
@@ -66,6 +67,95 @@ public static class DatabaseSetup
         }
 
         await UpgradeSqliteAuditFixesAsync(db, log);
+        await UpgradeSqliteVoucherTypesAsync(db, log);
+    }
+
+    /// <summary>
+    /// Voucher types (VoucherTypes migration on SQL Server): Orders.Type and OrderLines.ReturnedQuantity, StockIns.Type and
+    /// StockIns.CustomerId, StockInLines.DemoOrderLineId. StockIns.SupplierId must become nullable, which SQLite can only do by
+    /// rebuilding the table: the new table is made from the old one's own CREATE statement (so its collations stay), the rows are
+    /// copied, the old table is dropped and the new one renamed, and the old indexes are created again. Foreign keys are switched
+    /// off for the rebuild (dropping StockIns would otherwise cascade to its lines) and checked before the commit. Runs once,
+    /// after a backup, in one transaction.
+    /// </summary>
+    private static async Task UpgradeSqliteVoucherTypesAsync(StoreDbContext db, ILogger log)
+    {
+        if (await ScalarAsync(db, "SELECT COUNT(*) FROM pragma_table_info('Orders') WHERE name = 'Type'") > 0) return;
+
+        var createStockIns = (string)(await QueryAsync(db, "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'StockIns'")).Single();
+        var stockInIndexes = (await QueryAsync(db, "SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = 'StockIns' AND sql IS NOT NULL"))
+            .Cast<string>().ToList();
+        var columns = string.Join(", ", (await QueryAsync(db, "SELECT name FROM pragma_table_info('StockIns') ORDER BY cid")).Select(c => $"\"{c}\""));
+
+        // The same table under a new name, with SupplierId nullable, the two new columns and the check.
+        var createNew = Regex.Replace(createStockIns, @"^CREATE TABLE\s+(""?)StockIns\1", "CREATE TABLE \"StockIns_new\"");
+        createNew = Regex.Replace(createNew, @"(""?SupplierId""?\s+INTEGER\s+)NOT NULL", "$1NULL");
+        // SQLite wants every column before the table constraints, so the new columns go in front of the first CONSTRAINT.
+        var open = createNew.IndexOf('(');
+        var parts = SplitTopLevel(createNew[(open + 1)..createNew.LastIndexOf(')')]).ToList();
+        var firstConstraint = parts.FindIndex(p => p.TrimStart().StartsWith("CONSTRAINT", StringComparison.OrdinalIgnoreCase));
+        parts.InsertRange(firstConstraint < 0 ? parts.Count : firstConstraint,
+        [
+            "\"Type\" INTEGER NOT NULL DEFAULT 0",
+            "\"CustomerId\" INTEGER NULL CONSTRAINT \"FK_StockIns_Customers_CustomerId\" REFERENCES \"Customers\" (\"Id\") ON DELETE RESTRICT",
+        ]);
+        parts.Add($"CONSTRAINT \"{StoreDbContext.CkStockInParty}\" CHECK (([Type] = 0 AND [SupplierId] IS NOT NULL AND [CustomerId] IS NULL) OR ([Type] = 1 AND [CustomerId] IS NOT NULL AND [SupplierId] IS NULL))");
+        createNew = $"{createNew[..(open + 1)]}{string.Join(", ", parts.Select(p => p.Trim()))})";
+
+        string[] steps =
+        [
+            "ALTER TABLE Orders ADD COLUMN Type INTEGER NOT NULL DEFAULT 0",
+            "CREATE INDEX IX_Orders_Type_CustomerId ON Orders (Type, CustomerId)",
+            $"ALTER TABLE OrderLines ADD COLUMN ReturnedQuantity INTEGER NOT NULL DEFAULT 0 CONSTRAINT {StoreDbContext.CkReturnedQuantity} CHECK ([ReturnedQuantity] >= 0 AND [ReturnedQuantity] <= [Quantity])",
+            createNew,
+            $"INSERT INTO StockIns_new ({columns}) SELECT {columns} FROM StockIns",
+            "DROP TABLE StockIns",
+            "ALTER TABLE StockIns_new RENAME TO StockIns",
+            .. stockInIndexes,
+            "CREATE INDEX IX_StockIns_CustomerId_CreatedAt ON StockIns (CustomerId, CreatedAt)",
+            "ALTER TABLE StockInLines ADD COLUMN DemoOrderLineId INTEGER NULL CONSTRAINT FK_StockInLines_OrderLines_DemoOrderLineId REFERENCES OrderLines (Id) ON DELETE RESTRICT",
+            "CREATE INDEX IX_StockInLines_DemoOrderLineId ON StockInLines (DemoOrderLineId)",
+        ];
+
+        await BackupSqliteAsync(db, db.Database.GetDbConnection().DataSource, "before-voucher-types", log);
+        await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = OFF"); // ignored inside a transaction, so before it
+        try
+        {
+            await using var tx = await db.Database.BeginTransactionAsync();
+            foreach (var sql in steps) await db.Database.ExecuteSqlRawAsync(sql.Replace("{", "{{").Replace("}", "}}"));
+            if (await ScalarAsync(db, "SELECT COUNT(*) FROM pragma_foreign_key_check") > 0)
+                throw new InvalidOperationException("The voucher-types upgrade would leave broken references, so nothing was changed. Restore the backup and report this.");
+            await tx.CommitAsync();
+        }
+        finally
+        {
+            await db.Database.ExecuteSqlRawAsync("PRAGMA foreign_keys = ON");
+        }
+        log.LogWarning("Database upgraded: sale/demo issue vouchers and purchase/demo-return receive vouchers.");
+    }
+
+    /// <summary>Splits a CREATE TABLE body at the commas that are not inside brackets.</summary>
+    private static IEnumerable<string> SplitTopLevel(string body)
+    {
+        int depth = 0, start = 0;
+        for (var i = 0; i < body.Length; i++)
+        {
+            if (body[i] == '(') depth++;
+            else if (body[i] == ')') depth--;
+            else if (body[i] == ',' && depth == 0) { yield return body[start..i]; start = i + 1; }
+        }
+        yield return body[start..];
+    }
+
+    private static async Task<List<object>> QueryAsync(StoreDbContext db, string sql)
+    {
+        await using var cmd = db.Database.GetDbConnection().CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Transaction = db.Database.CurrentTransaction?.GetDbTransaction();
+        var list = new List<object>();
+        await using var r = await cmd.ExecuteReaderAsync();
+        while (await r.ReadAsync()) list.Add(r.GetValue(0));
+        return list;
     }
 
     private static async Task<long> ScalarAsync(StoreDbContext db, string sql)

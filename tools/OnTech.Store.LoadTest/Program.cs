@@ -27,7 +27,7 @@ for (var i = 1; i <= 5; i++)
 var supplier = await setup.CreateSupplierAsync(new SaveSupplierRequest { CompanyName = $"Load test supplier {stamp}" });
 await setup.CreateStockInAsync(new CreateStockInRequest
 {
-    SupplierId = supplier.Id, VoucherNumber = $"LT-IN-{stamp}", Lines = items.Select(i => new OrderLineRequest { ItemId = i.Id, Quantity = 200 }).ToList(),
+    SupplierId = supplier.Id, VoucherNumber = $"LT-IN-{stamp}", Lines = items.Select(i => new StockInLineRequest { ItemId = i.Id, Quantity = 200 }).ToList(),
 });
 items = (await setup.GetItemsAsync(category.Id)).ToList();
 var customer = await setup.CreateCustomerAsync(new SaveCustomerRequest { CompanyName = $"Load test customer {stamp}" });
@@ -86,7 +86,7 @@ async Task Step(StoreApiClient pc, Random rnd)
         await Time("Stock in", () => pc.CreateStockInAsync(new CreateStockInRequest
         {
             SupplierId = supplier.Id, VoucherNumber = $"LT-{Guid.NewGuid():N}", Notes = "load test",
-            Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = qty } },
+            Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = qty } },
         }));
         expected.AddOrUpdate(item.Id, 0, (_, q) => q + qty);
     }

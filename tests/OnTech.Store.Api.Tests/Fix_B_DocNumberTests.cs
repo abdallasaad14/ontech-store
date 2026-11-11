@@ -65,14 +65,14 @@ public class Fix_B_DocNumberTests : IClassFixture<StoreApiFactory>
         var stockIn = await (await admin.Post("/api/stock-ins", new CreateStockInRequest
         {
             SupplierId = supplier.Id, VoucherNumber = $"in-{tag}", SupplierInvoiceNumber = $" inv-{tag} ",
-            Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
+            Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 1 } },
         })).Read<StockInDto>();
         Assert.Equal($"IN-{tag}".ToUpperInvariant(), stockIn.VoucherNumber);
         Assert.Equal($"INV-{tag}".ToUpperInvariant(), stockIn.SupplierInvoiceNumber);
 
         var again = await admin.Post("/api/stock-ins", new CreateStockInRequest
         {
-            SupplierId = supplier.Id, VoucherNumber = $"In-{tag}", Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
+            SupplierId = supplier.Id, VoucherNumber = $"In-{tag}", Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 1 } },
         });
         Assert.Equal(HttpStatusCode.Conflict, again.StatusCode);
         var p = await again.ProblemAsync();
@@ -127,7 +127,7 @@ public class Fix_B_SqliteUpgradeTests
             var (_, item, _, supplier) = await FixB.SeedAsync(admin);
             voucher = (await (await admin.Post("/api/stock-ins", new CreateStockInRequest
             {
-                SupplierId = supplier.Id, VoucherNumber = "OLD-1", Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
+                SupplierId = supplier.Id, VoucherNumber = "OLD-1", Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 1 } },
             })).Read<StockInDto>()).VoucherNumber;
         }
         SqliteUpgrade.Exec(cs,
@@ -156,7 +156,7 @@ public class Fix_B_SqliteUpgradeTests
             var item = (await admin.GetAs<IReadOnlyList<ItemDto>>("/api/items"))[0];
             var dup = await admin.Post("/api/stock-ins", new CreateStockInRequest
             {
-                SupplierId = supplier.Id, VoucherNumber = "old-1", Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
+                SupplierId = supplier.Id, VoucherNumber = "old-1", Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 1 } },
             });
             Assert.Equal(HttpStatusCode.Conflict, dup.StatusCode);
         }
@@ -179,7 +179,7 @@ public class Fix_B_SqliteUpgradeTests
             foreach (var v in new[] { "DUP-1", "DUP-2" })
                 await (await admin.Post("/api/stock-ins", new CreateStockInRequest
                 {
-                    SupplierId = supplier.Id, VoucherNumber = v, Lines = { new OrderLineRequest { ItemId = item.Id, Quantity = 1 } },
+                    SupplierId = supplier.Id, VoucherNumber = v, Lines = { new StockInLineRequest { ItemId = item.Id, Quantity = 1 } },
                 })).Read<StockInDto>();
         }
         SqliteUpgrade.Exec(cs,

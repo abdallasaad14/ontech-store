@@ -45,11 +45,14 @@ public static class Mapping
         CustomerTaxNumber = o.Customer?.TaxNumber,
         CustomerPhoneNumber = o.Customer?.PhoneNumber,
         IssueVoucherNumber = o.IssueVoucherNumber,
+        Type = o.Type,
         WithReceipt = o.WithReceipt,
         ReceiptNumber = o.ReceiptNumber,
         Notes = o.Notes,
         Status = o.Status,
         TotalQuantity = o.Lines.Sum(l => l.Quantity),
+        ReturnedQuantity = o.Lines.Sum(l => l.ReturnedQuantity),
+        OpenQuantity = o.OpenQuantity(),
         CreatedByUserId = o.CreatedByUserId,
         CreatedByUserName = o.CreatedByUser?.FullName ?? "",
         CreatedAt = o.CreatedAt.ToUtcOffset(),
@@ -65,6 +68,8 @@ public static class Mapping
             CategoryId = l.CategoryId,
             CategoryName = l.CategoryName,
             Quantity = l.Quantity,
+            ReturnedQuantity = l.ReturnedQuantity,
+            OpenQuantity = o.IsOpenDemo() ? l.Quantity - l.ReturnedQuantity : 0,
         }).ToList(),
     };
 
@@ -72,7 +77,11 @@ public static class Mapping
     {
         Id = s.Id,
         StockInNumber = s.StockInNumber,
+        Type = s.Type,
         SupplierId = s.SupplierId,
+        CustomerId = s.CustomerId,
+        CustomerName = s.Customer?.CompanyName,
+        PartyName = s.Supplier?.CompanyName ?? s.Customer?.CompanyName ?? "",
         SupplierName = s.Supplier?.CompanyName ?? "",
         SupplierTaxNumber = s.Supplier?.TaxNumber,
         VoucherNumber = s.VoucherNumber,
@@ -95,8 +104,17 @@ public static class Mapping
             CategoryId = l.CategoryId,
             CategoryName = l.CategoryName,
             Quantity = l.Quantity,
+            DemoOrderLineId = l.DemoOrderLineId,
+            DemoOrderId = l.DemoOrderLine?.OrderId,
+            DemoIssueVoucherNumber = l.DemoOrderLine?.Order?.IssueVoucherNumber,
         }).ToList(),
     };
+
+    /// <summary>A demo that is not cancelled: its lines are still (partly) with the customer.</summary>
+    public static bool IsOpenDemo(this Order o) => o.Type == IssueType.Demo && o.Status == OrderStatus.Completed;
+
+    /// <summary>Units of a demo still with the customer; 0 for a sale or a cancelled demo.</summary>
+    public static int OpenQuantity(this Order o) => o.IsOpenDemo() ? o.Lines.Sum(l => l.Quantity - l.ReturnedQuantity) : 0;
 
     public static string? Clean(this string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 

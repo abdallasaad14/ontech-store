@@ -77,28 +77,33 @@ public class ItemsController(StoreDbContext db) : ControllerBase
                 Receipt = m.Order != null ? m.Order.ReceiptNumber : null,
                 CustomerId = m.Order != null ? (int?)m.Order.CustomerId : null,
                 Customer = m.Order != null ? m.Order.Customer.CompanyName : null,
+                IssueType = m.Order != null ? (IssueType?)m.Order.Type : null,
+                ReceiveType = m.StockIn != null ? (ReceiveType?)m.StockIn.Type : null,
+                ReturnCustomer = m.StockIn != null && m.StockIn.Customer != null ? m.StockIn.Customer.CompanyName : null,
                 StockInNumber = m.StockIn != null ? m.StockIn.StockInNumber : null,
                 InVoucher = m.StockIn != null ? m.StockIn.VoucherNumber : null,
                 SupplierInvoice = m.StockIn != null ? m.StockIn.SupplierInvoiceNumber : null,
-                Supplier = m.StockIn != null ? m.StockIn.Supplier.CompanyName : null,
+                Supplier = m.StockIn != null && m.StockIn.Supplier != null ? m.StockIn.Supplier.CompanyName : null,
             })
             .ToListAsync(ct);
 
         var lines = rows.Select(m => new ItemCardLineDto
         {
-            Id = m.Id, Date = m.CreatedAt.ToUtcOffset(), Type = m.Type,
+            Id = m.Id, Date = m.CreatedAt.ToUtcOffset(), Type = m.Type, IssueType = m.IssueType, ReceiveType = m.ReceiveType,
             In = Math.Max(m.Change, 0), Out = Math.Max(-m.Change, 0), Balance = m.QuantityAfter,
             OrderId = m.OrderId, StockInId = m.StockInId,
             DocumentNumber = m.StockInNumber, // an order's number is its voucher number, shown already
             VoucherNumber = m.IssueVoucher ?? m.InVoucher,
             InvoiceNumber = m.Receipt ?? m.SupplierInvoice,
-            PartyName = m.Customer ?? m.Supplier,
+            PartyName = m.Customer ?? m.Supplier ?? m.ReturnCustomer,
             UserName = m.UserName, Note = m.Note,
         }).ToList();
 
         // An order takes stock out and its cancellation puts it back, so the sum per customer is what they kept.
+        // Sales only: a demo is lent, not bought.
         var topCustomers = rows
-            .Where(m => m.CustomerId is not null && m.Type is StockMovementType.Order or StockMovementType.OrderCancelled)
+            .Where(m => m.CustomerId is not null && m.IssueType == IssueType.Sale
+                        && m.Type is StockMovementType.Order or StockMovementType.OrderCancelled)
             .GroupBy(m => (Id: m.CustomerId!.Value, Name: m.Customer!))
             .Select(g => new ItemCardCustomerDto
             {

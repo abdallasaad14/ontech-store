@@ -17,7 +17,7 @@ namespace OnTech.Store.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "8.0.33")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -250,6 +250,9 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.Property<bool>("WithReceipt")
                         .HasColumnType("bit");
 
@@ -272,6 +275,8 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.HasIndex("CreatedByUserId", "CreatedAt");
 
                     b.HasIndex("CustomerId", "CreatedAt");
+
+                    b.HasIndex("Type", "CustomerId");
 
                     b.ToTable("Orders");
                 });
@@ -310,6 +315,9 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("ReturnedQuantity")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
@@ -321,6 +329,8 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.ToTable("OrderLines", t =>
                         {
                             t.HasCheckConstraint("CK_OrderLines_Quantity_Positive", "[Quantity] > 0");
+
+                            t.HasCheckConstraint("CK_OrderLines_ReturnedQuantity", "[ReturnedQuantity] >= 0 AND [ReturnedQuantity] <= [Quantity]");
                         });
                 });
 
@@ -348,6 +358,9 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -360,12 +373,15 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("SupplierId")
+                    b.Property<int?>("SupplierId")
                         .HasColumnType("int");
 
                     b.Property<string>("SupplierInvoiceNumber")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
 
                     b.Property<string>("VoucherNumber")
                         .IsRequired()
@@ -385,9 +401,14 @@ namespace OnTech.Store.Api.Data.Migrations
                     b.HasIndex("VoucherNumber")
                         .IsUnique();
 
+                    b.HasIndex("CustomerId", "CreatedAt");
+
                     b.HasIndex("SupplierId", "CreatedAt");
 
-                    b.ToTable("StockIns");
+                    b.ToTable("StockIns", t =>
+                        {
+                            t.HasCheckConstraint("CK_StockIns_Party", "([Type] = 0 AND [SupplierId] IS NOT NULL AND [CustomerId] IS NULL) OR ([Type] = 1 AND [CustomerId] IS NOT NULL AND [SupplierId] IS NULL)");
+                        });
                 });
 
             modelBuilder.Entity("OnTech.Store.Api.Data.StockInLine", b =>
@@ -405,6 +426,9 @@ namespace OnTech.Store.Api.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("DemoOrderLineId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ItemCode")
                         .HasMaxLength(64)
@@ -425,6 +449,8 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DemoOrderLineId");
 
                     b.HasIndex("ItemId");
 
@@ -691,21 +717,32 @@ namespace OnTech.Store.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("OnTech.Store.Api.Data.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("OnTech.Store.Api.Data.Supplier", "Supplier")
                         .WithMany("StockIns")
                         .HasForeignKey("SupplierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CancelledByUser");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Customer");
 
                     b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("OnTech.Store.Api.Data.StockInLine", b =>
                 {
+                    b.HasOne("OnTech.Store.Api.Data.OrderLine", "DemoOrderLine")
+                        .WithMany()
+                        .HasForeignKey("DemoOrderLineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("OnTech.Store.Api.Data.Item", "Item")
                         .WithMany()
                         .HasForeignKey("ItemId")
@@ -717,6 +754,8 @@ namespace OnTech.Store.Api.Data.Migrations
                         .HasForeignKey("StockInId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DemoOrderLine");
 
                     b.Navigation("Item");
 

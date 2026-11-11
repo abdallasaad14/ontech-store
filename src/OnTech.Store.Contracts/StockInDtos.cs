@@ -11,9 +11,9 @@ public sealed class CreateStockInRequest
     /// <summary>Purchase (the default) or DemoReturn.</summary>
     public ReceiveType Type { get; set; } = ReceiveType.Purchase;
     /// <summary>Required for a purchase; must be empty for a demo return.</summary>
-    public int? SupplierId { get; set; }
+    [Range(1, int.MaxValue)] public int? SupplierId { get; set; }
     /// <summary>Required for a demo return: the customer the demo went out to. Must be empty for a purchase.</summary>
-    public int? CustomerId { get; set; }
+    [Range(1, int.MaxValue)] public int? CustomerId { get; set; }
     [Required, MinLength(1)] public List<StockInLineRequest> Lines { get; set; } = new();
     /// <summary>The warehouse receipt voucher number (إذن إضافة). Required and unique.</summary>
     [Required, MaxLength(50)] public string VoucherNumber { get; set; } = "";
@@ -27,7 +27,7 @@ public sealed class StockInLineRequest
     [Range(1, int.MaxValue)] public int ItemId { get; set; }
     [Range(1, 1_000_000)] public int Quantity { get; set; }
     /// <summary>Demo return only (required there): the demo line this quantity comes back on.</summary>
-    public int? DemoOrderLineId { get; set; }
+    [Range(1, int.MaxValue)] public int? DemoOrderLineId { get; set; }
 }
 
 public sealed class CancelStockInRequest
