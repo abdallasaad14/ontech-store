@@ -176,17 +176,8 @@
 
                         <Button AutomationProperties.AutomationId="Orders_ChangeTypeButton" Margin="0,12,0,0" HorizontalAlignment="Left"
                                 Command="{Binding DataContext.ChangeTypeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                CommandParameter="{Binding}" ToolTip="{l:T 'Admin only: for an order saved with the wrong type'}">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource LinkButton}">
-                                    <Setter Property="Content" Value="{l:T 'Mark as demo'}"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Type}" Value="Demo">
-                                            <Setter Property="Content" Value="{l:T 'Mark as sale'}"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
+                                CommandParameter="{Binding}" ToolTip="{l:T 'Admin only: for an order saved with the wrong type'}"
+                                Style="{StaticResource LinkButton}" Content="{l:T 'Mark as demo'}">
                             <Button.Visibility>
                                 <MultiBinding Converter="{StaticResource CanCancelOrder}">
                                     <Binding Path="DataContext.CanChangeType" RelativeSource="{RelativeSource AncestorType=UserControl}"/>

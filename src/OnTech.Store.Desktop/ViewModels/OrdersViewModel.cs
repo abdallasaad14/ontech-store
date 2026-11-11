@@ -19,7 +19,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
     public bool IsSaleLog => !IsDemoLog;
     public bool CanCancel => Session.Can(Permission.CancelOrders);
     /// <summary>Only an admin may fix an order saved with the wrong type.</summary>
-    public bool CanChangeType => Session.User.IsAdmin;
+    public bool CanChangeType => Session.User.IsAdmin && type == IssueType.Sale;
 
     // Shown in the current language; the position picks the filter (0 all, 1 with, 2 without).
     public IReadOnlyList<string> ReceiptFilters { get; } = [L.T("All orders"), L.T("With receipt"), L.T("Without receipt")];
@@ -147,24 +147,19 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
         });
     }
 
-    /// <summary>Admin only: turns a sale into a demo or back, for orders saved with the wrong type. Stock does not change.</summary>
+    /// <summary>Admin only: turns a sale into a demo, for orders saved with the wrong type. Never a demo into a sale. Stock does not change.</summary>
     [RelayCommand]
     private Task ChangeTypeAsync(OrderDto? order)
     {
-        if (order is null || order.Status == OrderStatus.Cancelled) return Task.CompletedTask;
-        var to = order.Type == IssueType.Demo ? IssueType.Sale : IssueType.Demo;
-        var question = to == IssueType.Demo
-            ? L.T("Mark issue voucher {0} as a demo? Its items will show as still with {1} until a demo return brings them back. Stock does not change.", order.IssueVoucherNumber, order.CustomerName)
-            : L.T("Mark issue voucher {0} as a sale? It will no longer count as a demo with {1}. Stock does not change.", order.IssueVoucherNumber, order.CustomerName);
+        if (order is null || order.Status == OrderStatus.Cancelled || order.Type == IssueType.Demo) return Task.CompletedTask;
+        var question = L.T("Mark issue voucher {0} as a demo? Its items will show as still with {1} until a demo return brings them back. Stock does not change.", order.IssueVoucherNumber, order.CustomerName);
         if (!Dialogs.Confirm(question)) return Task.CompletedTask;
         return RunAsync(async () =>
         {
-            var changed = await Api.ChangeOrderTypeAsync(order.Id, to);
+            var changed = await Api.ChangeOrderTypeAsync(order.Id, IssueType.Demo);
             await ReloadAsync();
             Selected = Orders.FirstOrDefault(o => o.Id == changed.Id);
-            SuccessMessage = changed.Type == IssueType.Demo
-                ? L.T("Issue voucher {0} is now a demo. It moved to the Demo page.", changed.IssueVoucherNumber)
-                : L.T("Issue voucher {0} is now a sale. It moved to the Orders Log.", changed.IssueVoucherNumber);
+            SuccessMessage = L.T("Issue voucher {0} is now a demo. It moved to the Demo page.", changed.IssueVoucherNumber);
         });
     }
 }

@@ -83,8 +83,8 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
     }
 
     /// <summary>
-    /// Admin only: fixes an order saved with the wrong type, e.g. a demo that went out before demos existed and was saved as a sale.
-    /// Refused when the order is cancelled, or when it is a demo that already has something back.
+    /// Admin only: fixes a sale that was really a demo, e.g. one that went out before demos existed.
+    /// Sale to demo only: a demo is never turned into a sale (owner's decision). Refused when the order is cancelled.
     /// </summary>
     [HttpPost("{id:int}/type")]
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -97,8 +97,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
         if (order.Type != req.Type)
         {
             if (order.Status != OrderStatus.Completed) throw ApiException.Conflict("A cancelled order's type can't be changed.");
-            if (order.Lines.Any(l => l.ReturnedQuantity > 0))
-                throw ApiException.Conflict("Some of this demo has already come back, so it can't become a sale.");
+            if (req.Type == IssueType.Sale) throw ApiException.BadRequest("A demo can't be turned into a sale.");
             if (req.Type == IssueType.Demo && order.ReceiptNumber is not null)
                 throw ApiException.BadRequest("An order with a receipt can't become a demo. Receipts are for sales.");
             // Conditional, so a return saved on another PC in the meantime can't be lost.

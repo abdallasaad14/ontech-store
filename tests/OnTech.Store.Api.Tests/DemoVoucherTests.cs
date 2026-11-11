@@ -218,7 +218,7 @@ public class DemoVoucherTests : IClassFixture<StoreApiFactory>
         Assert.Equal(18, await QtyAsync(admin, item.Id)); // stock is not touched
 
         await (await ReturnAsync(admin, customer.Id, (item.Id, demo.Lines[0].Id, 1))).Read<StockInDto>();
-        Assert.Equal(HttpStatusCode.Conflict, (await admin.Post($"/api/orders/{sale.Id}/type", new ChangeOrderTypeRequest { Type = IssueType.Sale })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await admin.Post($"/api/orders/{sale.Id}/type", new ChangeOrderTypeRequest { Type = IssueType.Sale })).StatusCode); // demo -> sale is never allowed
 
         var withReceipt = await (await admin.Post("/api/orders", new CreateOrderRequest
         {

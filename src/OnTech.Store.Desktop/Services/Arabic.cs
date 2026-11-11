@@ -468,13 +468,9 @@ internal static class Arabic
             "جزء من هذا الديمو رجع بالفعل، لذلك لا يمكن إلغاؤه. ألغِ أذون رجوع الديمو الخاصة به أولًا.",
         ["Mark issue voucher {0} as a demo? Its items will show as still with {1} until a demo return brings them back. Stock does not change."] =
             "تحويل إذن الصرف {0} إلى ديمو؟ ستظهر أصنافه على أنها لدى {1} حتى تُستلم بإذن رجوع ديمو. الرصيد لن يتغير.",
-        ["Mark issue voucher {0} as a sale? It will no longer count as a demo with {1}. Stock does not change."] =
-            "تحويل إذن الصرف {0} إلى بيع؟ لن يُحسب ديمو لدى {1} بعد الآن. الرصيد لن يتغير.",
         ["Issue voucher {0} is now a demo."] = "إذن الصرف {0} أصبح ديمو.",
-        ["Issue voucher {0} is now a sale."] = "إذن الصرف {0} أصبح بيع.",
         ["Admin only: for an order saved with the wrong type"] = "لمسؤول النظام فقط: لإذن تم حفظه بنوع خاطئ",
         ["Mark as demo"] = "تحويل إلى ديمو",
-        ["Mark as sale"] = "تحويل إلى بيع",
         ["Back:"] = "رجع:",
         ["Still with the customer:"] = "لا يزال لدى العميل:",
         ["{0} back"] = "رجع {0}",
@@ -553,7 +549,6 @@ internal static class Arabic
         ["No purchases match. {0} is a demo return voucher: it is on the Demo page."] = "لا توجد أذون شراء مطابقة. الإذن {0} إذن رجوع ديمو: تجده في صفحة الديمو.",
         ["No demo returns match. {0} is a purchase voucher: it is in the Stock In Log."] = "لا يوجد رجوع ديمو مطابق. الإذن {0} إذن شراء: تجده في سجل أذون الإضافة.",
         ["Issue voucher {0} is now a demo. It moved to the Demo page."] = "إذن الصرف {0} أصبح ديمو، وانتقل إلى صفحة الديمو.",
-        ["Issue voucher {0} is now a sale. It moved to the Orders Log."] = "إذن الصرف {0} أصبح بيعًا، وانتقل إلى سجل أذون الصرف.",
         ["Every sale taken from the store, newest first. Demos are on the Demo page. Search by issue voucher, receipt number, customer or item."] =
             "كل أذون البيع من المخزن، الأحدث أولًا. الديمو في صفحة الديمو. ابحث برقم إذن الصرف أو رقم الإيصال أو العميل أو الصنف.",
         ["Everything bought from suppliers, newest first. Demo returns are on the Demo page. Search by number, voucher, supplier invoice, supplier or item."] =
@@ -580,7 +575,7 @@ internal static class Arabic
         ["Unknown issue voucher type."] = "نوع إذن الصرف غير معروف.",
         ["Unknown receive voucher type."] = "نوع إذن الإضافة غير معروف.",
         ["A cancelled order's type can't be changed."] = "لا يمكن تغيير نوع إذن صرف ملغى.",
-        ["Some of this demo has already come back, so it can't become a sale."] = "جزء من هذا الديمو رجع بالفعل، لذلك لا يمكن تحويله إلى بيع.",
+        ["A demo can't be turned into a sale."] = "لا يمكن تحويل الديمو إلى بيع.",
         ["You are returning more than the customer still has of one or more items. Nothing was saved."] =
             "الكمية الراجعة أكبر مما لدى العميل لصنف أو أكثر. لم يتم حفظ أي شيء.",
 
