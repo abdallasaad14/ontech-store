@@ -4,7 +4,7 @@ Read this first. It lists every feature on `main`, its state, and the files that
 
 **Keep it current.** Any PR that adds or changes a feature updates this file in the same PR: the feature's row, its files, and the "Last updated" line.
 
-Last updated: 2026-11-05, main after PR #9.
+Last updated: 2026-11-11, branch `fix/audit-main` (audit fixes, see `audit/fix/FIX_REPORT.md`).
 
 ## The app in one paragraph
 
@@ -14,7 +14,7 @@ OnTech's internal stock app. A small ASP.NET Core server (one office PC) keeps c
 
 | Project | What it is |
 |---|---|
-| `src/OnTech.Store.Api` | Server: ASP.NET Core 8 Web API, EF Core, JWT. Port 5080, Swagger at `/swagger`. SQL Server in production, SQLite in Development and tests. |
+| `src/OnTech.Store.Api` | Server: ASP.NET Core 8 Web API, EF Core, JWT. Port 5080, Swagger at `/swagger` in Development only (`Swagger__Enabled=true` turns it on elsewhere). SQL Server in production, SQLite in Development and tests. |
 | `src/OnTech.Store.Contracts` | DTOs and enums shared by server and app (`Permission`, `OrderStatus`, `StockMovementType`, `*Dtos.cs`). |
 | `src/OnTech.Store.Client` | `StoreApiClient` (typed HTTP client, one method per endpoint), `ApiError` (server error to readable text), `CustomerSheet` (reads .xlsx/.csv for import), `XlsxWriter` (writes .xlsx with no extra package). |
 | `src/OnTech.Store.Desktop` | WPF app, exe `OnTechStore`. MVVM with CommunityToolkit.Mvvm. |
@@ -39,8 +39,8 @@ State: ✅ done and merged · 🟡 basic version, more planned · ⏳ not starte
 
 | Feature | State | PR | Server | Desktop | Notes |
 |---|---|---|---|---|---|
-| Sign in with username + password, forced password change | ✅ | #1, #2 | `AuthController` (`/api/auth/login`, `me`, `change-password`), `Auth/TokenService.cs`, `Auth/AuthSetup.cs`, `Services/PasswordService.cs` (PBKDF2) | `Views/LoginWindow`, `LoginViewModel`, `Views/ChangePasswordWindow`, `ChangePasswordViewModel`, `Services/Session.cs`, `Services/AppSettings.cs` (server URL, last username, language in `%LocalAppData%\OnTechStore\settings.json`) | Seed admin `admin` / `ChangeMe!123` from `appsettings.json` `Seed`, made by `DatabaseSetup.CreateFirstAdminAsync`. Token lasts 12 h. |
-| Users and permissions | ✅ | #1, #2 | `UsersController` (`/api/users`, reset-password), `Auth/Permissions.cs` (checked against the DB on every request) | `UsersViewModel` / `UsersView` (admin menu) | `Permission` flags enum in Contracts: ViewStock 1, ManageCustomers 2, CreateOrders 4, AddStock 8, ViewOrders 16, CancelOrders 32, ManageCatalog 64, ManageUsers 128, ManageSuppliers 256. `StandardUser` preset. Users are disabled, never deleted. |
+| Sign in with username + password, forced password change | ✅ | #1, #2 | `AuthController` (`/api/auth/login`, `me`, `change-password`), `Auth/TokenService.cs`, `Auth/AuthSetup.cs`, `Services/PasswordService.cs` (PBKDF2) | `Views/LoginWindow`, `LoginViewModel`, `Views/ChangePasswordWindow`, `ChangePasswordViewModel`, `Services/Session.cs`, `Services/AppSettings.cs` (server URL, last username, language in `%LocalAppData%\OnTechStore\settings.json`) | First admin `admin` is made by `DatabaseSetup.CreateFirstAdminAsync` only when the DB has no admin, with the password from `Seed__AdminPassword` (env or user-secrets; startup fails without it then). `MustChangePassword` is enforced on the server (`Auth/MustChangePassword.cs`: 403 code `MustChangePassword`, only `me` and `change-password` allowed); the app opens the change-password window on that code. Lockout: 5 wrong passwords for one username → 30 s, doubling up to 300 s (`Auth/LoginThrottle.cs`, 429 code `TooManyAttempts`). JWT key from `Jwt__SigningKey` (≥ 32 bytes; required outside Development), see `audit/fix/DEPLOY_NOTES.md`. Token lasts 12 h. |
+| Users and permissions | ✅ | #1, #2 | `UsersController` (`/api/users`, reset-password), `Auth/Permissions.cs` (checked against the DB on every request) | `UsersViewModel` / `UsersView` (admin menu) | `Permission` flags enum in Contracts: ViewStock 1, ManageCustomers 2, CreateOrders 4, AddStock 8, ViewOrders 16, CancelOrders 32, ManageCatalog 64, ManageUsers 128, ManageSuppliers 256. `StandardUser` preset. Users are disabled, never deleted. Reads use `ReadAccess` (any of several permissions): catalog GETs `ReadAccess.Catalog`, customers `ReadAccess.Customers`, suppliers `ReadAccess.Suppliers` (`[HasAnyPermission]`); dashboard, item card and movements need ViewStock. The app menu shows only pages the user can open. |
 | Categories and items (catalog) | ✅ | #1, #2 | `CategoriesController`, `ItemsController` (`?categoryId=&search=&inStockOnly=&lowStockOnly=`) | `CatalogViewModel` / `CatalogView` (admin menu) | New items start at 0; quantity can never be typed. Low-stock level per item. |
 | Digit-only codes | ✅ | #6 | `Services/CatalogCodes.cs` (next code, validation, converts old `C01`/`C01-001`, backfill on startup) | code boxes in `CatalogView` | Category `01`..`11`; item = category code + 3 digits (`04001`), unique across all categories. Search matches from the start of the code. |
 | Customers | ✅ | #1, #2, #3 | `CustomersController` (search by number or name; `POST /api/customers/import`) | `CustomersViewModel` / `CustomersView`, import via `Client/CustomerSheet.cs` | `CustomerNumber` unique, auto next. Import skips existing numbers, so re-importing is safe. |
@@ -50,13 +50,17 @@ State: ✅ done and merged · 🟡 basic version, more planned · ⏳ not starte
 | Orders log | 🟡 | #1, #2, #7 | `GET /api/orders` (many filters, paging), `/{id}`, `by-receipt/{n}`, `/{id}/cancel` → `StockService.CancelOrderAsync` | `OrdersViewModel` / `OrdersView` | Shows the voucher number only. Has search, receipt filter, paging, details, cancel. Plan step 3: full log with every filter in the UI and receipt PDFs. |
 | Stock In log | ✅ | #7 | `GET /api/stock-ins`, `/{id}`, `/{id}/cancel` → `StockService.CancelStockInAsync` (409 if that stock was already issued) | `StockInsViewModel` / `StockInsView` | |
 | Home page / dashboard | ✅ | #1, #2 | `DashboardController` `GET /api/dashboard/summary` | `HomeViewModel` / `HomeView`, `Views/StockPill` (In stock / Low / Out) | Three big actions: New Order, Stock In, Add Customer. Double-click an item to order it. |
-| Stock history (movements) | ✅ | #1, #9 | `StockMovementsController` `GET /api/stock-movements` | shown per item on the item card | Types in `StockMovementType`: Initial, Restock and Adjustment (history only), Order, OrderCancelled, StockIn, StockInCancelled. |
+| Stock history (movements) | ✅ | #1, #9 | `StockMovementsController` `GET /api/stock-movements` | shown per item on the item card | Types in `StockMovementType`: Initial, Restock and Adjustment (history only), Order, OrderCancelled, StockIn, StockInCancelled. Listed by `Id` (the order the stock lock granted), so `QuantityAfter` reads in sequence; the item card does the same. |
 | Item card (كارت الصنف) | ✅ | #9 | `ItemsController` `GET /api/items/{id}/card?from=&to=` (ViewStock); balance from `StockMovement.QuantityAfter` | `ItemCardViewModel` / `Views/ItemCardWindow`, `VoucherViewModel` / `Views/VoucherWindow`, `Services/ItemCards.cs` (opens a card), `Services/ItemCardPrinter.cs` | Read only. Opening balance box, every movement with party, voucher and balance, period filter, top 5 customers, print/PDF, Excel. Opens from Items & Categories, Home, New Order and Stock In. |
 | Demo data | ✅ | #9 | `tools/OnTech.Store.DemoData` | | For trying the app with a year of movements. Never run `--in-place` on the real database without asking. |
 | Opening data (OnTech's stock and customers) | ✅ | #3 | `Data/OpeningData.cs` + `Data/Seed/opening-data.json` (11 categories, 318 items, 505 customers) | | Applied once on startup, recorded in the `AppliedSeeds` table. |
 | Arabic and right-to-left layout | ✅ | #5 | Server messages are English; the app translates them | `Services/L.cs`, `Services/Arabic.cs`, `Services/Dialogs.cs`, `Converters.cs` (`Translate`) | Language switch on the sign-in screen and in the sidebar. Rules in `CLAUDE.md`. Arabic is simple business Arabic (اختر، أدخل، إذن صرف), no street slang; the owner chose this in #9. |
 | Design ("Clean sidebar") | ✅ | #2 | | `Themes/Theme.xaml`, `MainWindow.xaml` | Brand blue `#055A9A`, gray `#A6A5AA`, Segoe UI. |
 | Tests and load test | ✅ | #4 | `tests/OnTech.Store.Api.Tests`, `tools/OnTech.Store.LoadTest` | | Baseline: 3 PCs on SQLite, p95 under 20 ms, no errors. Server uses workstation GC. |
+| Two PCs editing the same record | ✅ | audit | `Version` on Customers, Suppliers, Items, Users (concurrency token); 409 code `ConcurrencyConflict`; every "already used" 409 has code `Duplicate`; numbering gate `Services/NumberingGate.cs` | forms send the loaded `Version`; on 409 the record reloads into the open form (`ApiError.Code`) | Disable and reset-password bump `Version` too. Document numbers are stored trimmed and upper-case. |
+| Input checks and Arabic digits | ✅ | audit | DTO `[MaxLength]`; paging `Contracts/Paging` (page 1..1,000,000, size 1..200 → else 400) | `Client/Numbers.cs` accepts Arabic-Indic digits in every number field; every TextBox has `MaxLength` equal to the DTO; per-field server errors shown with the Arabic label | |
+| Desktop log file | ✅ | audit | | `%LOCALAPPDATA%\OnTechStore\logs\OnTechStore-yyyyMMdd.log`, newest 14 kept; unhandled and API errors logged (never passwords) | |
+| UI automation ids | ✅ | audit | | every control has `AutomationId` `<Screen>_<Control>` (e.g. `NewOrder_SaveButton`, `Shell_Nav_Catalog`), labels linked with `LabeledBy` | Used by `audit/OnTech.Store.UITests`. |
 | Safe SQLite upgrades | ✅ | #7 | `DatabaseSetup.UpgradeSqliteAsync`, `BackupSqliteAsync` (`VACUUM INTO <db>-backup-before-<change>-<time>.db`) | | |
 | Packaging, installer, backups | 🟡 | #1 | `scripts/install-service.ps1`, `scripts/backup-database.ps1` | publish command in README | Plan step 4. Scripts exist for SQL Server; the live install still runs SQLite (see below). |
 | Receipt PDFs | ⏳ | | | | Plan step 3. |
@@ -67,17 +71,19 @@ State: ✅ done and merged · 🟡 basic version, more planned · ⏳ not starte
 
 ## Database tables
 
-`Users`, `Categories`, `Items` (`Quantity` has a DB check `>= 0`), `Customers`, `Suppliers`, `Orders`, `OrderLines`, `StockIns`, `StockInLines` (lines keep a snapshot of item and category names), `StockMovements`, `AppliedSeeds`. Rows that history points to are disabled, never deleted. Migrations: `InitialCreate`, `UsernameLogin`, `CustomerNumber`, `OpeningData`, `CategoryCode`, `UniqueNumericItemCodes`, `SuppliersAndStockIn`.
+`Users`, `Categories`, `Items` (`Quantity` has a DB check `>= 0`), `Customers`, `Suppliers`, `Orders`, `OrderLines`, `StockIns`, `StockInLines` (lines keep a snapshot of item and category names), `StockMovements`, `AppliedSeeds`. Rows that history points to are disabled, never deleted. Migrations: `InitialCreate`, `UsernameLogin`, `CustomerNumber`, `OpeningData`, `CategoryCode`, `UniqueNumericItemCodes`, `SuppliersAndStockIn`, `AuditFixes` (`Version` columns, `CreatedByUserId` FKs on Customers/Suppliers, upper-case doc numbers). On SQLite the same changes come from `UpgradeSqliteAsync` (existing files get the indexes but not the FKs; voucher indexes are NOCASE).
 
 ## Rules decided with the owner
 
 - Stock changes only through a voucher tied to a customer or supplier. Never add a screen or endpoint that types a quantity directly; ask first if a stock-count correction is needed.
 - Every desktop change works in English and Arabic (RTL). See `CLAUDE.md`.
 - The server must stay light (normal office PC, up to 3 client PCs).
+- Items never move between categories, so an item keeps its code (audit L-7, won't fix). The customer list is not paged: the data is small (audit L-9, won't fix).
 
 ## How it runs on the owner's PC today
 
 - Repo at `C:\Users\PC\source\ontech-store`. The server is not a Windows service yet: it runs hidden with `dotnet run --project src/OnTech.Store.Api -c Release` on SQLite, DB file `src\OnTech.Store.Api\ontech-store-dev.db`, log `src\OnTech.Store.Api\server.log`.
+- After the audit fixes are merged, the server must run in Production with `Jwt__SigningKey` set (and the full SQLite path in `ConnectionStrings__Store`), or every restart signs everyone out: follow `audit/fix/DEPLOY_NOTES.md`.
 - Back up by copying the `.db` while the server is stopped. `backup-database.ps1` only applies to SQL Server.
 - Desktop exe: `src\OnTech.Store.Desktop\bin\Release\net8.0-windows\OnTechStore.exe`.
 
