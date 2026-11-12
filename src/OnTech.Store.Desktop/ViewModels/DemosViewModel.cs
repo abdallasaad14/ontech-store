@@ -8,12 +8,15 @@ using OnTech.Store.Desktop.Services;
 
 namespace OnTech.Store.Desktop.ViewModels;
 
+/// <summary>A group header on the Demo page: the customer (or item) name and how many units of it are out.</summary>
+public sealed record DemoGroup(string Name, int Units);
+
 /// <summary>One demo line still out, as the "With customers now" tab shows it.</summary>
-public sealed class OpenDemoRow(OpenDemoLineDto line, string group)
+public sealed class OpenDemoRow(OpenDemoLineDto line, DemoGroup group)
 {
     public OpenDemoLineDto Line { get; } = line;
     /// <summary>The group header: the customer or the item, with how many units of it are out.</summary>
-    public string Group { get; } = group;
+    public DemoGroup Group { get; } = group;
     public string Item => Line.ItemCode is { Length: > 0 } code ? $"{Line.ItemName} ({code})" : Line.ItemName;
     public string Customer => Line.CustomerNumber is { } n ? $"{n} · {Line.CustomerName}" : Line.CustomerName;
     /// <summary>Whole days since it went out (0 = today).</summary>
@@ -139,8 +142,8 @@ public sealed partial class DemosViewModel : PageViewModel
             var first = g.First();
             var name = byItem
                 ? (first.ItemCode is { Length: > 0 } code ? $"{first.ItemName} ({code})" : first.ItemName)
-                : (first.CustomerNumber is { } n ? $"{n} · {first.CustomerName}" : first.CustomerName);
-            var header = L.T("{0} · {1} unit(s) out", name, g.Sum(l => l.OpenQuantity));
+                : first.CustomerName;
+            var header = new DemoGroup(name, g.Sum(l => l.OpenQuantity));
             foreach (var l in g.OrderBy(l => l.CreatedAt)) Rows.Add(new OpenDemoRow(l, header));
         }
         SelectedRow = Rows.FirstOrDefault(r => r.Line.OrderLineId == keep);

@@ -84,10 +84,10 @@ public class DemoPageViewModelTests
         Assert.Equal(7, vm.OpenUnits);
         Assert.Equal(2, vm.OpenCustomers);
         Assert.Equal("7 unit(s) out with 2 customer(s)", vm.SummaryText);
-        Assert.Equal(["Acme · 3 unit(s) out", "Beta · 4 unit(s) out"], vm.Rows.Select(r => r.Group).Distinct());
+        Assert.Equal([new DemoGroup("Acme", 3), new DemoGroup("Beta", 4)], vm.Rows.Select(r => r.Group).Distinct());
 
         vm.GroupMode = 1;
-        Assert.Equal(["Printer · 1 unit(s) out", "Scanner · 6 unit(s) out"], vm.Rows.Select(r => r.Group).Distinct());
+        Assert.Equal([new DemoGroup("Printer", 1), new DemoGroup("Scanner", 6)], vm.Rows.Select(r => r.Group).Distinct());
         Assert.All(vm.Rows, r => Assert.Equal(3, r.DaysOut));
 
         vm.Search = "acme";
