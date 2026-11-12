@@ -39,6 +39,8 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
     public string PartyLabel => IsDemoReturnLog ? L.T("Customer") : L.T("Supplier");
     public string PartyHint => IsDemoReturnLog ? L.T("Type the customer number or part of the name") : L.T("Type the supplier number or part of the name");
     public string PartyAllText => IsDemoReturnLog ? L.T("All customers") : L.T("All suppliers");
+    public string PartyPlaceholder => IsDemoReturnLog ? L.T("Customer name or number") : L.T("Supplier name or number");
+    public string SearchHint => IsDemoReturnLog ? L.T("Voucher, customer, item or notes") : L.T("Voucher, supplier invoice, supplier, item or notes");
 
     /// <summary>Over every page of the list; cancelled vouchers left out.</summary>
     [ObservableProperty] private string? _totalsText;

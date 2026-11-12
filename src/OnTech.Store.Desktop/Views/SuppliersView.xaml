@@ -24,7 +24,7 @@
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <CheckBox AutomationProperties.AutomationId="Suppliers_ShowDisabledCheck" DockPanel.Dock="Right" Content="{l:T 'Show disabled'}" IsChecked="{Binding ShowDisabled}" Margin="12,0,0,0"/>
                         <Button AutomationProperties.AutomationId="Suppliers_SearchButton" DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox AutomationProperties.AutomationId="Suppliers_SearchBox" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Supplier number or company name (also phone, tax number, contact)'}">
+                        <TextBox AutomationProperties.AutomationId="Suppliers_SearchBox" Style="{StaticResource SearchBox}" Tag="{l:T 'Number, name, phone or tax number'}" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Supplier number or company name (also phone, tax number, contact)'}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>

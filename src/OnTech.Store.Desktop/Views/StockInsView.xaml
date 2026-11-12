@@ -30,7 +30,7 @@
                 <DockPanel>
                     <DockPanel DockPanel.Dock="Top" Margin="16,14,16,8">
                         <Button AutomationProperties.AutomationId="StockIns_SearchButton" DockPanel.Dock="Right" Content="{l:T 'Search'}" Margin="8,0,0,0" Command="{Binding SearchCommand}"/>
-                        <TextBox AutomationProperties.AutomationId="StockIns_SearchBox" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBox AutomationProperties.AutomationId="StockIns_SearchBox" Style="{StaticResource SearchBox}" Tag="{Binding SearchHint}" MaxLength="100" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding SearchCommand}"/>
                             </TextBox.InputBindings>
@@ -39,7 +39,7 @@
                     <!-- Only one supplier's purchases (or one customer's demo returns), with their totals at the bottom. -->
                     <DockPanel DockPanel.Dock="Top" Margin="16,0,16,8">
                         <TextBlock x:Name="PartyLabel" DockPanel.Dock="Left" Text="{Binding PartyLabel}" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextMutedBrush}"/>
-                        <TextBox AutomationProperties.AutomationId="StockIns_PartySearchBox" AutomationProperties.LabeledBy="{Binding ElementName=PartyLabel}" DockPanel.Dock="Left" Width="200" MaxLength="200"
+                        <TextBox AutomationProperties.AutomationId="StockIns_PartySearchBox" Style="{StaticResource SearchBox}" Tag="{Binding PartyPlaceholder}" AutomationProperties.LabeledBy="{Binding ElementName=PartyLabel}" DockPanel.Dock="Left" Width="200" MaxLength="200"
                                  Text="{Binding Party.Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" ToolTip="{Binding PartyHint}"/>
                         <Button AutomationProperties.AutomationId="StockIns_PartyClearButton" DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Margin="8,0,0,0"
                                 Content="{Binding PartyAllText}" Command="{Binding Party.ClearCommand}"/>

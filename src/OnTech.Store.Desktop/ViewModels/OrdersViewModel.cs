@@ -52,6 +52,8 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
     public string PartyLabel => L.T("Customer");
     public string PartyHint => L.T("Type the customer number or part of the name");
     public string PartyAllText => L.T("All customers");
+    public string PartyPlaceholder => L.T("Customer name or number");
+    public string SearchHint => IsDemoLog ? L.T("Voucher, customer, item or notes") : L.T("Voucher, receipt, customer, item or notes");
 
     /// <summary>Over every page of the list; cancelled vouchers left out.</summary>
     [ObservableProperty] private string? _totalsText;
