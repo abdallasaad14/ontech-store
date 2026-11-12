@@ -90,7 +90,7 @@
                 <DockPanel DockPanel.Dock="Top" Margin="20,16,20,10">
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                         <ComboBox AutomationProperties.AutomationId="Home_CategoryCombo" AutomationProperties.LabeledBy="{Binding ElementName=CategoryLabel}" Width="180" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" Margin="0,0,8,0"/>
-                        <TextBox AutomationProperties.AutomationId="Home_SearchBox" MaxLength="100" Width="200" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Search by item name or code'}">
+                        <TextBox AutomationProperties.AutomationId="Home_SearchBox" Style="{StaticResource SearchBox}" Tag="{l:T 'Item name, code or category'}" MaxLength="100" Width="200" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" ToolTip="{l:T 'Search by item name or code'}">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Return" Command="{Binding RefreshCommand}"/>
                             </TextBox.InputBindings>
