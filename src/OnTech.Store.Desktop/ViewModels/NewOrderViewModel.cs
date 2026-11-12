@@ -56,9 +56,6 @@ public sealed partial class NewOrderViewModel(Session session, ShellViewModel sh
     public bool IsSale => !IsDemo;
 
     public string Title => IsDemo ? L.T("New Demo Voucher") : L.T("New Order");
-    public string Subtitle => IsDemo
-        ? L.T("Choose what goes out to the customer to try. Stock is deducted when you save, and it shows on the Demo page until it comes back.")
-        : L.T("Choose what is leaving the store and who it is for. Stock is deducted when you save.");
 
     public string SaveText => IsDemo ? L.T("Save demo voucher") : L.T("Save order");
 

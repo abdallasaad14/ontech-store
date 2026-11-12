@@ -42,7 +42,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
     [ObservableProperty] private int _totalCount;
 
     public string PageText => TotalCount == 0
-        ? (IsDemoLog ? L.T("No demo vouchers") : L.T("No orders"))
+        ? ""
         : IsDemoLog ? L.T("Page {0} of {1} · {2} demo vouchers", Page, TotalPages, TotalCount)
         : L.T("Page {0} of {1} · {2} orders", Page, TotalPages, TotalCount);
 
@@ -86,7 +86,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
         TotalPages = result.TotalPages;
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
-        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces (cancelled not counted)", t.Vouchers, t.Quantity) : null;
+        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces", t.Vouchers, t.Quantity) : null;
         Selected = Orders.FirstOrDefault(o => o.Id == keep);
         await CheckOtherTypeAsync(result.TotalCount, ticket);
     }

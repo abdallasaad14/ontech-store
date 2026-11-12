@@ -55,6 +55,14 @@ public class TranslationTests
         Assert.True(bad.Count == 0, "Placeholders differ: " + string.Join(" | ", bad));
     }
 
+    /// <summary>A neutral "·" between numbers in right-to-left text gets reordered ("٠ إذن ٠٠ قطعة"); Arabic uses "،" instead.</summary>
+    [Fact]
+    public void Arabic_texts_do_not_use_the_middle_dot()
+    {
+        var bad = Arabic.Text.Where(kv => kv.Value.Contains('·')).Select(kv => kv.Key).ToList();
+        Assert.True(bad.Count == 0, "Middle dot in Arabic: " + string.Join(" | ", bad));
+    }
+
     private static string Placeholders(string s) => string.Join(",", Regex.Matches(s, @"\{\d+\}").Select(m => m.Value).Order());
 
     /// <summary>Messages from CONTRACTS.md section 3 and the ones agents A and B added on the server.</summary>

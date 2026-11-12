@@ -16,7 +16,6 @@
                     <StackPanel>
                         <TextBlock Style="{StaticResource Icon}" Text="&#xE7BF;" FontSize="22" HorizontalAlignment="Left"/>
                         <TextBlock Text="{l:T 'New Order'}" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,2"/>
-                        <TextBlock Text="{l:T 'Take items out for a customer'}" FontSize="12" Opacity="0.85"/>
                     </StackPanel>
                 </Button>
                 <Button AutomationProperties.AutomationId="Home_StockInButton" Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding StockInCommand}"
@@ -26,7 +25,6 @@
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE896;" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="{l:T 'Stock In'}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                        <TextBlock Text="{l:T 'Items received from a supplier'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
                     </StackPanel>
                 </Button>
                 <Button AutomationProperties.AutomationId="Home_AddCustomerButton" Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding AddCustomerCommand}"
@@ -36,49 +34,57 @@
                             <TextBlock Style="{StaticResource Icon}" Text="&#xE8FA;" Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"/>
                         </Border>
                         <TextBlock Text="{l:T 'Add Customer'}" FontSize="16" FontWeight="SemiBold" Margin="0,10,0,2"/>
-                        <TextBlock Text="{l:T 'Company name, number, tax number'}" FontSize="12" Foreground="{StaticResource TextMutedBrush}"/>
                     </StackPanel>
                 </Button>
             </UniformGrid>
 
-            <!-- Today at a glance -->
-            <UniformGrid Rows="1" Margin="-6,0,-6,20" Visibility="{Binding CanViewStock, Converter={StaticResource BoolToVisibility}}">
-                <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
+            <!-- Today at a glance: every card is title, one big number, optional note. European digits keep the numbers alike in Arabic. -->
+            <UniformGrid Rows="1" Margin="-6,0,-6,20" NumberSubstitution.Substitution="European" Visibility="{Binding CanViewStock, Converter={StaticResource BoolToVisibility}}">
+                <UniformGrid.Resources>
+                    <Style x:Key="StatNumber" TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="26"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                    </Style>
+                    <Style x:Key="StatNote" TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+                        <Setter Property="Margin" Value="0,2,0,0"/>
+                    </Style>
+                </UniformGrid.Resources>
+                <Border Style="{StaticResource Card}" Margin="6,0" Padding="20,18">
                     <StackPanel>
                         <TextBlock Text="{l:T 'Units in stock'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBlock Text="{Binding Summary.TotalUnitsInStock}" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock AutomationProperties.AutomationId="Home_UnitsInStock" Text="{Binding Summary.TotalUnitsInStock}" Style="{StaticResource StatNumber}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
+                <Border Style="{StaticResource Card}" Margin="6,0" Padding="20,18">
                     <StackPanel>
                         <TextBlock Text="{l:T 'Low stock'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBlock FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}">
-                            <Run Text="{Binding Summary.LowStockItemCount, Mode=OneWay}"/><Run Text="{l:T ' items'}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
-                        </TextBlock>
+                        <TextBlock AutomationProperties.AutomationId="Home_LowStockCount" Text="{Binding Summary.LowStockItemCount}" Style="{StaticResource StatNumber}"/>
+                        <TextBlock Text="{l:T 'items'}" Style="{StaticResource StatNote}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
+                <Border Style="{StaticResource Card}" Margin="6,0" Padding="20,18">
                     <StackPanel>
                         <TextBlock Text="{l:T 'Orders today'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBlock FontSize="22" FontWeight="SemiBold">
-                            <Run Text="{Binding Summary.OrdersToday, Mode=OneWay}"/><Run Text="{Binding Summary.UnitsOutToday, Mode=OneWay, StringFormat={l:T ' · {0} units out'}}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
-                        </TextBlock>
+                        <TextBlock AutomationProperties.AutomationId="Home_OrdersToday" Text="{Binding Summary.OrdersToday}" Style="{StaticResource StatNumber}"/>
+                        <TextBlock AutomationProperties.AutomationId="Home_UnitsOutToday" Text="{Binding Summary.UnitsOutToday, StringFormat={l:T '\{0\} units out'}}" Style="{StaticResource StatNote}"/>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Margin="6,0" Padding="16,12">
+                <Border Style="{StaticResource Card}" Margin="6,0" Padding="20,18">
                     <StackPanel>
                         <TextBlock x:Name="CategoryLabel" Text="{l:T 'Customers'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBlock Text="{Binding Summary.CustomerCount}" FontSize="22" FontWeight="SemiBold"/>
+                        <TextBlock AutomationProperties.AutomationId="Home_CustomerCount" Text="{Binding Summary.CustomerCount}" Style="{StaticResource StatNumber}"/>
                     </StackPanel>
                 </Border>
-                <!-- Demos still out: opens the Demo page -->
-                <Button AutomationProperties.AutomationId="Home_DemosCard" Style="{StaticResource ActionCard}" Margin="6,0" Padding="0" Command="{Binding OpenDemosCommand}"
+                <!-- Demos still out: opens the Demo page. ActionCard already pads 20,18. -->
+                <Button AutomationProperties.AutomationId="Home_DemosCard" Style="{StaticResource ActionCard}" Margin="6,0" Command="{Binding OpenDemosCommand}"
                         ToolTip="{l:T 'Open the Demo page'}" Visibility="{Binding CanOpenDemos, Converter={StaticResource BoolToVisibility}}">
-                    <StackPanel Margin="-4,-6">
+                    <StackPanel>
                         <TextBlock Text="{l:T 'Demos with customers'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBlock FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}">
-                            <Run Text="{Binding Summary.OpenDemoQuantity, Mode=OneWay}"/><Run Text="{Binding Summary.OpenDemoCustomers, Mode=OneWay, StringFormat={l:T ' units · {0} customers'}}" FontSize="13" Foreground="{StaticResource TextMutedBrush}"/>
-                        </TextBlock>
+                        <TextBlock AutomationProperties.AutomationId="Home_OpenDemoQuantity" Text="{Binding Summary.OpenDemoQuantity}" Style="{StaticResource StatNumber}"/>
+                        <TextBlock AutomationProperties.AutomationId="Home_OpenDemoCustomers" Text="{Binding Summary.OpenDemoCustomers, StringFormat={l:T '\{0\} customers'}}" Style="{StaticResource StatNote}"/>
                     </StackPanel>
                 </Button>
             </UniformGrid>
@@ -100,7 +106,6 @@
                     </StackPanel>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{l:T 'Stock available'}" Style="{StaticResource SectionTitle}"/>
-                        <TextBlock Text="{l:T 'Double-click an item to start an order with it.'}" Style="{StaticResource Hint}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </DockPanel>
                 <DataGrid AutomationProperties.AutomationId="Home_StockGrid" x:Name="StockGrid" ItemsSource="{Binding Items}" Margin="10,0,10,10" MouseDoubleClick="OnStockDoubleClick">

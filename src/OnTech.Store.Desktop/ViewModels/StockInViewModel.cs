@@ -63,9 +63,6 @@ public sealed partial class StockInViewModel(Session session, ShellViewModel she
     public string SaveText => IsDemoReturn ? L.T("Save demo return") : L.T("Save stock-in");
 
     public string Title => IsDemoReturn ? L.T("Demo Return") : L.T("Stock In");
-    public string Subtitle => IsDemoReturn
-        ? L.T("Record a demo coming back from a customer. Pick the customer, then type how much of each demo came back. Stock is added when you save.")
-        : L.T("Record items bought from a supplier. Stock is added when you save. New items are added by an admin under Items & Categories.");
 
     // Set by the Demo page's "Return" on a line: that customer, with that line filled in once the lists load.
     private int? _startCustomerId;

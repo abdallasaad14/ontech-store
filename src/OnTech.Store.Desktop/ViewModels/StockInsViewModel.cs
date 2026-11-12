@@ -29,7 +29,7 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
     [ObservableProperty] private int _totalCount;
 
     public string PageText => TotalCount == 0
-        ? (IsDemoReturnLog ? L.T("No demo returns") : L.T("No stock-ins"))
+        ? ""
         : IsDemoReturnLog ? L.T("Page {0} of {1} · {2} demo returns", Page, TotalPages, TotalCount)
         : L.T("Page {0} of {1} · {2} stock-ins", Page, TotalPages, TotalCount);
 
@@ -73,7 +73,7 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
         TotalPages = result.TotalPages;
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
-        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces (cancelled not counted)", t.Vouchers, t.Quantity) : null;
+        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces", t.Vouchers, t.Quantity) : null;
         Selected = StockIns.FirstOrDefault(s => s.Id == keep);
         await CheckOtherTypeAsync(result.TotalCount, ticket);
     }

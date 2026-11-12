@@ -24,8 +24,6 @@
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="{l:T 'Demos'}" Style="{StaticResource PageTitle}"/>
-                <TextBlock Text="{l:T 'Everything lent to customers to try: what is still out and with whom, demo issue vouchers and demo returns. Numbers come from the same issue and receipt voucher books.'}"
-                           Style="{StaticResource PageSubtitle}" TextWrapping="Wrap"/>
             </StackPanel>
         </DockPanel>
 
