@@ -8,7 +8,6 @@
             <Button AutomationProperties.AutomationId="Users_NewUserButton" DockPanel.Dock="Right" Content="{l:T '+ Add user'}" Style="{StaticResource PrimaryButton}" VerticalAlignment="Top" Command="{Binding NewUserCommand}"/>
             <StackPanel>
                 <TextBlock Text="{l:T 'Users'}" Style="{StaticResource PageTitle}"/>
-                <TextBlock Text="{l:T 'Who can sign in, and what each person is allowed to do. Changes apply right away on every PC.'}" Style="{StaticResource PageSubtitle}"/>
             </StackPanel>
         </DockPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
@@ -86,8 +85,7 @@
                         <TextBlock x:Name="FullNameLabel" Text="{l:T 'Full name *'}" Style="{StaticResource FieldLabel}"/>
                         <TextBox AutomationProperties.AutomationId="Users_FullNameBox" AutomationProperties.LabeledBy="{Binding ElementName=FullNameLabel}" MaxLength="150" Text="{Binding FullName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock x:Name="UsernameLabel" Text="{l:T 'Username * (used to sign in)'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox AutomationProperties.AutomationId="Users_UsernameBox" AutomationProperties.LabeledBy="{Binding ElementName=UsernameLabel}" MaxLength="64" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,4"/>
-                        <TextBlock Style="{StaticResource Hint}" Text="{l:T 'For example ahmed or ahmed.ali. No spaces.'}" Margin="0,0,0,12"/>
+                        <TextBox AutomationProperties.AutomationId="Users_UsernameBox" AutomationProperties.LabeledBy="{Binding ElementName=UsernameLabel}" MaxLength="64" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <StackPanel Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock x:Name="PasswordLabel" Text="{l:T 'First password * (at least 8 characters)'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="Users_PasswordBox" AutomationProperties.LabeledBy="{Binding ElementName=PasswordLabel}" MaxLength="128" Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,8"/>

@@ -17,7 +17,6 @@
             </StackPanel>
             <StackPanel>
                 <TextBlock Text="{l:T 'Items &amp; Categories'}" Style="{StaticResource PageTitle}"/>
-                <TextBlock Text="{l:T 'What the store holds. Double-click an item to open its card with every movement in and out.'}" Style="{StaticResource PageSubtitle}"/>
             </StackPanel>
         </DockPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
@@ -112,8 +111,7 @@
                             <TextBlock x:Name="CategoryNameLabel" Text="{l:T 'Name *'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="Catalog_CategoryNameBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryNameLabel}" MaxLength="100" Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock x:Name="CategoryCodeLabel" Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox AutomationProperties.AutomationId="Catalog_CategoryCodeBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryCodeLabel}" MaxLength="10" Text="{Binding CategoryCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{l:T 'Digits only. Leave empty for the next code (01, 02, ...).'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_CategoryCodeBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryCodeLabel}" MaxLength="10" Text="{Binding CategoryCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock x:Name="CategoryDescriptionLabel" Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="Catalog_CategoryDescriptionBox" AutomationProperties.LabeledBy="{Binding ElementName=CategoryDescriptionLabel}" MaxLength="500" Style="{StaticResource MultiLineTextBox}" Text="{Binding CategoryDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <CheckBox AutomationProperties.AutomationId="Catalog_CategoryActiveCheck" Content="{l:T 'Active'}" IsChecked="{Binding CategoryActive}" Margin="0,0,0,18"/>
@@ -125,15 +123,11 @@
                             <TextBlock x:Name="ItemNameLabel" Text="{l:T 'Item name *'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="Catalog_ItemNameBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemNameLabel}" MaxLength="150" Text="{Binding ItemName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock x:Name="ItemCodeLabel" Text="{l:T 'Code'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox AutomationProperties.AutomationId="Catalog_ItemCodeBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemCodeLabel}" MaxLength="64" Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
-                            <TextBlock Text="{l:T 'Digits only. Leave empty to get the category code plus a number, e.g. 01004.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_ItemCodeBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemCodeLabel}" MaxLength="64" Text="{Binding ItemCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <TextBlock x:Name="ItemDescriptionLabel" Text="{l:T 'Description'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="Catalog_ItemDescriptionBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemDescriptionLabel}" MaxLength="500" Style="{StaticResource MultiLineTextBox}" Text="{Binding ItemDescription, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
-                            <TextBlock Text="{l:T 'New items start at 0. Add their stock with Stock In, from a supplier.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"
-                                       Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}}"/>
                             <TextBlock x:Name="ItemLowStockLabel" Text="{l:T 'Low stock warning at'}" Style="{StaticResource FieldLabel}"/>
-                            <TextBox AutomationProperties.AutomationId="Catalog_ItemLowStockBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemLowStockLabel}" MaxLength="9" Text="{Binding ItemLowStock, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Shows &quot;Low&quot; when the quantity falls to this number. 0 turns the warning off.'}" Margin="0,5,0,12"/>
+                            <TextBox AutomationProperties.AutomationId="Catalog_ItemLowStockBox" AutomationProperties.LabeledBy="{Binding ElementName=ItemLowStockLabel}" MaxLength="9" Text="{Binding ItemLowStock, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                             <CheckBox AutomationProperties.AutomationId="Catalog_ItemActiveCheck" Content="{l:T 'Active'}" IsChecked="{Binding ItemActive}" Margin="0,0,0,18"
                                       Visibility="{Binding IsNewItem, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}"/>
                         </StackPanel>
