@@ -67,12 +67,16 @@
                                 <Button AutomationProperties.AutomationId="Demos_RefreshButton" DockPanel.Dock="Right" Content="{l:T 'Refresh'}" Command="{Binding RefreshCommand}"/>
                                 <TextBlock Text="{Binding SummaryText}" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource WarnBrush}"/>
                             </DockPanel>
-                            <DataGrid AutomationProperties.AutomationId="Demos_OpenGrid" ItemsSource="{Binding RowsView}" SelectedItem="{Binding SelectedRow}" Margin="6,0,6,0">
+                            <DataGrid x:Name="OpenGrid" AutomationProperties.AutomationId="Demos_OpenGrid" ItemsSource="{Binding RowsView}" SelectedItem="{Binding SelectedRow}" Margin="6,0,6,0">
                                 <DataGrid.GroupStyle>
                                     <GroupStyle>
                                         <GroupStyle.HeaderTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="8,12,8,4" Foreground="{StaticResource TextBrush}"/>
+                                                <!-- Name and count in separate texts, so right-to-left order and digits stay clean. -->
+                                                <StackPanel Orientation="Horizontal" Margin="8,12,8,4">
+                                                    <TextBlock Text="{Binding Name.Name}" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
+                                                    <TextBlock Text="{Binding Name.Units, StringFormat={l:T '\{0\} unit(s) out'}}" Margin="12,0,0,0" Foreground="{StaticResource WarnBrush}"/>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </GroupStyle.HeaderTemplate>
                                     </GroupStyle>

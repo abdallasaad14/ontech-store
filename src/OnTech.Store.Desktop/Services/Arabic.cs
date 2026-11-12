@@ -532,7 +532,7 @@ internal static class Arabic
         ["No demos are out right now."] = "لا يوجد ديمو بالخارج حاليًا.",
         ["No open demos match the search."] = "لا يوجد ديمو بالخارج يطابق البحث.",
         ["{0} unit(s) out with {1} customer(s)"] = "{0} وحدة بالخارج لدى {1} عميل",
-        ["{0} · {1} unit(s) out"] = "{0}، {1} وحدة بالخارج",
+        ["{0} unit(s) out"] = "{0} وحدة بالخارج",
         ["DAYS OUT"] = "أيام بالخارج",
         ["Days out:"] = "أيام بالخارج:",
         ["WENT OUT"] = "خرج",
