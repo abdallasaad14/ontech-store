@@ -29,7 +29,7 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
     [ObservableProperty] private int _totalCount;
 
     public string PageText => TotalCount == 0
-        ? (IsDemoReturnLog ? L.T("No demo returns") : L.T("No stock-ins"))
+        ? ""
         : IsDemoReturnLog ? L.T("Page {0} of {1} · {2} demo returns", Page, TotalPages, TotalCount)
         : L.T("Page {0} of {1} · {2} stock-ins", Page, TotalPages, TotalCount);
 

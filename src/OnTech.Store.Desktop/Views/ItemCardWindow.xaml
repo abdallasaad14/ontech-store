@@ -83,8 +83,6 @@
                 <Button AutomationProperties.AutomationId="ItemCard_RefreshButton" Content="{l:T 'Refresh'}" Margin="0,0,8,0" Command="{Binding RefreshCommand}"/>
                 <Button AutomationProperties.AutomationId="ItemCard_CloseButton" Content="{l:T 'Close'}" Style="{StaticResource PrimaryButton}" MinWidth="90" IsCancel="True" Click="OnClose"/>
             </StackPanel>
-            <TextBlock Text="{l:T 'Oldest first. Balance is the quantity in the store right after each movement. Double-click a movement to open its order or stock-in.'}"
-                       Style="{StaticResource Hint}" VerticalAlignment="Center" TextWrapping="Wrap"/>
         </DockPanel>
 
         <Grid>
@@ -124,9 +122,6 @@
                             <DataGridTextColumn Header="{l:T 'BY'}" Binding="{Binding UserName}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <TextBlock Text="{l:T 'No movements in this period. Stock comes in with Stock In and goes out with orders.'}" Style="{StaticResource Hint}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"
-                               Visibility="{Binding Lines.Count, Converter={StaticResource HasValueToVisibility}, ConverterParameter=Invert}"/>
                 </Grid>
             </Border>
 
@@ -134,7 +129,6 @@
             <Border Grid.Column="1" Style="{StaticResource Card}" Width="250" Margin="16,0,0,0">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="{l:T 'TOP CUSTOMERS'}" Style="{StaticResource FieldLabel}"/>
-                    <TextBlock DockPanel.Dock="Top" Text="{l:T 'Units taken in this period, after cancelled orders.'}" Style="{StaticResource Hint}" TextWrapping="Wrap" Margin="0,0,0,10"/>
                     <Grid>
                         <ItemsControl ItemsSource="{Binding TopCustomers}">
                             <ItemsControl.ItemTemplate>
@@ -149,8 +143,6 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <TextBlock Text="{l:T 'No customer took this item in this period.'}" Style="{StaticResource Hint}" TextWrapping="Wrap"
-                                   Visibility="{Binding TopCustomers.Count, Converter={StaticResource HasValueToVisibility}, ConverterParameter=Invert}"/>
                     </Grid>
                 </DockPanel>
             </Border>

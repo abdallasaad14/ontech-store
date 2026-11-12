@@ -5,8 +5,7 @@
              xmlns:views="clr-namespace:OnTech.Store.Desktop.Views">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,28,32,24" MaxWidth="900" HorizontalAlignment="Left">
-            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource PageSubtitle}" Margin="0,4,0,20" TextWrapping="Wrap"/>
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,0,0,20"/>
             <views:MessageBanners/>
 
             <Border Style="{StaticResource Card}" Padding="24">
@@ -82,7 +81,6 @@
                         <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,0,16">
                             <TextBlock x:Name="IssueVoucherNumberLabel" Text="{l:T 'Issue voucher number *'}" Style="{StaticResource FieldLabel}"/>
                             <TextBox AutomationProperties.AutomationId="NewOrder_IssueVoucherNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=IssueVoucherNumberLabel}" MaxLength="30" Text="{Binding IssueVoucherNumber, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The number on the warehouse issue voucher. Required, and each number is used once.'}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,0,0,16" Visibility="{Binding IsSale, Converter={StaticResource BoolToVisibility}}">
@@ -90,7 +88,6 @@
                             <StackPanel Visibility="{Binding WithReceipt, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock x:Name="ReceiptNumberLabel" Text="{l:T 'Receipt number'}" Style="{StaticResource FieldLabel}"/>
                                 <TextBox AutomationProperties.AutomationId="NewOrder_ReceiptNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=ReceiptNumberLabel}" MaxLength="50" Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}"/>
-                                <TextBlock Style="{StaticResource Hint}" Text="{l:T 'Each receipt number can be used once. You can search orders by it later.'}"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>

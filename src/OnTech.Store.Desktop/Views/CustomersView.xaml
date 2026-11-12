@@ -12,7 +12,6 @@
                     Command="{Binding ImportCommand}" Visibility="{Binding CanEdit, Converter={StaticResource BoolToVisibility}}"/>
             <StackPanel>
                 <TextBlock Text="{l:T 'Customers'}" Style="{StaticResource PageTitle}"/>
-                <TextBlock Text="{l:T 'Companies that take items from the store.'}" Style="{StaticResource PageSubtitle}"/>
             </StackPanel>
         </DockPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
@@ -69,8 +68,7 @@
                     <StackPanel>
                         <TextBlock Text="{Binding FormTitle}" Style="{StaticResource SectionTitle}" Margin="0,0,0,16"/>
                         <TextBlock x:Name="CustomerNumberLabel" Text="{l:T 'Customer number'}" Style="{StaticResource FieldLabel}"/>
-                        <TextBox AutomationProperties.AutomationId="Customers_CustomerNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=CustomerNumberLabel}" MaxLength="9" Text="{Binding CustomerNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,2"/>
-                        <TextBlock Text="{l:T 'Leave empty to use the next free number.'}" Style="{StaticResource Hint}" Margin="0,0,0,12"/>
+                        <TextBox AutomationProperties.AutomationId="Customers_CustomerNumberBox" AutomationProperties.LabeledBy="{Binding ElementName=CustomerNumberLabel}" MaxLength="9" Text="{Binding CustomerNumber, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock x:Name="CompanyNameLabel" Text="{l:T 'Company name *'}" Style="{StaticResource FieldLabel}"/>
                         <TextBox AutomationProperties.AutomationId="Customers_CompanyNameBox" AutomationProperties.LabeledBy="{Binding ElementName=CompanyNameLabel}" MaxLength="200" Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12"/>
                         <TextBlock x:Name="PhoneNumberLabel" Text="{l:T 'Phone'}" Style="{StaticResource FieldLabel}"/>

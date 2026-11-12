@@ -15,8 +15,7 @@
             </Grid>
             <TextBlock Text="STORE" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="2,6,0,22"/>
 
-            <TextBlock Text="{l:T 'Sign in'}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{l:T 'Use the username and password your admin gave you.'}" Style="{StaticResource PageSubtitle}" Margin="0,4,0,20"/>
+            <TextBlock Text="{l:T 'Sign in'}" Style="{StaticResource PageTitle}" Margin="0,0,0,20"/>
 
             <views:MessageBanners/>
 
@@ -63,7 +62,6 @@
                     <Button AutomationProperties.AutomationId="Login_TestConnectionButton" DockPanel.Dock="Right" Content="{l:T 'Test'}" Margin="8,0,0,0" Command="{Binding TestConnectionCommand}"/>
                     <TextBox AutomationProperties.AutomationId="Login_ServerUrlBox" AutomationProperties.LabeledBy="{Binding ElementName=ServerUrlLabel}" MaxLength="200" Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"/>
                 </DockPanel>
-                <TextBlock Style="{StaticResource Hint}" Text="{l:T 'The IP address or name of the server PC, for example 192.168.1.10. Port 5080 is used if you don\'t type one.'}"/>
             </StackPanel>
 
             <Button AutomationProperties.AutomationId="Login_SignInButton" Content="{l:T 'Sign in'}" Style="{StaticResource PrimaryButton}" IsDefault="True" MinHeight="40"

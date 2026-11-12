@@ -17,7 +17,6 @@
         </DockPanel.Style>
         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20" Visibility="{Binding IsPurchaseLog, Converter={StaticResource BoolToVisibility}}">
             <TextBlock Text="{l:T 'Stock In Log'}" Style="{StaticResource PageTitle}"/>
-            <TextBlock Text="{l:T 'Everything bought from suppliers, newest first. Demo returns are on the Demo page. Search by number, voucher, supplier invoice, supplier or item.'}" Style="{StaticResource PageSubtitle}"/>
         </StackPanel>
         <views:MessageBanners DockPanel.Dock="Top"/>
 

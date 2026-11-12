@@ -42,7 +42,7 @@ public sealed partial class OrdersViewModel(Session session, ShellViewModel shel
     [ObservableProperty] private int _totalCount;
 
     public string PageText => TotalCount == 0
-        ? (IsDemoLog ? L.T("No demo vouchers") : L.T("No orders"))
+        ? ""
         : IsDemoLog ? L.T("Page {0} of {1} · {2} demo vouchers", Page, TotalPages, TotalCount)
         : L.T("Page {0} of {1} · {2} orders", Page, TotalPages, TotalCount);
 

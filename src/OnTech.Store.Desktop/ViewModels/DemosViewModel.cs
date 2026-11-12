@@ -111,7 +111,7 @@ public sealed partial class DemosViewModel : PageViewModel
     public int OpenUnits => _open.Sum(l => l.OpenQuantity);
     public int OpenCustomers => _open.Select(l => l.CustomerId).Distinct().Count();
     public string SummaryText => _open.Count == 0
-        ? (string.IsNullOrWhiteSpace(Search) ? L.T("No demos are out right now.") : L.T("No open demos match the search."))
+        ? ""
         : L.T("{0} unit(s) out with {1} customer(s)", OpenUnits, OpenCustomers);
 
     private readonly LatestRequest _requests = new();
