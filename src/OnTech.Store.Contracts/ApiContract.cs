@@ -29,12 +29,12 @@ public static class ReadAccess
 
     /// <summary>
     /// GET api/customers, api/customers/{id}: the Customers page, the customer picker on New Order, and the customer picker of a
-    /// demo return on Stock In.
+    /// demo return on Stock In, and the customer filter of the voucher logs.
     /// </summary>
-    public const Permission Customers = Permission.ViewStock | Permission.ManageCustomers | Permission.CreateOrders | Permission.AddStock;
+    public const Permission Customers = Permission.ViewStock | Permission.ManageCustomers | Permission.CreateOrders | Permission.AddStock | Permission.ViewOrders;
 
-    /// <summary>GET api/suppliers, api/suppliers/{id}: the Suppliers page and the supplier picker on Stock In.</summary>
-    public const Permission Suppliers = Permission.ViewStock | Permission.ManageSuppliers | Permission.AddStock;
+    /// <summary>GET api/suppliers, api/suppliers/{id}: the Suppliers page, the supplier picker on Stock In and the supplier filter of the Stock In Log.</summary>
+    public const Permission Suppliers = Permission.ViewStock | Permission.ManageSuppliers | Permission.AddStock | Permission.ViewOrders;
 
     /// <summary>GET api/dashboard/summary, api/items/{id}/card, api/stock-movements: stock figures. ViewStock only.</summary>
     public const Permission StockFigures = Permission.ViewStock;

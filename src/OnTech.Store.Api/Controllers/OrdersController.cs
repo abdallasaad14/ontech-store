@@ -33,6 +33,12 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
     {
         var q = Filter(db.Orders.AsNoTracking(), query);
         var total = await q.CountAsync(ct);
+        var done = q.Where(o => o.Status == OrderStatus.Completed);
+        var totals = new VoucherTotals
+        {
+            Vouchers = await done.CountAsync(ct),
+            Quantity = await done.SelectMany(o => o.Lines).SumAsync(l => (int?)l.Quantity, ct) ?? 0,
+        };
 
         q = query.Sort switch
         {
@@ -55,6 +61,7 @@ public class OrdersController(StoreDbContext db, StockService stock) : Controlle
             Page = query.Page,
             PageSize = query.PageSize,
             TotalCount = total,
+            Totals = totals,
         };
     }
 

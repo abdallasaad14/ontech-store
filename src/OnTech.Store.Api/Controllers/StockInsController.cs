@@ -53,6 +53,12 @@ public class StockInsController(StoreDbContext db, StockService stock) : Control
                              || s.Lines.Any(l => l.ItemName.ToLower().Contains(t) || (l.ItemCode != null && l.ItemCode.StartsWith(t))));
 
         var total = await q.CountAsync(ct);
+        var done = q.Where(s => s.Status == OrderStatus.Completed);
+        var totals = new VoucherTotals
+        {
+            Vouchers = await done.CountAsync(ct),
+            Quantity = await done.SelectMany(s => s.Lines).SumAsync(l => (int?)l.Quantity, ct) ?? 0,
+        };
         var page = await q.OrderByDescending(s => s.CreatedAt).ThenByDescending(s => s.Id)
             .Skip(Paging.Skip(f.Page, f.PageSize)).Take(f.PageSize)
             .Include(s => s.Supplier).Include(s => s.Customer).Include(s => s.CreatedByUser).Include(s => s.CancelledByUser)
@@ -66,6 +72,7 @@ public class StockInsController(StoreDbContext db, StockService stock) : Control
             Page = f.Page,
             PageSize = f.PageSize,
             TotalCount = total,
+            Totals = totals,
         };
     }
 

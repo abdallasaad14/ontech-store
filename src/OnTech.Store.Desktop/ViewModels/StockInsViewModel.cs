@@ -33,7 +33,26 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
         : IsDemoReturnLog ? L.T("Page {0} of {1} · {2} demo returns", Page, TotalPages, TotalCount)
         : L.T("Page {0} of {1} · {2} stock-ins", Page, TotalPages, TotalCount);
 
-    public override Task LoadAsync() => RunAsync(ReloadAsync, clearMessages: false);
+    /// <summary>Only this supplier's purchases, or this customer's demo returns.</summary>
+    public PartyFilter Party => _party ??= new(() => _ = SearchAsync());
+    private PartyFilter? _party;
+    public string PartyLabel => IsDemoReturnLog ? L.T("Customer") : L.T("Supplier");
+    public string PartyHint => IsDemoReturnLog ? L.T("Type the customer number or part of the name") : L.T("Type the supplier number or part of the name");
+    public string PartyAllText => IsDemoReturnLog ? L.T("All customers") : L.T("All suppliers");
+    public string PartyPlaceholder => IsDemoReturnLog ? L.T("Customer name or number") : L.T("Supplier name or number");
+    public string SearchHint => IsDemoReturnLog ? L.T("Voucher, customer, item or notes") : L.T("Voucher, supplier invoice, supplier, item or notes");
+
+    /// <summary>Over every page of the list; cancelled vouchers left out.</summary>
+    [ObservableProperty] private string? _totalsText;
+
+    public override Task LoadAsync() => RunAsync(async () =>
+    {
+        if (!Party.IsLoaded)
+            Party.SetAll(IsDemoReturnLog
+                ? (await Api.GetCustomersAsync(includeInactive: true)).Select(c => new PartyChoice(c.Id, c.CustomerNumber, c.CompanyName))
+                : (await Api.GetSuppliersAsync(includeInactive: true)).Select(s => new PartyChoice(s.Id, s.SupplierNumber, s.CompanyName)));
+        await ReloadAsync();
+    }, clearMessages: false);
 
     private readonly LatestRequest _requests = new();
 
@@ -44,6 +63,8 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
         {
             Search = Search,
             Type = Type,
+            SupplierId = IsDemoReturnLog ? null : Party.Selected?.Id,
+            CustomerId = IsDemoReturnLog ? Party.Selected?.Id : null,
             Page = Page,
             PageSize = 50,
         }, ticket.Token);
@@ -54,6 +75,7 @@ public sealed partial class StockInsViewModel(Session session, ShellViewModel sh
         TotalPages = result.TotalPages;
         TotalCount = result.TotalCount;
         OnPropertyChanged(nameof(PageText));
+        TotalsText = result.Totals is { } t ? L.T("Total: {0} vouchers · {1} pieces", t.Vouchers, t.Quantity) : null;
         Selected = StockIns.FirstOrDefault(s => s.Id == keep);
         await CheckOtherTypeAsync(result.TotalCount, ticket);
     }

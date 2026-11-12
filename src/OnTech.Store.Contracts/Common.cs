@@ -7,6 +7,15 @@ public sealed class PagedResult<T>
     public int PageSize { get; init; }
     public int TotalCount { get; init; }
     public int TotalPages => PageSize == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)PageSize);
+    /// <summary>Voucher logs only (orders, stock-ins): totals over every page of the filtered list.</summary>
+    public VoucherTotals? Totals { get; init; }
+}
+
+/// <summary>Totals of a filtered voucher log, cancelled vouchers left out. Voucher lines have no prices, so there is no value.</summary>
+public sealed class VoucherTotals
+{
+    public int Vouchers { get; init; }
+    public int Quantity { get; init; }
 }
 
 /// <summary>Limits on paged lists (CONTRACTS.md §8). Values outside them are refused with 400.</summary>
